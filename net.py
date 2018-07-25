@@ -73,8 +73,6 @@ class Net(object):
     temp_conv = conv2d('conv' + str(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
     conv_num += 1    
 
-
-
     temp_conv = conv2d('conv' + str(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
     conv_num += 1
 
@@ -120,8 +118,8 @@ class Net(object):
 
     conv8_313 = temp_conv
     return conv8_313
+
   def loss(self, scope, conv8_313, prior_boost_nongray, gt_ab_313):
-    
     flat_conv8_313 = tf.reshape(conv8_313, [-1, 313])
     flat_gt_ab_313 = tf.reshape(gt_ab_313, [-1,313])
     g_loss = tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(flat_conv8_313, flat_gt_ab_313)) / (self.batch_size)

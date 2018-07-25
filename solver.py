@@ -26,7 +26,7 @@ class Solver(object):
       self.num_gpus = 1
     if solver_params:
       self.learning_rate = float(solver_params['learning_rate'])
-      self.moment = float(solver_params['moment'])
+      # self.moment = float(solver_params['moment'])
       self.max_steps = int(solver_params['max_iterators'])
       self.train_dir = str(solver_params['train_dir'])
       self.lr_decay = float(solver_params['lr_decay'])
@@ -52,7 +52,7 @@ class Solver(object):
       self.global_step = tf.get_variable('global_step', [], initializer=tf.constant_initializer(0), trainable=False)
       learning_rate = tf.train.exponential_decay(self.learning_rate, self.global_step,
                                            self.decay_steps, self.lr_decay, staircase=True)
-      opt = tf.train.AdamOptimizer(learning_rate=learning_rate, beta2=0.99)
+      opt = tf.train.AdamOptimizer(learning_rate=learning_rate, beta1=0.9, beta2=0.99)
       with tf.name_scope('gpu') as scope:
         new_loss, self.total_loss = self.construct_graph(scope)
         self.summaries = tf.get_collection(tf.GraphKeys.SUMMARIES, scope)
@@ -76,7 +76,7 @@ class Solver(object):
       train_op = tf.group(apply_gradient_op, variables_averages_op)
 
       saver = tf.train.Saver(write_version=1)
-      saver1 = tf.train.Saver()
+      # saver1 = tf.train.Saver()
       summary_op = tf.summary.merge(self.summaries)
       init =  tf.global_variables_initializer()
       config = tf.ConfigProto(allow_soft_placement=True)
