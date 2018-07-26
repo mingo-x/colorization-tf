@@ -10,9 +10,9 @@ import utils
 IMG_SIZE = 224
 IMG_DIR = '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val'
 OUT_DIR = '/srv/glusterfs/xieya/colorization-tf/prediction'
-LABEL_PATH = '~/colorization-tf/resources/ILSVRC2012_validation_ground_truth.txt'
-LOG_PATH = '~/metrics.txt'
-MODEL_CHECKPOINT = '/srv/glusterfs/xieya/colorization-tf/pretrained/color_model.ckpt'
+LABEL_PATH = '/home/xieya/colorization-tf/resources/ILSVRC2012_validation_ground_truth.txt'
+LOG_PATH = '/home/xieya/metrics.txt'
+MODEL_CHECKPOINT = '/srv/glusterfs/xieya/colorization-tf/models/model.ckpt-38000'
 NUM_IMGS = 10000
 VGG16 = tf.keras.applications.vgg16.VGG16()
 
@@ -85,6 +85,7 @@ def main():
     img_list.sort()
     saver = tf.train.Saver()
     model, input_tensor = _get_model()
+    print("Model got.")
 
     vgg16_losses = []
     l2_losses = []
@@ -93,6 +94,7 @@ def main():
     config.gpu_options.allow_growth = True
     with tf.Session(config=config) as sess, open(LABEL_PATH, 'r') as label_file:
         saver.restore(sess, MODEL_CHECKPOINT)
+        print('Checkpoint restored.')
         for img_name in img_list:
             if not img_name.endswith('.JPEG'):
                 continue
