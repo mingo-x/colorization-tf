@@ -82,8 +82,8 @@ def _image_process(image):
 def main():
     img_list = os.listdir(IMG_DIR)
     img_list.sort()
-    saver = tf.train.Saver()
     model, input_tensor = _get_model()
+    saver = tf.train.Saver()
 
     vgg16_losses = []
     l2_losses = []
