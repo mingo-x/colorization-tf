@@ -22,6 +22,7 @@ def _predict_single_image(img_name, model, input_tensor, sess):
     img = _image_process(img)
     img = np.asarray(img, dtype=np.uint8)
     img_true = img
+    img = img[np.newaxis, :, :, :]
     data_l, _, _ = utils.preprocess(img)
     prediction = sess.run(model, feed_dict={input_tensor: data_l})
     img_rgb = utils.decode(data_l, prediction, 2.63)
