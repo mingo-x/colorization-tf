@@ -133,5 +133,5 @@ class DataSet(object):
     Returns:
       images: 4-D ndarray [batch_size, height, width, 3]
     """
-    print(self.record_queue.qsize(), self.image_queue.qsize(), self.batch_queue.qsize())
+    # print(self.record_queue.qsize(), self.image_queue.qsize(), self.batch_queue.qsize())
     return self.batch_queue.get()
