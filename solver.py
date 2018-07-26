@@ -82,6 +82,7 @@ class Solver(object):
       config = tf.ConfigProto(allow_soft_placement=True)
       config.gpu_options.allow_growth = True
       sess = tf.Session(config=config)
+      print("Session configured.")
       sess.run(init)
       print("Initialized.")
       #saver1.restore(sess, './models/model.ckpt')
