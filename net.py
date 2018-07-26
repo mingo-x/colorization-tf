@@ -122,7 +122,7 @@ class Net(object):
   def loss(self, scope, conv8_313, prior_boost_nongray, gt_ab_313):
     flat_conv8_313 = tf.reshape(conv8_313, [-1, 313])
     flat_gt_ab_313 = tf.reshape(gt_ab_313, [-1,313])
-    g_loss = tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(flat_conv8_313, flat_gt_ab_313)) / (self.batch_size)
+    g_loss = tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(logits=flat_conv8_313, labels=flat_gt_ab_313)) / (self.batch_size)
     
     tf.summary.scalar('weight_loss', tf.add_n(tf.get_collection('losses', scope=scope)))
     #
