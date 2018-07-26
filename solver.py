@@ -34,6 +34,7 @@ class Solver(object):
     self.train = train
     self.net = Net(train=train, common_params=common_params, net_params=net_params)
     self.dataset = DataSet(common_params=common_params, dataset_params=dataset_params)
+    print("Solver initialization done.")
 
   def construct_graph(self, scope):
     with tf.device('/gpu:' + str(self.device_id)):
