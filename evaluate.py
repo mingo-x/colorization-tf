@@ -92,6 +92,7 @@ def main():
     with tf.Session() as sess, open(LABEL_PATH, 'r') as label_file:
         saver.restore(sess, MODEL_CHECKPOINT)
         for img_name in img_list:
+            print(img_name)
             img_count += 1
             img_label = int(label_file.readline())
             img_rgb, img_true = _predict_single_image(img_name, model, input_tensor, sess)
