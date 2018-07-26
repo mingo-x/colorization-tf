@@ -113,6 +113,7 @@ class Solver(object):
                         'sec/batch)')
           print (format_str % (datetime.now(), step, loss_value,
                                examples_per_sec, sec_per_batch))
+          start_time = time.time()
         
         if step % 10 == 0:
           summary_str = sess.run(summary_op, feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
