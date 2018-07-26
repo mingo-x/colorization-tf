@@ -83,6 +83,7 @@ def _image_process(image):
 
 def main():
     img_list = os.listdir(IMG_DIR).sort()
+    print(len(img_list))
     saver = tf.train.Saver()
     model, input_tensor = _get_model()
 
