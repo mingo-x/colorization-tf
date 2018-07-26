@@ -83,12 +83,14 @@ class Solver(object):
       config.gpu_options.allow_growth = True
       sess = tf.Session(config=config)
       sess.run(init)
+      print("Initialized.")
       #saver1.restore(sess, './models/model.ckpt')
       #nilboy
       summary_writer = tf.summary.FileWriter(self.train_dir, sess.graph)
       for step in xrange(self.max_steps):
         start_time = time.time()
         t1 = time.time()
+        print("Hello?")
         data_l, gt_ab_313, prior_boost_nongray = self.dataset.batch()
         t2 = time.time()
         _, loss_value = sess.run([train_op, self.total_loss], feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
