@@ -9,11 +9,11 @@ import cv2
 import utils
 
 IMG_SIZE = 224
-IMG_DIR = ''
-OUT_DIR = ''
+IMG_DIR = '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val'
+OUT_DIR = '/srv/glusterfs/colorization-tf/prediction'
 LABEL_PATH = '~/colorization-tf/resources/ILSVRC2012_validation_ground_truth.txt'
 LOG_PATH = './metrics.txt'
-MODEL_CHECKPOINT = 'models/model.ckpt'
+MODEL_CHECKPOINT = '/srv/glusterfs/colorization-tf/pretrained/color_model.ckpt'
 NUM_IMGS = 10000
 VGG16 = tf.keras.applications.vgg16.VGG16()
 
