@@ -14,6 +14,10 @@ from datetime import datetime
 import os
 import sys
 
+
+_LOG_FREQ = 10
+
+
 class Solver(object):
 
   def __init__(self, train=True, common_params=None, solver_params=None, net_params=None, dataset_params=None):
@@ -89,21 +93,21 @@ class Solver(object):
       #saver1.restore(sess, './models/model.ckpt')
       #nilboy
       summary_writer = tf.summary.FileWriter(self.train_dir, sess.graph)
+      start_time = time.time()
       for step in xrange(self.max_steps):
-        start_time = time.time()
-        t1 = time.time()
+        # t1 = time.time()
         data_l, gt_ab_313, prior_boost_nongray = self.dataset.batch()
-        t2 = time.time()
+        # t2 = time.time()
         _, loss_value = sess.run([train_op, self.total_loss], feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
-        duration = time.time() - start_time
-        t3 = time.time()
-        print('io: ' + str(t2 - t1) + '; compute: ' + str(t3 - t2))
+        # t3 = time.time()
+        # print('io: ' + str(t2 - t1) + '; compute: ' + str(t3 - t2))
         assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
 
-        if step % 1 == 0:
-          num_examples_per_step = self.batch_size * self.num_gpus
+        if step % _LOG_FREQ == 0:
+          duration = time.time() - start_time
+          num_examples_per_step = self.batch_size * self.num_gpus * _LOG_FREQ
           examples_per_sec = num_examples_per_step / duration
-          sec_per_batch = duration / self.num_gpus
+          sec_per_batch = duration / (self.num_gpus * _LOG_FREQ)
 
           format_str = ('%s: step %d, loss = %.2f (%.1f examples/sec; %.3f '
                         'sec/batch)')
