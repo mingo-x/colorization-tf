@@ -52,9 +52,10 @@ def _l2_loss(img_true, img_pred):
 def _vgg_loss(img, label, model):
     img = img[np.newaxis, :, :, :]
     img = tf.keras.applications.vgg16.preprocess_input(img)
-    prediction = model.predict(img)
-    prediction = tf.keras.applications.vgg16.decode_predictions(prediction, top=1)[0][0][0]
-    return float(int(prediction) == label)
+    prediction = model.predict(img)[0]
+    prediction = np.argmax(prediction)
+    # prediction = tf.keras.applications.vgg16.decode_predictions(prediction, top=1)[0][0][0]
+    return float(prediction == label)
 
 
 def _image_process(image):
