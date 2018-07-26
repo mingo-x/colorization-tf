@@ -1,4 +1,3 @@
-import csv
 import os
 
 import numpy as np
@@ -112,4 +111,8 @@ def main():
     l2_accs = np.mean(l2_losses, axis=0)
     for i in range(0, 151):
         print("L2 acc", ",", i, ",", l2_accs[i])
+    
+
+if __name__ == "__main__":
+    main()
     
