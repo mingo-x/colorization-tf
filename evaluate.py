@@ -89,7 +89,9 @@ def main():
     vgg16_losses = []
     l2_losses = []
     img_count = 0
-    with tf.Session() as sess, open(LABEL_PATH, 'r') as label_file:
+    config = tf.ConfigProto(allow_soft_placement=True)
+    config.gpu_options.allow_growth = True
+    with tf.Session(config=config) as sess, open(LABEL_PATH, 'r') as label_file:
         saver.restore(sess, MODEL_CHECKPOINT)
         for img_name in img_list:
             print(img_name)
