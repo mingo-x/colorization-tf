@@ -136,8 +136,8 @@ class SolverMultigpu(object):
 
       train_op = tf.group(apply_gradient_op, variables_averages_op)
 
-      saver = tf.train.Saver(write_version=1)
-      saver1 = tf.train.Saver()
+      saver = tf.train.Saver(write_version=tf.train.SaverDef.V2)
+      # saver1 = tf.train.Saver()
       summary_op = tf.summary.merge(self.summaries)
       init =  tf.global_variables_initializer()
       config=tf.ConfigProto(allow_soft_placement=True)
