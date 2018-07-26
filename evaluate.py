@@ -18,8 +18,8 @@ NUM_IMGS = 10000
 VGG16 = tf.keras.applications.vgg16.VGG16()
 
 
-def _predict_single_image(img_path, model, input_tensor, sess):
-    img_name = os.path.split(img_path)[1]
+def _predict_single_image(img_name, model, input_tensor, sess):
+    img_path = os.path.join(IMG_DIR, img_name)
     img = cv2.imread(img_path)
     img = _image_process(img)
     img = np.asarray(img, dtype=np.uint8)
@@ -91,10 +91,10 @@ def main():
     img_count = 0
     with tf.Session() as sess, open(LABEL_PATH, 'r') as label_file:
         saver.restore(sess, MODEL_CHECKPOINT)
-        for img_path in img_list:
+        for img_name in img_list:
             img_count += 1
             img_label = int(label_file.readline())
-            img_rgb, img_true = _predict_single_image(img_path, model, input_tensor, sess)
+            img_rgb, img_true = _predict_single_image(img_name, model, input_tensor, sess)
             vgg16_loss = _vgg_loss(img_rgb, img_label)
             vgg16_losses.append(vgg16_loss)
             l2_loss = _l2_loss(img_true, img_rgb)
