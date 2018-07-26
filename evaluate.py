@@ -9,10 +9,10 @@ import utils
 
 IMG_SIZE = 224
 IMG_DIR = '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val'
-OUT_DIR = '/srv/glusterfs/colorization-tf/prediction'
+OUT_DIR = '/srv/glusterfs/xieya/colorization-tf/prediction'
 LABEL_PATH = '~/colorization-tf/resources/ILSVRC2012_validation_ground_truth.txt'
-LOG_PATH = './metrics.txt'
-MODEL_CHECKPOINT = '/srv/glusterfs/colorization-tf/pretrained/color_model.ckpt'
+LOG_PATH = '~/metrics.txt'
+MODEL_CHECKPOINT = '/srv/glusterfs/xieya/colorization-tf/pretrained/color_model.ckpt'
 NUM_IMGS = 10000
 VGG16 = tf.keras.applications.vgg16.VGG16()
 
@@ -81,7 +81,8 @@ def _image_process(image):
 
 
 def main():
-    img_list = os.listdir(IMG_DIR).sort()
+    img_list = os.listdir(IMG_DIR)
+    img_list.sort()
     saver = tf.train.Saver()
     model, input_tensor = _get_model()
 
@@ -93,6 +94,8 @@ def main():
     with tf.Session(config=config) as sess, open(LABEL_PATH, 'r') as label_file:
         saver.restore(sess, MODEL_CHECKPOINT)
         for img_name in img_list:
+            if not img_name.endswith('.JPEG'):
+                continue
             img_count += 1
             img_label = int(label_file.readline())
             img_rgb, img_true = _predict_single_image(img_name, model, input_tensor, sess)
