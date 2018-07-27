@@ -42,7 +42,7 @@ def _get_model():
 
 
 def _l2_loss(img_true, img_pred):
-    print(img_true.shape, img_pred.shape)
+    # print(img_true.shape, img_pred.shape)
     l2_dist = np.sqrt(np.sum(np.square(img_true - img_pred), axis=2))
     ones = np.ones_like(l2_dist)
     zeros = np.zeros_like(l2_dist)
@@ -56,11 +56,11 @@ def _l2_loss(img_true, img_pred):
 def _vgg_loss(img, label, model):
     img = tf.keras.applications.vgg16.preprocess_input(img)
     prediction = model.predict(img)
-    decoded_prediction = tf.keras.applications.vgg16.decode_predictions(prediction, top=1)[0][0]
-    print(decoded_prediction)
+    # decoded_prediction = tf.keras.applications.vgg16.decode_predictions(prediction, top=1)[0][0]
+    # print(decoded_prediction)
     prediction = prediction[0]
     prediction = np.argmax(prediction)
-    print(prediction)
+    # print(prediction)
     return 1. if prediction == label else 0.
 
 
@@ -121,7 +121,7 @@ def main():
     l2_accs = np.mean(l2_losses, axis=0)
     x = [i for i in range(0, 151)]
     auc_score = auc(x, l2_accs)
-    print("L2 auc, {}".format(auc_score))
+    print("L2 auc, {0}, {1}".format(auc_score, auc_score / 151.))
     for i in range(0, 151):
         print("L2 acc, {0}, {1}".format(i, l2_accs[i]))
     
