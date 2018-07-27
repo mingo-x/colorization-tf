@@ -48,7 +48,7 @@ def _l2_loss(img_true, img_pred, prior=None):
     ones = np.ones_like(l2_dist)
     if prior is not None:
         print(ones.shape, prior.shape)
-        ones = ones * prior
+        ones = ones * prior[:, :, :, 0]
     zeros = np.zeros_like(l2_dist)
     scores = []
     for thr in range(0, 151):
