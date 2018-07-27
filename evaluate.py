@@ -37,7 +37,7 @@ def _predict_single_image(img_name, model, input_tensor, sess):
     # data_l = data_l[0, :, :, :]
     # gray_ab= np.zeros((data_l.shape[0], data_l.shape[1], 2))
     # img_gray = np.concatenate((data_l, gray_ab), axis=-1)
-    img_gray = color.grey2rgb(data_l[0, :, :, :])
+    img_gray = color.grey2rgb(data_l[0, :, :, 0])
 
     imsave(os.path.join(OUT_DIR, img_name), img_gray)
     return img_ab, data_ab[0, :, :, :], prior
