@@ -103,7 +103,7 @@ def main():
                 continue
             print(img_name)
             img_count += 1
-            img_label = int(label_file.readline().split('.')[1])
+            img_label = int(label_file.readline().split(' ')[1])
             img_ab, data_ab = _predict_single_image(img_name, model, input_tensor, sess)
             img_rgb = tf.keras.preprocessing.image.load_img(os.path.join(OUT_DIR, img_name), target_size=(224, 224))
             img_rgb = tf.keras.preprocessing.image.img_to_array(img_rgb)
