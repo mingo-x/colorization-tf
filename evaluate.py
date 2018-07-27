@@ -34,10 +34,10 @@ def _predict_single_image(img_name, model, input_tensor, sess):
     prior = resize(prior, (IMG_SIZE, IMG_SIZE))
     img_rgb, img_ab = utils.decode(data_l, prediction, 2.63)
 
-    # data_l = data_l[0, :, :, :]
-    # gray_ab= np.zeros((data_l.shape[0], data_l.shape[1], 2))
-    # img_gray = np.concatenate((data_l, gray_ab), axis=-1)
-    img_gray = color.grey2rgb(data_l[0, :, :, :])
+    data_l = data_l[0, :, :, :] + 50
+    gray_ab= np.zeros((data_l.shape[0], data_l.shape[1], 2))
+    img_gray = np.concatenate((data_l, gray_ab), axis=-1)
+    img_gray = color.lab2rgb(img_gray)
 
     imsave(os.path.join(OUT_DIR, img_name), img_gray)
     return img_ab, data_ab[0, :, :, :], prior
