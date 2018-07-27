@@ -33,7 +33,7 @@ def _predict_single_image(img_name, model, input_tensor, sess):
     prior = prior[0, :, :, 0]
     prior = resize(prior, (IMG_SIZE, IMG_SIZE))
     img_rgb, img_ab = utils.decode(data_l, prediction, 2.63)
-    imsave(os.path.join(OUT_DIR, img_name), img_rgb)
+    imsave(os.path.join(OUT_DIR, img_name), data_l)
     return img_ab, data_ab[0, :, :, :], prior
 
 
