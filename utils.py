@@ -257,6 +257,7 @@ def preprocess(data, training=True):
   #Prior_Boost 
   #prior_boost: [N, 1, H/4, W/4]
   prior_boost = _prior_boost(gt_ab_313)
+  prior_0 = _prior_boost(gt_ab_313, gamma=0.)
 
   #Eltwise
   #prior_boost_nongray: [N, 1, H/4, W/4]
@@ -265,7 +266,7 @@ def preprocess(data, training=True):
   if training:
     return data_l, gt_ab_313, prior_boost_nongray
   else:
-    return data_l, gt_ab_313, data_ab
+    return data_l, data_ab, prior_0
 
 
 def softmax(x):
