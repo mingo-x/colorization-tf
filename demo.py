@@ -19,7 +19,7 @@ conv8_313 = autocolor.inference(data_l)
 
 saver = tf.train.Saver()
 with tf.Session() as sess:
-  saver.restore(sess, '/srv/glusterfs/xieya/colorization-tf/models/model.ckpt-139000')
+  saver.restore(sess, '/srv/glusterfs/xieya/colorization-tf/pretrained/color_model.ckpt')
   conv8_313 = sess.run(conv8_313)
 
 img_rgb, _ = decode(data_l, conv8_313, 2.63)
