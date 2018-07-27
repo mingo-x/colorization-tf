@@ -217,7 +217,7 @@ def _prior_boost(gt_ab_313):
   return prior_boost
 
 
-def preprocess(data):
+def preprocess(data, training=True):
   '''Preprocess
   Args: 
     data: RGB batch (N * H * W * 3)
@@ -262,7 +262,11 @@ def preprocess(data):
   #prior_boost_nongray: [N, 1, H/4, W/4]
   prior_boost_nongray = prior_boost * nongray_mask
 
-  return data_l, gt_ab_313, prior_boost_nongray
+  if training:
+    return data_l, gt_ab_313, prior_boost_nongray
+  else:
+    return data_l, data_ab
+
 
 def softmax(x):
     """Compute softmax values for each sets of scores in x."""
@@ -293,7 +297,7 @@ def decode(data_l, conv8_313, rebalance=1):
   img_lab = np.concatenate((data_l, data_ab), axis=-1)
   img_rgb = color.lab2rgb(img_lab)
 
-  return img_rgb
+  return img_rgb, data_ab
 
 def get_data_l(image_path):
   """

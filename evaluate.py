@@ -21,13 +21,13 @@ def _predict_single_image(img_name, model, input_tensor, sess):
     img = cv2.imread(img_path)
     img = _image_process(img)
     img = np.asarray(img, dtype=np.uint8)
-    img_true = img
+    # img_true = img
     img = img[np.newaxis, :, :, :]
-    data_l, _, _ = utils.preprocess(img)
+    data_l, data_ab = utils.preprocess(img, training=False)
     prediction = sess.run(model, feed_dict={input_tensor: data_l})
-    img_rgb = utils.decode(data_l, prediction, 2.63)
+    img_rgb, img_ab = utils.decode(data_l, prediction, 2.63)
     imsave(os.path.join(OUT_DIR, img_name), img_rgb)
-    return img_rgb, img_true
+    return img_rgb, img_ab, data_ab
 
 
 def _get_model():
@@ -39,6 +39,7 @@ def _get_model():
 
 
 def _l2_loss(img_true, img_pred):
+    assert img_true.shape[2] == 2 and img_pred.shape[2] == 2
     l2_dist = np.sqrt(np.sum(np.square(img_true - img_pred), axis=2))
     ones = np.ones_like(l2_dist)
     zeros = np.zeros_like(l2_dist)
@@ -54,7 +55,8 @@ def _vgg_loss(img, label, model):
     img = tf.keras.applications.vgg16.preprocess_input(img)
     prediction = model.predict(img)[0]
     prediction = np.argmax(prediction)
-    # prediction = tf.keras.applications.vgg16.decode_predictions(prediction, top=1)[0][0][0]
+    class_name = tf.keras.applications.vgg16.decode_predictions(prediction, top=1)[0][0][1]
+    print(class_name)
     return float(prediction == label)
 
 
@@ -103,10 +105,10 @@ def main():
             print(img_name)
             img_count += 1
             img_label = int(label_file.readline())
-            img_rgb, img_true = _predict_single_image(img_name, model, input_tensor, sess)
+            img_rgb, img_ab, data_ab = _predict_single_image(img_name, model, input_tensor, sess)
             vgg16_loss = _vgg_loss(img_rgb, img_label, vgg16)
             vgg16_losses.append(vgg16_loss)
-            l2_loss = _l2_loss(img_true, img_rgb)
+            l2_loss = _l2_loss(data_ab, img_ab)
             l2_losses.append(l2_loss)
 
             if img_count == NUM_IMGS:
