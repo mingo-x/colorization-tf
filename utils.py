@@ -265,7 +265,7 @@ def preprocess(data, training=True):
   if training:
     return data_l, gt_ab_313, prior_boost_nongray
   else:
-    return data_l, data_ab
+    return data_l, data_ab, prior_boost_nongray
 
 
 def softmax(x):
