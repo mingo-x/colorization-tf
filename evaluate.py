@@ -12,8 +12,8 @@ IMG_DIR = '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val'
 OUT_DIR = '/srv/glusterfs/xieya/colorization-tf/prediction'
 LABEL_PATH = '/home/xieya/colorization-tf/resources/ILSVRC2012_validation_ground_truth.txt'
 LOG_PATH = '/home/xieya/metrics.txt'
-MODEL_CHECKPOINT = '/srv/glusterfs/xieya/colorization-tf/models/model.ckpt-38000'
-NUM_IMGS = 10000
+MODEL_CHECKPOINT = '/srv/glusterfs/xieya/colorization-tf/pretrained/color_model.ckpt'
+NUM_IMGS = 100
 
 
 def _predict_single_image(img_name, model, input_tensor, sess):
