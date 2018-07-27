@@ -107,8 +107,8 @@ def main():
             img_count += 1
             img_label = int(label_file.readline())
             img_ab, data_ab = _predict_single_image(img_name, model, input_tensor, sess)
-            img_rgb = tf.keras.preprocessing.load_img(os.path.join(OUT_DIR, img_name), target_size=(224, 224))
-            img_rgb = tf.keras.preprocessing.img_to_array(img_rgb)
+            img_rgb = tf.keras.preprocessing.image.load_img(os.path.join(OUT_DIR, img_name), target_size=(224, 224))
+            img_rgb = tf.keras.preprocessing.image.img_to_array(img_rgb)
             img_rgb = img_rgb.reshape((1, img_rgb.shape[0], img_rgb.shape[1], img_rgb.shape[2]))
             vgg16_loss = _vgg_loss(img_rgb, img_label, vgg16)
             vgg16_losses.append(vgg16_loss)
