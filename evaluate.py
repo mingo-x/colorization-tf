@@ -27,9 +27,9 @@ def _predict_single_image(img_name, model, input_tensor, sess):
     img= _image_process(img)
     img = [img]
     img = np.asarray(img, dtype=np.uint8)
-    data_l, gt_ab_313, data_ab = utils.preprocess(img, training=False, )
+    data_l, data_ab, prior = utils.preprocess(img, training=False, )
     prediction = sess.run(model, feed_dict={input_tensor: data_l})
-    prior = utils._prior_boost(gt_ab_313, gamma=0.)
+    # prior = utils._prior_boost(gt_ab_313, gamma=0.)
     prior = prior[0, :, :, 0]
     prior = resize(prior, (IMG_SIZE, IMG_SIZE))
     img_rgb, img_ab = utils.decode(data_l, prediction, 2.63)
@@ -130,7 +130,7 @@ def main():
     x = [i for i in range(0, 151)]
     auc_score = auc(x, l2_accs)
     auc_score_re = auc(x, l2_accs_re)
-    print("L2 auc, {0}, {1}, {2}, {3}".format(auc_score, auc_score / 151., auc_score_re, auc_score_re / 151.))
+    print("L2 auc, {0}, {1}, {2}, {3}".format(auc_score, auc_score / 150., auc_score_re, auc_score_re / 150.))
     for i in range(0, 151):
         print("L2 acc, {0}, {1}, {2}".format(i, l2_accs[i], l2_accs_re[i]))
     
