@@ -14,9 +14,9 @@ OUT_DIR = '/srv/glusterfs/xieya/colorization-tf/prediction'
 LABEL_PATH = '/home/xieya/colorization-tf/resources/ILSVRC2012_validation_ground_truth.txt'
 LOG_PATH = '/home/xieya/metrics.txt'
 MODEL_CHECKPOINT = '/srv/glusterfs/xieya/colorization-tf/pretrained/color_model.ckpt'
-CLASS_ID_DICT_PATH = '/srv/glusterfs/xieya/colorization-tf/resources/class_index_dict.pkl'
+#CLASS_ID_DICT_PATH = '/srv/glusterfs/xieya/colorization-tf/resources/class_index_dict.pkl'
 NUM_IMGS = 100
-CLASS_ID_DICT = pickle.load(open(CLASS_ID_DICT_PATH, 'rb'))
+#CLASS_ID_DICT = pickle.load(open(CLASS_ID_DICT_PATH, 'rb'))
 
 
 def _predict_single_image(img_name, model, input_tensor, sess):
