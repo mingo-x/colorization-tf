@@ -15,9 +15,9 @@ IMG_DIR = '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val'
 OUT_DIR = '/srv/glusterfs/xieya/colorization-tf/prediction'
 LABEL_PATH = '/home/xieya/colorization-tf/resources/val.txt'
 LOG_PATH = '/home/xieya/metrics.txt'
-MODEL_CHECKPOINT = '/srv/glusterfs/xieya/colorization-tf/pretrained/color_model.ckpt'
+MODEL_CHECKPOINT = '/srv/glusterfs/xieya/colorization-tf/models/model.ckpt-174000'
 #CLASS_ID_DICT_PATH = '/srv/glusterfs/xieya/colorization-tf/resources/class_index_dict.pkl'
-NUM_IMGS = 100
+NUM_IMGS = 10000
 #CLASS_ID_DICT = pickle.load(open(CLASS_ID_DICT_PATH, 'rb'))
 
 
