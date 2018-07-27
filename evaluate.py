@@ -39,7 +39,7 @@ def _get_model():
 
 
 def _l2_loss(img_true, img_pred):
-    assert img_true.shape[2] == 2 and img_pred.shape[2] == 2
+    print(img_true.shape, img_pred.shape)
     l2_dist = np.sqrt(np.sum(np.square(img_true - img_pred), axis=2))
     ones = np.ones_like(l2_dist)
     zeros = np.zeros_like(l2_dist)
@@ -53,10 +53,11 @@ def _l2_loss(img_true, img_pred):
 def _vgg_loss(img, label, model):
     img = img[np.newaxis, :, :, :]
     img = tf.keras.applications.vgg16.preprocess_input(img)
-    prediction = model.predict(img)[0]
-    prediction = np.argmax(prediction)
+    prediction = model.predict(img)
     class_name = tf.keras.applications.vgg16.decode_predictions(prediction, top=1)[0][0][1]
     print(class_name)
+    prediction = prediction[0]
+    prediction = np.argmax(prediction)
     return float(prediction == label)
 
 
