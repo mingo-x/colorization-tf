@@ -16,7 +16,7 @@ LABEL_PATH = '/home/xieya/colorization-tf/resources/val.txt'
 LOG_PATH = '/home/xieya/metrics.txt'
 MODEL_CHECKPOINT = '/srv/glusterfs/xieya/colorization-tf/pretrained/color_model.ckpt'
 #CLASS_ID_DICT_PATH = '/srv/glusterfs/xieya/colorization-tf/resources/class_index_dict.pkl'
-NUM_IMGS = 10000
+NUM_IMGS = 100
 #CLASS_ID_DICT = pickle.load(open(CLASS_ID_DICT_PATH, 'rb'))
 
 
