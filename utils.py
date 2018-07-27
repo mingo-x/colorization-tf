@@ -205,8 +205,8 @@ def _prior_boost(gt_ab_313, gamma=0.5, alpha=1.0):
     prior_boost: (N, H, W, 1)
   '''
   enc_dir = './resources'
-  gamma = 0.5
-  alpha = 1.0
+  gamma = gamma
+  alpha = alpha
 
   pc = PriorFactor(alpha, gamma, priorFile=os.path.join(enc_dir, 'prior_probs.npy'))
 

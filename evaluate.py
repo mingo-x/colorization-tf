@@ -49,13 +49,10 @@ def _l2_loss(img_true, img_pred, prior=None):
     # print(img_true.shape, img_pred.shape)
     l2_dist = np.sqrt(np.sum(np.square(img_true - img_pred), axis=2))
     ones = np.ones_like(l2_dist)
-    if prior is not None:
-        print(ones.shape, prior.shape)
-        ones = ones * prior
     zeros = np.zeros_like(l2_dist)
     scores = []
     for thr in range(0, 151):
-        score = np.mean(np.where(np.less_equal(l2_dist, thr), ones, zeros))
+        score = np.average(np.where(np.less_equal(l2_dist, thr), ones, zeros), weights=prior)
         scores.append(score)
     return scores
 
