@@ -197,7 +197,7 @@ class PriorFactor():
         elif(axis==3):
             return corr_factor[:,:,:,na()]
 
-def _prior_boost(gt_ab_313):
+def _prior_boost(gt_ab_313, gamma=0.5, alpha=1.0):
   '''
   Args:
     gt_ab_313: (N, H, W, 313)

@@ -28,9 +28,10 @@ def _predict_single_image(img_name, model, input_tensor, sess):
     img = np.asarray(img, dtype=np.uint8)
     data_l, data_ab = utils.preprocess(img, training=False)
     prediction = sess.run(model, feed_dict={input_tensor: data_l})
+    prior = utils._prior_boost(prediction, gamma=0.)
     img_rgb, img_ab = utils.decode(data_l, prediction, 2.63)
     imsave(os.path.join(OUT_DIR, img_name), img_rgb)
-    return img_ab, data_ab[0, :, :, :]
+    return img_ab, data_ab[0, :, :, :], prior
 
 
 def _get_model():
@@ -41,10 +42,12 @@ def _get_model():
     return conv8_313, input_tensor
 
 
-def _l2_loss(img_true, img_pred):
+def _l2_loss(img_true, img_pred, prior=None):
     # print(img_true.shape, img_pred.shape)
     l2_dist = np.sqrt(np.sum(np.square(img_true - img_pred), axis=2))
     ones = np.ones_like(l2_dist)
+    if prior is not None:
+        ones *= prior
     zeros = np.zeros_like(l2_dist)
     scores = []
     for thr in range(0, 151):
@@ -91,6 +94,7 @@ def main():
 
     vgg16_losses = []
     l2_losses = []
+    l2_losses_re = []
     img_count = 0
     config = tf.ConfigProto(allow_soft_placement=True)
     config.gpu_options.allow_growth = True
@@ -104,7 +108,7 @@ def main():
             print(img_name)
             img_count += 1
             img_label = int(label_file.readline().split(' ')[1])
-            img_ab, data_ab = _predict_single_image(img_name, model, input_tensor, sess)
+            img_ab, data_ab, prior = _predict_single_image(img_name, model, input_tensor, sess)
             img_rgb = tf.keras.preprocessing.image.load_img(os.path.join(OUT_DIR, img_name), target_size=(224, 224))
             img_rgb = tf.keras.preprocessing.image.img_to_array(img_rgb)
             img_rgb = img_rgb.reshape((1, img_rgb.shape[0], img_rgb.shape[1], img_rgb.shape[2]))
@@ -112,6 +116,8 @@ def main():
             vgg16_losses.append(vgg16_loss)
             l2_loss = _l2_loss(data_ab, img_ab)
             l2_losses.append(l2_loss)
+            l2_loss_re = _l2_loss(data_ab, img_ab, prior=prior)
+            l2_losses_re.append(l2_loss_re)
 
             if img_count == NUM_IMGS:
                 break
@@ -119,11 +125,13 @@ def main():
     vgg16_acc = np.mean(vgg16_losses)
     print("VGG16 acc, {}".format(vgg16_acc))
     l2_accs = np.mean(l2_losses, axis=0)
+    l2_accs_re = np.mean(l2_losses_re, axis=0)
     x = [i for i in range(0, 151)]
     auc_score = auc(x, l2_accs)
-    print("L2 auc, {0}, {1}".format(auc_score, auc_score / 151.))
+    auc_score_re = auc(x, l2_accs_re)
+    print("L2 auc, {0}, {1}, {2}, {3}".format(auc_score, auc_score / 151., auc_score_re, auc_score_re / 151.))
     for i in range(0, 151):
-        print("L2 acc, {0}, {1}".format(i, l2_accs[i]))
+        print("L2 acc, {0}, {1}, {2}".format(i, l2_accs[i], l2_accs_re[i]))
     
 
 if __name__ == "__main__":
