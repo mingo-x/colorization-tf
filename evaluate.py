@@ -8,7 +8,7 @@ from skimage.io import imsave
 import cv2
 import utils
 
-IMG_SIZE = 224
+IMG_SIZE = 256
 IMG_DIR = '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val'
 OUT_DIR = '/srv/glusterfs/xieya/colorization-tf/prediction'
 LABEL_PATH = '/home/xieya/colorization-tf/resources/ILSVRC2012_validation_ground_truth.txt'
@@ -22,11 +22,9 @@ NUM_IMGS = 100
 def _predict_single_image(img_name, model, input_tensor, sess):
     img_path = os.path.join(IMG_DIR, img_name)
     img = cv2.imread(img_path)
-    img= cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img= _image_process(img)
     img = [img]
-    # img = _image_process(img)
     img = np.asarray(img, dtype=np.uint8)
-    # img_true = img
     data_l, data_ab = utils.preprocess(img, training=False)
     prediction = sess.run(model, feed_dict={input_tensor: data_l})
     img_rgb, img_ab = utils.decode(data_l, prediction, 2.63)
@@ -74,12 +72,12 @@ def _image_process(image):
     if w > h:
       image = cv2.resize(image, (int(IMG_SIZE * w / h), IMG_SIZE))
 
-      crop_start = np.random.randint(0, int(IMG_SIZE * w / h) - IMG_SIZE + 1)
+      crop_start = (int(IMG_SIZE * w / h) - IMG_SIZE) / 2
       image = image[:, crop_start:crop_start + IMG_SIZE, :]
     else:
       image = cv2.resize(image, (IMG_SIZE, int(IMG_SIZE * h / w)))
 
-      crop_start = np.random.randint(0, int(IMG_SIZE * h / w) - IMG_SIZE + 1)
+      crop_start = (int(IMG_SIZE * h / w) - IMG_SIZE) / 2
       image = image[crop_start:crop_start + IMG_SIZE, :, :]
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     return image
