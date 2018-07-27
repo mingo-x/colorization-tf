@@ -22,5 +22,5 @@ with tf.Session() as sess:
   saver.restore(sess, '/srv/glusterfs/xieya/colorization-tf/models/model.ckpt-30000')
   conv8_313 = sess.run(conv8_313)
 
-img_rgb = decode(data_l, conv8_313, 2.63)
+img_rgb, _ = decode(data_l, conv8_313, 2.63)
 imsave('color.jpg', img_rgb)

@@ -1,4 +1,5 @@
 import os
+import pickle
 
 import numpy as np
 import tensorflow as tf
@@ -13,21 +14,24 @@ OUT_DIR = '/srv/glusterfs/xieya/colorization-tf/prediction'
 LABEL_PATH = '/home/xieya/colorization-tf/resources/ILSVRC2012_validation_ground_truth.txt'
 LOG_PATH = '/home/xieya/metrics.txt'
 MODEL_CHECKPOINT = '/srv/glusterfs/xieya/colorization-tf/pretrained/color_model.ckpt'
+CLASS_ID_DICT_PATH = '/srv/glusterfs/xieya/colorization-tf/resources/class_index_dict.pkl'
 NUM_IMGS = 100
+CLASS_ID_DICT = pickle.load(open(CLASS_ID_DICT_PATH, 'rb'))
 
 
 def _predict_single_image(img_name, model, input_tensor, sess):
     img_path = os.path.join(IMG_DIR, img_name)
     img = cv2.imread(img_path)
-    img = _image_process(img)
+    img= cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img = [img]
+    # img = _image_process(img)
     img = np.asarray(img, dtype=np.uint8)
     # img_true = img
-    img = img[np.newaxis, :, :, :]
     data_l, data_ab = utils.preprocess(img, training=False)
     prediction = sess.run(model, feed_dict={input_tensor: data_l})
     img_rgb, img_ab = utils.decode(data_l, prediction, 2.63)
     imsave(os.path.join(OUT_DIR, img_name), img_rgb)
-    return img_rgb, img_ab, data_ab[0, :, :, :]
+    return img_ab, data_ab[0, :, :, :]
 
 
 def _get_model():
@@ -59,7 +63,8 @@ def _vgg_loss(img, label, model):
     print(decoded_prediction)
     prediction = prediction[0]
     prediction = np.argmax(prediction)
-    return float(prediction == label)
+    print(prediction)
+    return 1. if prediction == label else 0.
 
 
 def _image_process(image):
@@ -102,8 +107,8 @@ def main():
             print(img_name)
             img_count += 1
             img_label = int(label_file.readline())
-            img_rgb, img_ab, data_ab = _predict_single_image(img_name, model, input_tensor, sess)
-            img_rgb = tf.keras.preprocessing.load_img(os.path.join(OUT_DIR, img_name))
+            img_ab, data_ab = _predict_single_image(img_name, model, input_tensor, sess)
+            img_rgb = tf.keras.preprocessing.load_img(os.path.join(OUT_DIR, img_name), target_size=(224, 224))
             img_rgb = tf.keras.preprocessing.img_to_array(img_rgb)
             img_rgb = img_rgb.reshape((1, img_rgb.shape[0], img_rgb.shape[1], img_rgb.shape[2]))
             vgg16_loss = _vgg_loss(img_rgb, img_label, vgg16)
