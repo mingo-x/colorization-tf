@@ -5,7 +5,7 @@ from skimage.io import imsave
 from skimage.transform import resize
 import cv2
 
-img = cv2.imread('rose_grayy.jpg')
+img = cv2.imread('yellow_gray.jpg')
 if len(img.shape) == 3:
   img = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 
@@ -19,7 +19,7 @@ conv8_313 = autocolor.inference(data_l)
 
 saver = tf.train.Saver()
 with tf.Session() as sess:
-  saver.restore(sess, '/srv/glusterfs/xieya/colorization-tf/pretrained/color_model.ckpt')
+  saver.restore(sess, '/srv/glusterfs/xieya/colorization-tf/models/model.ckpt-139000')
   conv8_313 = sess.run(conv8_313)
 
 img_rgb, _ = decode(data_l, conv8_313, 2.63)
