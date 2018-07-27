@@ -5,6 +5,7 @@ import numpy as np
 import tensorflow as tf
 from net import Net
 from skimage.io import imsave
+from skimage.transform import resize
 import cv2
 import utils
 from sklearn.metrics import auc
@@ -29,6 +30,8 @@ def _predict_single_image(img_name, model, input_tensor, sess):
     data_l, data_ab = utils.preprocess(img, training=False)
     prediction = sess.run(model, feed_dict={input_tensor: data_l})
     prior = utils._prior_boost(prediction, gamma=0.)
+    prior = prior[0, :, :, 0]
+    prior = resize(prior, (IMG_SIZE, IMG_SIZE))
     img_rgb, img_ab = utils.decode(data_l, prediction, 2.63)
     imsave(os.path.join(OUT_DIR, img_name), img_rgb)
     return img_ab, data_ab[0, :, :, :], prior
