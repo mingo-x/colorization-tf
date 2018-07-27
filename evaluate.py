@@ -37,9 +37,9 @@ def _predict_single_image(img_name, model, input_tensor, sess):
     # data_l = data_l[0, :, :, :]
     # gray_ab= np.zeros((data_l.shape[0], data_l.shape[1], 2))
     # img_gray = np.concatenate((data_l, gray_ab), axis=-1)
-    # img_gray = color.lab2rgb(img_gray)
+    img_gray = color.grey2rgb(data_l[0, :, :, :])
 
-    imsave(os.path.join(OUT_DIR, img_name), img_rgb)
+    imsave(os.path.join(OUT_DIR, img_name), img_gray)
     return img_ab, data_ab[0, :, :, :], prior
 
 
@@ -116,14 +116,14 @@ def main():
             img_count += 1
             img_label = int(label_file.readline().split(' ')[1])
             img_ab, data_ab, prior = _predict_single_image(img_name, model, input_tensor, sess)
-            img_rgb = tf.keras.preprocessing.image.load_img(os.path.join(IMG_DIR, img_name), target_size=(224, 224))
+            img_rgb = tf.keras.preprocessing.image.load_img(os.path.join(OUT_DIR, img_name), target_size=(224, 224))
             img_rgb = tf.keras.preprocessing.image.img_to_array(img_rgb)
             img_rgb = img_rgb.reshape((1, img_rgb.shape[0], img_rgb.shape[1], img_rgb.shape[2]))
             vgg16_loss = _vgg_loss(img_rgb, img_label, vgg16)
             vgg16_losses.append(vgg16_loss)
-            l2_loss = _l2_loss(img_ab, img_ab)
+            l2_loss = _l2_loss(data_ab, img_ab)
             l2_losses.append(l2_loss)
-            l2_loss_re = _l2_loss(img_ab, img_ab, prior=prior)
+            l2_loss_re = _l2_loss(data_ab, img_ab, prior=prior)
             l2_losses_re.append(l2_loss_re)
 
             if img_count == NUM_IMGS:
