@@ -27,7 +27,7 @@ def _predict_single_image(img_name, model, input_tensor, sess):
     prediction = sess.run(model, feed_dict={input_tensor: data_l})
     img_rgb, img_ab = utils.decode(data_l, prediction, 2.63)
     imsave(os.path.join(OUT_DIR, img_name), img_rgb)
-    return img_rgb, img_ab, data_ab
+    return img_rgb, img_ab, data_ab[0, :, :, :]
 
 
 def _get_model():
@@ -52,10 +52,11 @@ def _l2_loss(img_true, img_pred):
 
 def _vgg_loss(img, label, model):
     img = img[np.newaxis, :, :, :]
+    img = img.astype(np.float64)
     img = tf.keras.applications.vgg16.preprocess_input(img)
     prediction = model.predict(img)
-    class_name = tf.keras.applications.vgg16.decode_predictions(prediction, top=1)[0][0][1]
-    print(class_name)
+    decoded_prediction = tf.keras.applications.vgg16.decode_predictions(prediction, top=1)[0][0]
+    print(decoded_prediction)
     prediction = prediction[0]
     prediction = np.argmax(prediction)
     return float(prediction == label)
