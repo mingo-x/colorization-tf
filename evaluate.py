@@ -12,7 +12,7 @@ from sklearn.metrics import auc
 IMG_SIZE = 256
 IMG_DIR = '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val'
 OUT_DIR = '/srv/glusterfs/xieya/colorization-tf/prediction'
-LABEL_PATH = '/home/xieya/colorization-tf/resources/ILSVRC2012_validation_ground_truth.txt'
+LABEL_PATH = '/home/xieya/colorization-tf/resources/val.txt'
 LOG_PATH = '/home/xieya/metrics.txt'
 MODEL_CHECKPOINT = '/srv/glusterfs/xieya/colorization-tf/pretrained/color_model.ckpt'
 CLASS_ID_DICT_PATH = '/srv/glusterfs/xieya/colorization-tf/resources/class_index_dict.pkl'
@@ -54,8 +54,6 @@ def _l2_loss(img_true, img_pred):
 
 
 def _vgg_loss(img, label, model):
-    # img = img[np.newaxis, :, :, :]
-    # img = img.astype(np.float64)
     img = tf.keras.applications.vgg16.preprocess_input(img)
     prediction = model.predict(img)
     decoded_prediction = tf.keras.applications.vgg16.decode_predictions(prediction, top=1)[0][0]
@@ -105,7 +103,7 @@ def main():
                 continue
             print(img_name)
             img_count += 1
-            img_label = int(label_file.readline())
+            img_label = int(label_file.readline().split('.')[1])
             img_ab, data_ab = _predict_single_image(img_name, model, input_tensor, sess)
             img_rgb = tf.keras.preprocessing.load_img(os.path.join(OUT_DIR, img_name), target_size=(224, 224))
             img_rgb = tf.keras.preprocessing.img_to_array(img_rgb)
