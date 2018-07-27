@@ -7,6 +7,7 @@ from net import Net
 from skimage.io import imsave
 import cv2
 import utils
+from sklearn.metrics import auc
 
 IMG_SIZE = 256
 IMG_DIR = '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val'
@@ -118,10 +119,13 @@ def main():
                 break
 
     vgg16_acc = np.mean(vgg16_losses)
-    print("VGG16 acc", ",", vgg16_acc)
+    print("VGG16 acc, {}".format(vgg16_acc))
     l2_accs = np.mean(l2_losses, axis=0)
+    x = [i for i in range(0, 151)]
+    auc_score = auc(x, l2_accs)
+    print("L2 auc, {}".format(auc_score))
     for i in range(0, 151):
-        print("L2 acc", ",", i, ",", l2_accs[i])
+        print("L2 acc, {0}, {1}".format(i, l2_accs[i]))
     
 
 if __name__ == "__main__":
