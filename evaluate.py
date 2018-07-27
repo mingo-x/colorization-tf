@@ -40,7 +40,7 @@ def _predict_single_image(img_name, model, input_tensor, sess):
     img_gray = color.lab2rgb(img_gray)
 
     imsave(os.path.join(OUT_DIR, img_name), img_gray)
-    return img_ab, data_ab[0, :, :, :], prior
+    return img_ab, gray_ab, prior
 
 
 def _get_model():
