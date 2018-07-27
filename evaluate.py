@@ -51,8 +51,8 @@ def _l2_loss(img_true, img_pred):
 
 
 def _vgg_loss(img, label, model):
-    img = img[np.newaxis, :, :, :]
-    img = img.astype(np.float64)
+    # img = img[np.newaxis, :, :, :]
+    # img = img.astype(np.float64)
     img = tf.keras.applications.vgg16.preprocess_input(img)
     prediction = model.predict(img)
     decoded_prediction = tf.keras.applications.vgg16.decode_predictions(prediction, top=1)[0][0]
@@ -69,16 +69,11 @@ def _image_process(image):
     if w > h:
       image = cv2.resize(image, (int(IMG_SIZE * w / h), IMG_SIZE))
 
-      mirror = np.random.randint(0, 2)
-      if mirror:
-        image = np.fliplr(image)
       crop_start = np.random.randint(0, int(IMG_SIZE * w / h) - IMG_SIZE + 1)
       image = image[:, crop_start:crop_start + IMG_SIZE, :]
     else:
       image = cv2.resize(image, (IMG_SIZE, int(IMG_SIZE * h / w)))
-      mirror = np.random.randint(0, 2)
-      if mirror:
-        image = np.fliplr(image)
+
       crop_start = np.random.randint(0, int(IMG_SIZE * h / w) - IMG_SIZE + 1)
       image = image[crop_start:crop_start + IMG_SIZE, :, :]
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -108,6 +103,9 @@ def main():
             img_count += 1
             img_label = int(label_file.readline())
             img_rgb, img_ab, data_ab = _predict_single_image(img_name, model, input_tensor, sess)
+            img_rgb = tf.keras.preprocessing.load_img(os.path.join(OUT_DIR, img_name))
+            img_rgb = tf.keras.preprocessing.img_to_array(img_rgb)
+            img_rgb = img_rgb.reshape((1, img_rgb.shape[0], img_rgb.shape[1], img_rgb.shape[2]))
             vgg16_loss = _vgg_loss(img_rgb, img_label, vgg16)
             vgg16_losses.append(vgg16_loss)
             l2_loss = _l2_loss(data_ab, img_ab)

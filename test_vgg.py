@@ -33,4 +33,3 @@ with tf.Session(config=config) as sess:
 
         if img_count == NUM_IMGS:
             break
-# load an image from file
