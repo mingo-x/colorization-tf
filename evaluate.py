@@ -1,11 +1,11 @@
 import os
-import pickle
 
 import numpy as np
 import tensorflow as tf
 from net import Net
 from skimage.io import imsave
 from skimage.transform import resize
+from skimage import color
 import cv2
 import utils
 from sklearn.metrics import auc
@@ -33,7 +33,13 @@ def _predict_single_image(img_name, model, input_tensor, sess):
     prior = prior[0, :, :, 0]
     prior = resize(prior, (IMG_SIZE, IMG_SIZE))
     img_rgb, img_ab = utils.decode(data_l, prediction, 2.63)
-    imsave(os.path.join(OUT_DIR, img_name), data_l)
+
+    data_l = data_l[0, :, :, :]
+    gray_ab= np.zeros_like(data_l)
+    img_gray = np.concatenate((data_l, gray_ab), axis=-1)
+    img_gray = color.lab2rgb(img_gray)
+    
+    imsave(os.path.join(OUT_DIR, img_name), img_gray)
     return img_ab, data_ab[0, :, :, :], prior
 
 
