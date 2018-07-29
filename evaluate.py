@@ -34,7 +34,7 @@ def _predict_single_image(img_name, model, input_tensor, sess):
     prior = utils.get_prior(data_ab)
     prior = prior[0, :, :, 0]
     # prior = resize(prior, (IMG_SIZE, IMG_SIZE))
-    print(np.min(prior), np.max(prior), np.mean(prior))
+    # print(np.min(prior), np.max(prior), np.mean(prior))
     img_rgb, img_ab = utils.decode(data_l, prediction, 2.63)
 
     # data_l = data_l[0, :, :, :] + 50
@@ -134,6 +134,7 @@ def main():
             if img_count == NUM_IMGS:
                 break
 
+    print("Prior mean, {}".format(np.mean(prior_sums) / (IMG_SIZE * IMG_SIZE)))
     vgg16_acc = np.mean(vgg16_losses)
     print("VGG16 acc, {}".format(vgg16_acc))
     l2_accs = np.mean(l2_losses, axis=0)
