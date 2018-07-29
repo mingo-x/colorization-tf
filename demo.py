@@ -5,7 +5,7 @@ from skimage.io import imsave
 from skimage.transform import resize
 import cv2
 
-img = cv2.imread('rose_grayy.jpg')
+img = cv2.imread('gray.jpg')
 if len(img.shape) == 3:
   img = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 
