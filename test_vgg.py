@@ -22,7 +22,7 @@ NUM_IMGS = 10000
 THRESHOLD = 50
 
 
-def _predict_single_image(img_name, model, input_tensor, sess):
+def _predict_single_image(img_name, sess):
     img_path = os.path.join(IMG_DIR, img_name)
     img = cv2.imread(img_path)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -35,12 +35,12 @@ def _predict_single_image(img_name, model, input_tensor, sess):
     return prior
 
 
-def _get_model():
-    input_tensor = tf.placeholder(tf.float32)
+def _get_model(data_l):
+    # input_tensor = tf.placeholder(tf.float32)
     autocolor = Net(train=False)
-    conv8_313 = autocolor.inference(input_tensor)
+    conv8_313 = autocolor.inference(data_l)
 
-    return conv8_313, input_tensor
+    return conv8_313
 
 
 def _image_process(image):
@@ -64,8 +64,8 @@ def _image_process(image):
 def main():
     img_list = os.listdir(IMG_DIR)
     img_list.sort()
-    model, input_tensor = _get_model()
-    print("Model got.")
+    # model, input_tensor = _get_model()
+    # print("Model got.")
     saver = tf.train.Saver()
 
     prior_means = []
@@ -81,7 +81,7 @@ def main():
                 continue
             img_count += 1
             print(img_name)
-            prior = _predict_single_image(img_name, model, input_tensor, sess)
+            prior = _predict_single_image(img_name, sess)
             prior_mean = np.mean(prior)
             prior_means.append(prior_mean)
             print(prior_mean)
