@@ -15,10 +15,11 @@ IMG_DIR = '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val'
 OUT_DIR = '/srv/glusterfs/xieya/colorization-tf/prediction'
 LABEL_PATH = '/home/xieya/colorization-tf/resources/val.txt'
 LOG_PATH = '/home/xieya/metrics.txt'
-MODEL_CHECKPOINT = '/srv/glusterfs/xieya/colorization-tf/models/model.ckpt-174000'
+MODEL_CHECKPOINT = '/srv/glusterfs/xieya/colorization-tf/pretrained/color_model.ckpt'
 #CLASS_ID_DICT_PATH = '/srv/glusterfs/xieya/colorization-tf/resources/class_index_dict.pkl'
-NUM_IMGS = 10000
+NUM_IMGS = 100
 #CLASS_ID_DICT = pickle.load(open(CLASS_ID_DICT_PATH, 'rb'))
+THRESHOLD = 50
 
 
 def _predict_single_image(img_name, model, input_tensor, sess):
@@ -57,7 +58,7 @@ def _l2_loss(img_true, img_pred, prior=None):
     ones = np.ones_like(l2_dist)
     zeros = np.zeros_like(l2_dist)
     scores = []
-    for thr in range(0, 151):
+    for thr in range(0, THRESHOLD+1):
         score = np.average(np.where(np.less_equal(l2_dist, thr), ones, zeros), weights=prior)
         scores.append(score)
     return scores
@@ -133,11 +134,11 @@ def main():
     print("VGG16 acc, {}".format(vgg16_acc))
     l2_accs = np.mean(l2_losses, axis=0)
     l2_accs_re = np.mean(l2_losses_re, axis=0)
-    x = [i for i in range(0, 151)]
+    x = [i for i in range(0, THRESHOLD+1)]
     auc_score = auc(x, l2_accs)
     auc_score_re = auc(x, l2_accs_re)
-    print("L2 auc, {0}, {1}, {2}, {3}".format(auc_score, auc_score / 150., auc_score_re, auc_score_re / 150.))
-    for i in range(0, 151):
+    print("L2 auc, {0}, {1}, {2}, {3}".format(auc_score, auc_score / THRESHOLD, auc_score_re, auc_score_re / THRESHOLD))
+    for i in range(0, THRESHOLD+1):
         print("L2 acc, {0}, {1}, {2}".format(i, l2_accs[i], l2_accs_re[i]))
     
 
