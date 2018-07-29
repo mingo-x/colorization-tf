@@ -22,14 +22,19 @@ NUM_IMGS = 100
 THRESHOLD = 50
 
 
-def _predict_single_image(img_name, model, input_tensor, sess):
+def _predict_single_image(img_name):
     img_path = os.path.join(IMG_DIR, img_name)
     img = cv2.imread(img_path)
-    img= _image_process(img)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    # img= _image_process(img)
     img = [img]
     img = np.asarray(img, dtype=np.uint8)
     data_l, data_ab = utils.preprocess(img, training=False)
-    prediction = sess.run(model, feed_dict={input_tensor: data_l})
+    model = _get_model(data_l)
+    saver = tf.train.Saver()
+    with tf.Session() as sess:
+        saver.restore(sess, MODEL_CHECKPOINT)
+        prediction = sess.run(model)
     # prior = utils._prior_boost(gt_ab_313, gamma=0.)
     prior = utils.get_prior(data_ab)
     prior = prior[0, :, :, 0]
@@ -46,12 +51,12 @@ def _predict_single_image(img_name, model, input_tensor, sess):
     return img_ab, data_ab[0, :, :, :], prior
 
 
-def _get_model():
-    input_tensor = tf.placeholder(tf.float32)
+def _get_model(data_l):
+    # input_tensor = tf.placeholder(tf.float32)
     autocolor = Net(train=False)
-    conv8_313 = autocolor.inference(input_tensor)
+    conv8_313 = autocolor.inference(data_l)
 
-    return conv8_313, input_tensor
+    return conv8_313
 
 
 def _l2_loss(img_true, img_pred, prior=None):
@@ -101,9 +106,9 @@ def _image_process(image):
 def main():
     img_list = os.listdir(IMG_DIR)
     img_list.sort()
-    model, input_tensor = _get_model()
-    print("Model got.")
-    saver = tf.train.Saver()
+    # model, input_tensor = _get_model()
+    # print("Model got.")
+    
 
     vgg16_losses = []
     l2_losses = []
@@ -111,11 +116,9 @@ def main():
     prior_sums = []
     img_count = 0
     skip_count = 0
-    config = tf.ConfigProto(allow_soft_placement=True)
-    config.gpu_options.allow_growth = True
-    with tf.Session(config=config) as sess, open(LABEL_PATH, 'r') as label_file:
-        saver.restore(sess, MODEL_CHECKPOINT)
-        print('Checkpoint restored.')
+    # config = tf.ConfigProto(allow_soft_placement=True)
+    # config.gpu_options.allow_growth = True
+    with open(LABEL_PATH, 'r') as label_file:
         vgg16 = tf.keras.applications.vgg16.VGG16()
         for img_name in img_list:
             if not img_name.endswith('.JPEG'):
@@ -126,7 +129,7 @@ def main():
                 continue
             print(img_name)
             img_count += 1
-            img_ab, data_ab, prior = _predict_single_image(img_name, model, input_tensor, sess)
+            img_ab, data_ab, prior = _predict_single_image(img_name)
 
             img_rgb = tf.keras.preprocessing.image.load_img(os.path.join(OUT_DIR, img_name), target_size=(224, 224))
             img_rgb = tf.keras.preprocessing.image.img_to_array(img_rgb)
