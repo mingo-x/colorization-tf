@@ -217,6 +217,13 @@ def _prior_boost(gt_ab_313, gamma=0.5, alpha=1.0):
   return prior_boost
 
 
+def get_prior(ab_313):
+  prior = _prior_boost(ab_313, gamma=0.)
+  # Non-gray mask?
+  # Subsampling?
+  return prior
+
+
 def preprocess(data, training=True):
   '''Preprocess
   Args: 
@@ -257,7 +264,6 @@ def preprocess(data, training=True):
   #Prior_Boost 
   #prior_boost: [N, 1, H/4, W/4]
   prior_boost = _prior_boost(gt_ab_313)
-  prior_0 = _prior_boost(gt_ab_313, gamma=0.)
 
   #Eltwise
   #prior_boost_nongray: [N, 1, H/4, W/4]
@@ -266,7 +272,7 @@ def preprocess(data, training=True):
   if training:
     return data_l, gt_ab_313, prior_boost_nongray
   else:
-    return data_l, data_ab, prior_0
+    return data_l, data_ab, gt_ab_313
 
 
 def softmax(x):

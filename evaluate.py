@@ -28,11 +28,11 @@ def _predict_single_image(img_name, model, input_tensor, sess):
     img= _image_process(img)
     img = [img]
     img = np.asarray(img, dtype=np.uint8)
-    data_l, data_ab, prior = utils.preprocess(img, training=False, )
+    data_l, data_ab, gt_ab_313 = utils.preprocess(img, training=False)
     prediction = sess.run(model, feed_dict={input_tensor: data_l})
-    # prior = utils._prior_boost(gt_ab_313, gamma=0.)
+    prior = utils._prior_boost(gt_ab_313, gamma=0.)
     prior = prior[0, :, :, 0]
-    prior = resize(prior, (IMG_SIZE, IMG_SIZE))
+    # prior = resize(prior, (IMG_SIZE, IMG_SIZE))
     print(np.mean(prior))
     img_rgb, img_ab = utils.decode(data_l, prediction, 2.63)
 
