@@ -217,8 +217,9 @@ def _prior_boost(gt_ab_313, gamma=0.5, alpha=1.0):
   return prior_boost
 
 
-def get_prior(ab_313):
-  prior = _prior_boost(ab_313, gamma=0.)
+def get_prior(data_ab):
+  gt_ab_313 = _nnencode(data_ab)
+  prior = _prior_boost(gt_ab_313, gamma=0.)
   # Non-gray mask?
   # Subsampling?
   return prior
@@ -272,7 +273,7 @@ def preprocess(data, training=True):
   if training:
     return data_l, gt_ab_313, prior_boost_nongray
   else:
-    return data_l, data_ab, gt_ab_313
+    return data_l, data_ab
 
 
 def softmax(x):
