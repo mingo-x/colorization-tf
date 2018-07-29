@@ -105,6 +105,7 @@ def main():
     vgg16_losses = []
     l2_losses = []
     l2_losses_re = []
+    prior_sums = []
     img_count = 0
     config = tf.ConfigProto(allow_soft_placement=True)
     config.gpu_options.allow_growth = True
@@ -128,6 +129,7 @@ def main():
             l2_losses.append(l2_loss)
             l2_loss_re = _l2_loss(data_ab, img_ab, prior=prior)
             l2_losses_re.append(l2_loss_re)
+            prior_sums.append(np.sum(prior))
 
             if img_count == NUM_IMGS:
                 break
@@ -135,7 +137,7 @@ def main():
     vgg16_acc = np.mean(vgg16_losses)
     print("VGG16 acc, {}".format(vgg16_acc))
     l2_accs = np.mean(l2_losses, axis=0)
-    l2_accs_re = np.mean(l2_losses_re, axis=0)
+    l2_accs_re = np.average(l2_losses_re, axis=0, weights=prior_sums)
     x = [i for i in range(0, THRESHOLD+1)]
     auc_score = auc(x, l2_accs)
     auc_score_re = auc(x, l2_accs_re)
