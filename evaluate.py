@@ -34,7 +34,7 @@ def _predict_single_image(img_name, model, input_tensor, sess):
     prior = utils.get_prior(data_ab)
     prior = prior[0, :, :, 0]
     # prior = resize(prior, (IMG_SIZE, IMG_SIZE))
-    print(np.mean(prior))
+    print(np.min(prior), np.max(prior), np.mean(prior))
     img_rgb, img_ab = utils.decode(data_l, prediction, 2.63)
 
     # data_l = data_l[0, :, :, :] + 50
