@@ -47,7 +47,7 @@ def _predict_single_image(img_name, model, input_tensor, sess):
 
 
 def _get_model():
-    input_tensor = tf.placeholder(tf.float32, (1, IMG_SIZE, IMG_SIZE, 1))
+    input_tensor = tf.placeholder(tf.float32)
     autocolor = Net(train=False)
     conv8_313 = autocolor.inference(input_tensor)
 
