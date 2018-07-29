@@ -208,7 +208,7 @@ def _prior_boost(gt_ab_313, gamma=0.5, alpha=1.0):
   gamma = gamma
   alpha = alpha
 
-  pc = PriorFactor(alpha, gamma, priorFile=os.path.join(enc_dir, 'prior_probs.npy'))
+  pc = PriorFactor(alpha, gamma, priorFile=os.path.join(enc_dir, 'prior_probs.npy'), verbose=True)
 
   gt_ab_313 = np.transpose(gt_ab_313, (0, 3, 1, 2))
   prior_boost = pc.forward(gt_ab_313, axis=1)
@@ -221,10 +221,10 @@ def get_prior(data_ab):
   gt_ab_313 = _nnencode(data_ab)
   prior = _prior_boost(gt_ab_313, gamma=0.)
   # Non-gray mask?
-  thresh = 5
-  nongray_mask = (np.sum(np.sum(np.sum(np.abs(data_ab) > thresh, axis=1), axis=1), axis=1) > 0)[:, np.newaxis, np.newaxis, np.newaxis]
+  # thresh = 5
+  # nongray_mask = (np.sum(np.sum(np.sum(np.abs(data_ab) > thresh, axis=1), axis=1), axis=1) > 0)[:, np.newaxis, np.newaxis, np.newaxis]
   # Subsampling?
-  return prior * nongray_mask
+  return prior
 
 
 def preprocess(data, training=True):
