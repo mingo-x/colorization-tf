@@ -222,7 +222,7 @@ def get_prior(data_ab):
   prior = _prior_boost(gt_ab_313, gamma=0.)
   # Non-gray mask?
   thresh = 5
-  nongray_mask = (np.sum(np.sum(np.sum(np.abs(data_ab_ss) > thresh, axis=1), axis=1), axis=1) > 0)[:, np.newaxis, np.newaxis, np.newaxis]
+  nongray_mask = (np.sum(np.sum(np.sum(np.abs(data_ab) > thresh, axis=1), axis=1), axis=1) > 0)[:, np.newaxis, np.newaxis, np.newaxis]
   # Subsampling?
   return prior * nongray_mask
 
