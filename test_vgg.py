@@ -25,7 +25,8 @@ THRESHOLD = 50
 def _predict_single_image(img_name, model, input_tensor, sess):
     img_path = os.path.join(IMG_DIR, img_name)
     img = cv2.imread(img_path)
-    img= _image_process(img)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    # img= _image_process(img)
     img = [img]
     img = np.asarray(img, dtype=np.uint8)
     _, data_ab = utils.preprocess(img, training=False)
@@ -35,7 +36,7 @@ def _predict_single_image(img_name, model, input_tensor, sess):
 
 
 def _get_model():
-    input_tensor = tf.placeholder(tf.float32, (1, IMG_SIZE, IMG_SIZE, 1))
+    input_tensor = tf.placeholder(tf.float32)
     autocolor = Net(train=False)
     conv8_313 = autocolor.inference(input_tensor)
 
