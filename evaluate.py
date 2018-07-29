@@ -55,13 +55,16 @@ def _get_model():
 
 
 def _l2_loss(img_true, img_pred, prior=None):
-    # print(img_true.shape, img_pred.shape)
     l2_dist = np.sqrt(np.sum(np.square(img_true - img_pred), axis=2))
-    ones = np.ones_like(l2_dist)
+    if prior is None:
+        ones = np.ones_like(l2_dist)
+    else:
+        ones = prior
+    ones_sum = np.sum(ones)
     zeros = np.zeros_like(l2_dist)
     scores = []
     for thr in range(0, THRESHOLD+1):
-        score = np.average(np.where(np.less_equal(l2_dist, thr), ones, zeros), weights=prior)
+        score = np.sum(np.where(np.less_equal(l2_dist, thr), ones, zeros)) / ones_sum
         scores.append(score)
     return scores
 
@@ -107,6 +110,7 @@ def main():
     l2_losses_re = []
     prior_sums = []
     img_count = 0
+    skip_count = 0
     config = tf.ConfigProto(allow_soft_placement=True)
     config.gpu_options.allow_growth = True
     with tf.Session(config=config) as sess, open(LABEL_PATH, 'r') as label_file:
@@ -116,9 +120,12 @@ def main():
         for img_name in img_list:
             if not img_name.endswith('.JPEG'):
                 continue
+            img_label = int(label_file.readline().split(' ')[1])
+            if skip_count <NUM_IMGS:
+                skip_count += 1
+                continue
             print(img_name)
             img_count += 1
-            img_label = int(label_file.readline().split(' ')[1])
             img_ab, data_ab, prior = _predict_single_image(img_name, model, input_tensor, sess)
             img_rgb = tf.keras.preprocessing.image.load_img(os.path.join(OUT_DIR, img_name), target_size=(224, 224))
             img_rgb = tf.keras.preprocessing.image.img_to_array(img_rgb)
