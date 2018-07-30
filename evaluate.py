@@ -81,20 +81,20 @@ def _vgg_loss(img, label, model):
 
 
 def _image_process(image):
-    # h = image.shape[0]
-    # w = image.shape[1]
+    h = image.shape[0]
+    w = image.shape[1]
 
-    image = cv2.resize(image, (IMG_SIZE, IMG_SIZE), interpolation=cv2.INTER_AREA)
-    # if w > h:
-    #   image = cv2.resize(image, (int(IMG_SIZE * w / h), IMG_SIZE))
+    # image = cv2.resize(image, (IMG_SIZE, IMG_SIZE), interpolation=cv2.INTER_AREA)
+    if w > h:
+      image = cv2.resize(image, (int(IMG_SIZE * w / h), IMG_SIZE))
 
-    #   crop_start = (int(IMG_SIZE * w / h) - IMG_SIZE) / 2
-    #   image = image[:, crop_start:crop_start + IMG_SIZE, :]
-    # else:
-    #   image = cv2.resize(image, (IMG_SIZE, int(IMG_SIZE * h / w)))
+      crop_start = (int(IMG_SIZE * w / h) - IMG_SIZE) / 2
+      image = image[:, crop_start:crop_start + IMG_SIZE, :]
+    else:
+      image = cv2.resize(image, (IMG_SIZE, int(IMG_SIZE * h / w)))
 
-    #   crop_start = (int(IMG_SIZE * h / w) - IMG_SIZE) / 2
-    #   image = image[crop_start:crop_start + IMG_SIZE, :, :]
+      crop_start = (int(IMG_SIZE * h / w) - IMG_SIZE) / 2
+      image = image[crop_start:crop_start + IMG_SIZE, :, :]
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     return image
 
