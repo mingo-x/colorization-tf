@@ -15,9 +15,9 @@ IMG_DIR = '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val'
 OUT_DIR = '/srv/glusterfs/xieya/colorization-tf/prediction'
 LABEL_PATH = '/home/xieya/colorization-tf/resources/val.txt'
 LOG_PATH = '/home/xieya/metrics.txt'
-MODEL_CHECKPOINT = '/srv/glusterfs/xieya/colorization-tf/models/model.ckpt-436000'
+MODEL_CHECKPOINT = '/srv/glusterfs/xieya/colorization-tf/models/model.ckpt-499000'
 #CLASS_ID_DICT_PATH = '/srv/glusterfs/xieya/colorization-tf/resources/class_index_dict.pkl'
-NUM_IMGS = 100
+NUM_IMGS = 49800
 #CLASS_ID_DICT = pickle.load(open(CLASS_ID_DICT_PATH, 'rb'))
 THRESHOLD = 150
 
@@ -47,7 +47,7 @@ def _predict_single_image(img_name, model, input_tensor, sess):
 
 
 def _get_model():
-    input_tensor = tf.placeholder(tf.float32)
+    input_tensor = tf.placeholder(tf.float32, (1, IMG_SIZE, IMG_SIZE, 1))
     autocolor = Net(train=False)
     conv8_313 = autocolor.inference(input_tensor)
 

@@ -66,14 +66,14 @@ def main():
     img_list.sort()
     # model, input_tensor = _get_model()
     # print("Model got.")
-    saver = tf.train.Saver()
+    # saver = tf.train.Saver()
 
     prior_means = []
     config = tf.ConfigProto(allow_soft_placement=True)
     config.gpu_options.allow_growth = True
 
     with tf.Session(config=config) as sess:
-        saver.restore(sess, MODEL_CHECKPOINT)
+        # saver.restore(sess, MODEL_CHECKPOINT)
         print('Checkpoint restored.')
         img_count = 0
         for img_name in img_list:
