@@ -3,7 +3,7 @@ import cv2
 from skimage.io import imsave
 
 IMG_SIZE = 256
-IMG_NAME = 'castle_gray.jpg'
+IMG_NAME = 'high_gray.jpg'
 
 def _resize(img):
     h = img.shape[0]
