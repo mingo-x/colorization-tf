@@ -2,12 +2,25 @@ import tensorflow as tf
 from utils import *
 from net import Net
 from skimage.io import imsave
-from skimage.transform import resize
 import cv2
+
+IMG_SIZE = 256
+
+def _resize(img):
+    h = img.shape[0]
+    w = img.shape[1]
+
+    if w > h:
+        img = cv2.resize(img, (int(IMG_SIZE * w / h), IMG_SIZE))
+    else:
+        img = cv2.resize(img, (IMG_SIZE, int(IMG_SIZE * h / w)))
+
+    return img
 
 img = cv2.imread('fire_gray.jpg')
 if len(img.shape) == 3:
   img = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+img = _resize(img)
 #img = cv2.resize(img, (256, 256))
 
 img = img[None, :, :, None]
