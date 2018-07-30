@@ -17,7 +17,7 @@ LABEL_PATH = '/home/xieya/colorization-tf/resources/val.txt'
 LOG_PATH = '/home/xieya/metrics.txt'
 MODEL_CHECKPOINT = '/srv/glusterfs/xieya/colorization-tf/models/model.ckpt-499000'
 #CLASS_ID_DICT_PATH = '/srv/glusterfs/xieya/colorization-tf/resources/class_index_dict.pkl'
-NUM_IMGS = 49800
+NUM_IMGS = 10000
 #CLASS_ID_DICT = pickle.load(open(CLASS_ID_DICT_PATH, 'rb'))
 THRESHOLD = 150
 
@@ -84,7 +84,7 @@ def _image_process(image):
     # h = image.shape[0]
     # w = image.shape[1]
 
-    image = cv2.resize(image, (IMG_SIZE, IMG_SIZE))
+    image = cv2.resize(image, (IMG_SIZE, IMG_SIZE), interpolation=cv2.INTER_AREA)
     # if w > h:
     #   image = cv2.resize(image, (int(IMG_SIZE * w / h), IMG_SIZE))
 

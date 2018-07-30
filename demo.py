@@ -5,9 +5,10 @@ from skimage.io import imsave
 from skimage.transform import resize
 import cv2
 
-img = cv2.imread('rose_grayy.jpg')
+img = cv2.imread('fire_gray.jpg')
 if len(img.shape) == 3:
   img = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+#img = cv2.resize(img, (256, 256))
 
 img = img[None, :, :, None]
 data_l = (img.astype(dtype=np.float32)) / 255.0 * 100 - 50
