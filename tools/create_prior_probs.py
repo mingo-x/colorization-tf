@@ -21,6 +21,7 @@
 import os
 import functools
 import monotonic
+import sys
 
 import numpy as np
 from skimage.io import imread
@@ -35,6 +36,8 @@ _POINTS_PATH = '/home/xieya/colorization-tf/resources/pts_in_hull.npy'
 _PRINT_FREQ = 10
 _TASK_ID = int(os.environ.get('SGE_TASK_ID')) - 1
 print("Task id: {}".format(_TASK_ID + 1))
+sys.stdout.flush()
+
 
 def _get_img_list():
   img_list = []  
@@ -45,7 +48,8 @@ def _get_img_list():
         img_path = img_path.strip()
         img_list.append(img_path)
       img_count += 1
-  print("Total image number: {}".format(img_count))
+  print("Total image number: {}".format(len(img_list)))
+  sys.stdout.flush()
   return img_list
 
 
@@ -89,6 +93,7 @@ def main():
     img_count += 1
     if img_count % _PRINT_FREQ == 0:
       print(img_count, monotonic.monotonic()-start_time)
+      sys.stdout.flush()
       start_time = monotonic.monotonic()
 
   probs = probs / np.sum(probs)
