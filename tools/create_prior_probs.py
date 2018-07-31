@@ -105,9 +105,13 @@ def main():
 def merge():
   prior_dir = '/srv/glusterfs/xieya/prior'
   total_imgs = 1281167
-  weights = [total_imgs/i for i in range(_NUM_TASKS)]
-  for i in weights:
-    print(i)
+  q = total_imgs / _NUM_TASKS
+  p = total_imgs % _NUM_TASKS
+  weights = [q for i in range(_NUM_TASKS)]
+  for i in range(p):
+    weights[i] += 1
+  for i in range(_NUM_TASKS):
+    print(i, weights[i])
   priors = []
   for prior_file in os.list_dir(prior_dir):
     prior = np.load(prior_file)
