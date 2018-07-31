@@ -1,3 +1,25 @@
+#!/usr/bin/python
+
+
+# ----- Parameters passed to the cluster -------
+## <= 1h is short queue, <= 6h is middle queue, <= 48 h is long queue
+
+#$ -t 1:100
+
+#$ -S /srv/glusterfs/xieya/anaconda2/bin/python
+
+#$ -l h_rt=5:59:59
+
+#$ -l h_vmem=4G
+
+#$ -o /srv/glusterfs/xieya/log
+
+#$ -e /srv/glusterfs/xieya/log
+
+#$ -j y
+
+
+import os
 import functools
 import monotonic
 
@@ -8,18 +30,22 @@ from skimage.transform import resize
 from multiprocessing import Pool
 
 
-_NUM_PROCESSES = 130
+_NUM_TASKS = 100
 _IMG_PATHS = 'data/train.txt'
 _POINTS_PATH = 'resources/pts_in_hull.npy'
 _PRINT_FREQ = 100
+_TASK_ID = int(os.environ.get('SGE_TASK_ID')) - 1
 
 
 def _get_img_list():
   img_list = []  
+  img_count = 0
   with open(_IMG_PATHS, 'r') as fin:
     for img_path in fin:
-      img_path = img_path.strip()
-      img_list.append(img_path)
+      if img_count % _NUM_TASKS == _TASK_ID:
+        img_path = img_path.strip()
+        img_list.append(img_path)
+      img_count += 1
   return img_list
 
 
