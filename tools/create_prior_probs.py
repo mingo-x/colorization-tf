@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/srv/glusterfs/xieya/anaconda2/bin/python
 
 
 # ----- Parameters passed to the cluster -------
