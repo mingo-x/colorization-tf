@@ -40,6 +40,7 @@ def _colorize_single_img(img_name, model, input_tensor, sess):
 
     # img = _resize(img)
     
+    img_l = (img_l.astype(dtype=np.float32)) / 255.0 * 100 - 50
     img_l_rs = (img_l_rs.astype(dtype=np.float32)) / 255.0 * 100 - 50
     img_313_rs = sess.run(model,  feed_dict={input_tensor: img_l_rs})
     img_rgb, _ = decode(img_l, img_313_rs, 2.63)
