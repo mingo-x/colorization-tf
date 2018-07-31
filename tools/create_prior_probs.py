@@ -45,7 +45,7 @@ def _get_img_list():
         img_path = img_path.strip()
         img_list.append(img_path)
       img_count += 1
-  print("Total image number: {}".img_count)
+  print("Total image number: {}".format(img_count))
   return img_list
 
 
