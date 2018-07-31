@@ -1,3 +1,4 @@
+import functools
 import numpy as np
 from skimage.io import imread
 from skimage import color
@@ -57,7 +58,7 @@ def main():
   img_list = _get_img_list()
   probs = np.zeros((_NUM_PROCESSES, 313), dtype=np.float64)
   pool = Pool(processes=_NUM_PROCESSES)   
-  calculate_prior = lambda x: _calculate_prior(x, points)
+  calculate_prior = functools.partial(_calculate_prior, points=points)
   img_count = 0
 
   for prior in pool.imap_unordered(calculate_prior, img_list):
