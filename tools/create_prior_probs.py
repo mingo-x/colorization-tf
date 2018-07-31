@@ -7,6 +7,7 @@
 #$ -t 1:2
 
 #$ -S /srv/glusterfs/xieya/anaconda2/bin/python
+/srv/glusterfs/xieya/anaconda2/bin/python
 
 #$ -l h_rt=0:59:59
 
@@ -20,22 +21,30 @@
 
 
 import os
-import functools
-import monotonic
+import sys
 
-import numpy as np
-from skimage.io import imread
-from skimage import color
-from skimage.transform import resize
-from multiprocessing import Pool
+task_id = os.environ.get('SGE_TASK_ID')
+
+print task_id
 
 
-_NUM_TASKS = 100
-_IMG_PATHS = 'data/train.txt'
-_POINTS_PATH = 'resources/pts_in_hull.npy'
-_PRINT_FREQ = 10
-_TASK_ID = int(os.environ.get('SGE_TASK_ID')) - 1
-print _TASK_ID
+# import os
+# import functools
+# import monotonic
+
+# import numpy as np
+# from skimage.io import imread
+# from skimage import color
+# from skimage.transform import resize
+# from multiprocessing import Pool
+
+
+# _NUM_TASKS = 100
+# _IMG_PATHS = 'data/train.txt'
+# _POINTS_PATH = 'resources/pts_in_hull.npy'
+# _PRINT_FREQ = 10
+# _TASK_ID = int(os.environ.get('SGE_TASK_ID')) - 1
+# print _TASK_ID
 
 
 # def _get_img_list():
