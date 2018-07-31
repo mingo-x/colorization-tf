@@ -31,9 +31,9 @@ from multiprocessing import Pool
 
 
 _NUM_TASKS = 100
-_IMG_PATHS = 'data/train.txt'
-_POINTS_PATH = 'resources/pts_in_hull.npy'
-_PRINT_FREQ = 100
+_IMG_PATHS = '/home/xieya/colorization-tf/data/train.txt'
+_POINTS_PATH = '/home/xieya/colorization-tf/resources/pts_in_hull.npy'
+_PRINT_FREQ = 10
 _TASK_ID = int(os.environ.get('SGE_TASK_ID')) - 1
 
 
@@ -61,8 +61,7 @@ def _get_index(in_data, points):
   return index
 
 
-def _calculate_prior(img_path, points):
-  probs = np.zeros((_NUM_PROCESSES, 313), dtype=np.float64)
+def _calculate_prior(img_path, points, probs):
   img = imread(img_path)
   img = resize(img, (224, 224), preserve_range=True)
   if len(img.shape)!=3 or img.shape[2]!=3:
@@ -73,9 +72,6 @@ def _calculate_prior(img_path, points):
   nd_index = _get_index(img_ab, points)
   for i in nd_index:
     probs[i] += 1
-   
-  probs = probs / np.sum(probs)
-  return probs
 
 
 def main():
@@ -84,21 +80,19 @@ def main():
   points = points[None, :, :]
   
   img_list = _get_img_list()
-  probs = np.zeros((_NUM_PROCESSES, 313), dtype=np.float64)
-  pool = Pool(processes=_NUM_PROCESSES)   
-  calculate_prior = functools.partial(_calculate_prior, points=points)
+  probs = np.zeros((313), dtype=np.float64)   
   img_count = 0
   start_time = monotonic.monotonic()
 
-  for prior in pool.imap_unordered(calculate_prior, img_list):
-    probs += prior
+  for img_path in img_list:
+    _calculate_prior(img_path, points, probs)
     img_count += 1
     if img_count % _PRINT_FREQ == 0:
       print(img_count, monotonic.monotonic()-start_time)
       start_time = monotonic.monotonic()
 
   probs = probs / np.sum(probs)
-  np.save('probs', probs)
+  np.save('probs_{}'.format(_TASK_ID), probs)
 
 
 if __name__ == "__main__":
