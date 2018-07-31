@@ -6,7 +6,7 @@ from skimage.transform import resize
 from multiprocessing import Pool
 
 
-_NUM_PROCESSES = 2
+_NUM_PROCESSES = 50
 _IMG_PATHS = 'data/train.txt'
 _POINTS_PATH = 'resources/pts_in_hull.npy'
 _PRINT_FREQ = 100
@@ -34,7 +34,7 @@ def _get_index(in_data, points):
 
 
 def _calculate_prior(img_path, points):
-  probs = np.zeros((_NUM_PROCESSES, 313), dtype=np.float64)
+  probs = np.zeros((313), dtype=np.float64)
   img = imread(img_path)
   img = resize(img, (224, 224), preserve_range=True)
   if len(img.shape)!=3 or img.shape[2]!=3:
@@ -56,7 +56,7 @@ def main():
   points = points[None, :, :]
   
   img_list = _get_img_list()
-  probs = np.zeros((_NUM_PROCESSES, 313), dtype=np.float64)
+  probs = np.zeros((313), dtype=np.float64)
   pool = Pool(processes=_NUM_PROCESSES)   
   calculate_prior = functools.partial(_calculate_prior, points=points)
   img_count = 0
