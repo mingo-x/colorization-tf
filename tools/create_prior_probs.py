@@ -1,4 +1,4 @@
-#!/srv/glusterfs/xieya/anaconda2/bin/python
+#!/usr/bin/python
 
 
 # ----- Parameters passed to the cluster -------
@@ -6,7 +6,7 @@
 
 #$ -t 1:2
 
-#$ -S /srv/glusterfs/xieya/anaconda2/bin/python
+#$ -S /usr/bin/python
 
 #$ -l h_rt=0:59:59
 
@@ -34,7 +34,7 @@ _NUM_TASKS = 100
 _IMG_PATHS = 'data/train.txt'
 _POINTS_PATH = 'resources/pts_in_hull.npy'
 _PRINT_FREQ = 10
-_TASK_ID = int(os.environ.get('SGE_TASK_ID')) - 1
+_TASK_ID = int(os.environ.get('SGE_TASK_ID'))-1
 print _TASK_ID
 
 
