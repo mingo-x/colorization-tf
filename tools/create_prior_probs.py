@@ -34,9 +34,11 @@ _NUM_TASKS = 100
 _IMG_PATHS = '/home/xieya/colorization-tf/data/train.txt'
 _POINTS_PATH = '/home/xieya/colorization-tf/resources/pts_in_hull.npy'
 _PRINT_FREQ = 10
-_TASK_ID = int(os.environ.get('SGE_TASK_ID')) - 1
-print("Task id: {}".format(_TASK_ID + 1))
-sys.stdout.flush()
+_TASK_ID = os.environ.get('SGE_TASK_ID')
+if _TASK_ID is not None:
+  print("Task id: {}".format(_TASK_ID))
+  sys.stdout.flush()
+  _TASK_ID = int(_TASK_ID) - 1
 
 
 def _get_img_list():
