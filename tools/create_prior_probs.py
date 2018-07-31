@@ -1,7 +1,7 @@
 #!/srv/glusterfs/xieya/anaconda2/bin/python
 
-# ----- Parameters passed to the cluster ------
-## <= 1h is short queue, <= 6h is middle queue, <= 48 h is long queu
+# ----- Parameters passed to the cluster -------
+## <= 1h is short queue, <= 6h is middle queue, <= 48 h is long queue
 
 #$ -t 1:2
 
@@ -33,7 +33,8 @@ _NUM_TASKS = 100
 _IMG_PATHS = 'data/train.txt'
 _POINTS_PATH = 'resources/pts_in_hull.npy'
 _PRINT_FREQ = 10
-_TASK_ID = int(os.environ.get('SGE_TASK_ID')) - 1
+_TASK_ID = os.environ.get('SGE_TASK_ID')
+
 print _TASK_ID
 
 
