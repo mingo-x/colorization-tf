@@ -10,7 +10,7 @@ import cv2
 import utils
 from sklearn.metrics import auc
 
-IMG_SIZE = 256
+IMG_SIZE = 224
 IMG_DIR = '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val'
 OUT_DIR = '/srv/glusterfs/xieya/colorization-tf/prediction'
 LABEL_PATH = '/home/xieya/colorization-tf/resources/val.txt'

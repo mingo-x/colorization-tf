@@ -17,10 +17,10 @@ def _resize(img):
 
     return img
 
-img = cv2.imread('castle_gray.jpg')
+img = cv2.imread('high_gray.jpg')
 if len(img.shape) == 3:
   img = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-#img = _resize(img)
+img = _resize(img)
 
 img = img[None, :, :, None]
 data_l = (img.astype(dtype=np.float32)) / 255.0 * 100 - 50

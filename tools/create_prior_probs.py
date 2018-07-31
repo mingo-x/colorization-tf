@@ -5,7 +5,7 @@ from skimage.transform import resize
 from multiprocessing import Pool
 
 
-_NUM_PROCESSES = 130
+_NUM_PROCESSES = 2
 _IMG_PATHS = 'data/train.txt'
 _POINTS_PATH = 'resources/pts_in_hull.npy'
 _PRINT_FREQ = 100
