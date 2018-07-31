@@ -4,11 +4,11 @@
 # ----- Parameters passed to the cluster -------
 ## <= 1h is short queue, <= 6h is middle queue, <= 48 h is long queue
 
-#$ -t 1:100
+#$ -t 1:2
 
 #$ -S /srv/glusterfs/xieya/anaconda2/bin/python
 
-#$ -l h_rt=5:59:59
+#$ -l h_rt=0:59:59
 
 #$ -l h_vmem=4G
 
@@ -31,16 +31,18 @@ from multiprocessing import Pool
 
 
 _NUM_TASKS = 100
-_IMG_PATHS = '/home/xieya/colorization-tf/data/train.txt'
-_POINTS_PATH = '/home/xieya/colorization-tf/resources/pts_in_hull.npy'
+_IMG_PATHS = 'data/train.txt'
+_POINTS_PATH = 'resources/pts_in_hull.npy'
 _PRINT_FREQ = 10
 _TASK_ID = int(os.environ.get('SGE_TASK_ID')) - 1
+#_TASK_ID = 0
 
 
 def _get_img_list():
   img_list = []  
   img_count = 0
   with open(_IMG_PATHS, 'r') as fin:
+    print(_IMG_PATHS)
     for img_path in fin:
       if img_count % _NUM_TASKS == _TASK_ID:
         img_path = img_path.strip()
@@ -76,6 +78,7 @@ def _calculate_prior(img_path, points, probs):
 
 def main():
   points = np.load(_POINTS_PATH)
+  print(_POINTS_PATH)
   points = points.astype(np.float64)
   points = points[None, :, :]
   
