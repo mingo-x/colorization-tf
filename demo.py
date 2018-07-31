@@ -58,4 +58,7 @@ def main():
             _colorize_single_img(img_name, model, input_tensor, sess)
 
 
+if __name__ == "__main__":
+    main()
+
     
