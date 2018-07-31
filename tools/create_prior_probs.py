@@ -1,6 +1,5 @@
 #!/srv/glusterfs/xieya/anaconda2/bin/python
 
-
 # ----- Parameters passed to the cluster ------
 ## <= 1h is short queue, <= 6h is middle queue, <= 48 h is long queu
 
@@ -20,15 +19,15 @@
 
 
 import os
-import functools
-import monotonic
-
+# import functools
+# import monotonic
+'''
 import numpy as np
 from skimage.io import imread
 from skimage import color
 from skimage.transform import resize
 from multiprocessing import Pool
-
+'''
 
 _NUM_TASKS = 100
 _IMG_PATHS = 'data/train.txt'
