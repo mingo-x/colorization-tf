@@ -97,6 +97,12 @@ def main():
       start_time = monotonic.monotonic()
 
   probs = probs / np.sum(probs)
-  np.save('probs_{}'.format(_TASK_ID), probs)
+  np.save('/srv/glusterfs/xieya/prior/probs_{}'.format(_TASK_ID), probs)
+
+
+def merge():
+  pass
+
+
 if __name__ == "__main__":
   main()
