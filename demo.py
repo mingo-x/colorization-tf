@@ -54,8 +54,9 @@ def main():
     with tf.Session() as sess:
         saver.restore(sess, '/srv/glusterfs/xieya/colorization-tf/models/model.ckpt-499000')
         for img_name in os.listdir(IMG_DIR):
-            print(img_name)
-            _colorize_single_img(img_name, model, input_tensor, sess)
+            if img_name.endswith('.jpg'):
+                print(img_name)
+                _colorize_single_img(img_name, model, input_tensor, sess)
 
 
 if __name__ == "__main__":
