@@ -110,8 +110,6 @@ def merge():
   weights = [q for i in range(_NUM_TASKS)]
   for i in range(p):
     weights[i] += 1
-  for i in range(_NUM_TASKS):
-    print(i, weights[i])
   priors = []
   for prior_file in os.listdir(prior_dir):
     prior = np.load(os.path.join(prior_dir, prior_file))
