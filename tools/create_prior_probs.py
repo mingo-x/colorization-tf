@@ -37,7 +37,7 @@ def _calculate_prior(img_path, points):
   img = imread(img_path)
   img = resize(img, (224, 224), preserve_range=True)
   if len(img.shape)!=3 or img.shape[2]!=3:
-    continue
+    return probs
   img_lab = color.rgb2lab(img)
   img_lab = img_lab.reshape((-1, 3))
   img_ab = img_lab[:, 1:]
