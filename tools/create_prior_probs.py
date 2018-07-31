@@ -96,7 +96,18 @@ def main():
 
 
 def merge():
-  pass
+  prior_dir = '/srv/glusterfs/xieya/prior'
+  total_imgs = 1281167
+  weights = [total_imgs/i for i in range(_NUM_TASKS)]
+  for i in weights:
+    print(i)
+  priors = []
+  for prior_file in os.list_dir(prior_dir):
+    prior = np.load(prior_file)
+    priors.append(prior)
+  priors = np.asarray(priors)
+  priors = np.average(priors, axis=0, weights=weights)
+  np.save('/srv/glusterfs/xieya/prior/probs', priors)
 
 
 if __name__ == "__main__":
