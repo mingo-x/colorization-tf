@@ -1,4 +1,6 @@
 import functools
+import monotonic
+
 import numpy as np
 from skimage.io import imread
 from skimage import color
@@ -60,12 +62,14 @@ def main():
   pool = Pool(processes=_NUM_PROCESSES)   
   calculate_prior = functools.partial(_calculate_prior, points=points)
   img_count = 0
+  start_time = monotonic.monotonic()
 
   for prior in pool.imap_unordered(calculate_prior, img_list):
     probs += prior
     img_count += 1
     if img_count % _PRINT_FREQ == 0:
-      print(img_count)
+      print(img_count, monotonic.monotonic()-start_time)
+      start_time = monotonic.monotonic()
 
   probs = probs / np.sum(probs)
   np.save('probs', probs)
