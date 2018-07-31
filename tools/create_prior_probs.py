@@ -113,8 +113,8 @@ def merge():
   for i in range(_NUM_TASKS):
     print(i, weights[i])
   priors = []
-  for prior_file in os.list_dir(prior_dir):
-    prior = np.load(prior_file)
+  for prior_file in os.listdir(prior_dir):
+    prior = np.load(os.path.join(prior_dir, prior_file))
     priors.append(prior)
   priors = np.asarray(priors)
   priors = np.average(priors, axis=0, weights=weights)
