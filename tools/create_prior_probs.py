@@ -1,17 +1,12 @@
-#!/usr/bin/python
+#!/srv/glusterfs/xieya/anaconda2/bin/python
 
 
-# ----- Parameters passed to the cluster -------
-## <= 1h is short queue, <= 6h is middle queue, <= 48 h is long queue
+# ----- Parameters passed to the cluster ------
+## <= 1h is short queue, <= 6h is middle queue, <= 48 h is long queu
 
 #$ -t 1:2
 
-<<<<<<< HEAD
-#$ -S /usr/bin/python
-=======
 #$ -S /srv/glusterfs/xieya/anaconda2/bin/python
-/srv/glusterfs/xieya/anaconda2/bin/python
->>>>>>> f9d32ba2ce701a836c54884866825469771df62b
 
 #$ -l h_rt=0:59:59
 
