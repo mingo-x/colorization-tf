@@ -19,6 +19,10 @@
 
 
 import os
+
+
+_TASK_ID = os.environ.get('SGE_TASK_ID')
+print _TASK_ID
 # import functools
 # import monotonic
 '''
@@ -29,14 +33,10 @@ from skimage.transform import resize
 from multiprocessing import Pool
 '''
 
-_NUM_TASKS = 100
-_IMG_PATHS = 'data/train.txt'
-_POINTS_PATH = 'resources/pts_in_hull.npy'
-_PRINT_FREQ = 10
-_TASK_ID = os.environ.get('SGE_TASK_ID')
-
-print _TASK_ID
-
+# _NUM_TASKS = 100
+# _IMG_PATHS = 'data/train.txt'
+# _POINTS_PATH = 'resources/pts_in_hull.npy'
+# _PRINT_FREQ = 10
 
 # def _get_img_list():
 #   img_list = []  
@@ -96,7 +96,5 @@ print _TASK_ID
 
 #   probs = probs / np.sum(probs)
 #   np.save('probs_{}'.format(_TASK_ID), probs)
-
-
 # if __name__ == "__main__":
 #   main()
