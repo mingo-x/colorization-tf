@@ -6,16 +6,17 @@ import cv2
 
 INPUT_SIZE = 224
 IMG_DIR = '/srv/glusterfs/xieya/video/dog_frames/'
-OUTPUT_DIR = '/srv/glusterfs/xieya/video/dog_frames_color/'
+OUTPUT_DIR = '/srv/glusterfs/xieya/video/dog_frames_color_small/'
 
-def _resize(img):
-    h = img.shape[0]
-    w = img.shape[1]
+def _resize(img, resize_size=0):
+    if resize_size > 0:
+        h = img.shape[0]
+        w = img.shape[1]
 
-    if w > h:
-        img = cv2.resize(img, (int(IMG_SIZE * w / h), IMG_SIZE))
-    else:
-        img = cv2.resize(img, (IMG_SIZE, int(IMG_SIZE * h / w)))
+        if w > h:
+            img = cv2.resize(img, (int(resize_size * w / h), resize_size))
+        else:
+            img = cv2.resize(img, (resize_size, int(resize_size * h / w)))
 
     return img
 
@@ -28,6 +29,7 @@ def _get_model(input_tensor):
 
 def _colorize_single_img(img_name, model, input_tensor, sess):
     img = cv2.imread(os.path.join(IMG_DIR, img_name))
+    img = _resize(img, 256)
     img_rs = cv2.resize(img, (INPUT_SIZE, INPUT_SIZE))
     if len(img.shape) == 3:
         img_l = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
