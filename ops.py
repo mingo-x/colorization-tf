@@ -36,15 +36,18 @@ def _variable_with_weight_decay(name, shape, stddev, wd):
  Returns:
     Variable Tensor 
   """
+  # var = _variable(name, shape,
+  #   tf.truncated_normal_initializer(stddev=stddev, dtype=tf.float32))
   var = _variable(name, shape,
-    tf.truncated_normal_initializer(stddev=stddev, dtype=tf.float32))
+    tf.contrib.layers.variance_scaling_initializer(factor=2.0, mode='FAN_IN', uniform=False, dtype=tf.float32))
+  
   if wd is not None:
     weight_decay = tf.multiply(tf.nn.l2_loss(var), wd, name='weight_loss')
     tf.add_to_collection('losses', weight_decay)
   return var
 
 def conv2d(scope, input, kernel_size, stride=1, dilation=1, relu=True, wd=nilboy_weight_decay):
-  name = scope
+  # name = scope
   with tf.variable_scope(scope) as scope:
     kernel = _variable_with_weight_decay('weights', 
                                     shape=kernel_size,
@@ -73,7 +76,7 @@ def deconv2d(scope, input, kernel_size, stride=1, wd=nilboy_weight_decay):
   Return:
     output: 4-D tensor [batch_size, height * stride, width * stride, out_channel]
   """
-  pad_size = int((kernel_size[0] - 1)/2)
+  # pad_size = int((kernel_size[0] - 1)/2)
   #input = tf.pad(input, [[0,0], [pad_size, pad_size], [pad_size, pad_size], [0, 0]], "CONSTANT")
   batch_size, height, width, in_channel = [int(i) for i in input.get_shape()]
   out_channel = kernel_size[3] 
