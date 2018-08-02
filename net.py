@@ -161,7 +161,7 @@ class Net(object):
             conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [4, 4, 256, 1], stride=1, relu=False, wd=None)
             
             upsampled_output = tf.image.resize_images(conv_4, original_shape[1:3], method=ResizeMethod.NEAREST_NEIGHBOR)
-            
+
         return upsampled_output
 
 
@@ -181,7 +181,7 @@ class Net(object):
         '''
         enc_dir = './resources'
         cc = np.load(os.path.join(enc_dir, 'pts_in_hull.npy'))
-        cc = tf.constant(cc)  # [313, 2]
+        cc = tf.constant(cc, dtype=tf.float32)  # [313, 2]
         # cc = tf.expand_dims(cc, 0) 
         # conv8_313 = conv8_313[0, :, :, :]
         conv8_313_rh = conv8_313 * rebalance
