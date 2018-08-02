@@ -130,11 +130,11 @@ class Solver(object):
           loss_value, adv_loss_value, D_loss_value = sess.run(
             [self.total_loss, self.adv_loss, self.D_loss], 
             feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.conv8_313_real: conv8_313_real})
+          format_str = ('%s: step %d, G loss = %.2f, adv loss = %.2f, D loss = %0.2f (%.1f examples/sec; %.3f '
+                        'sec/batch)')
           assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
           assert not np.isnan(adv_loss_value), 'Adversarial diverged with loss = NaN'
           assert not np.isnan(D_loss_value), 'Discriminator diverged with loss = NaN'
-          format_str = ('%s: step %d, G loss = %.2f, adv loss = %.2f, D loss = %0.2f (%.1f examples/sec; %.3f '
-                        'sec/batch)')
           print (format_str % (datetime.now(), step, loss_value, adv_loss_value, D_loss_value,
                                examples_per_sec, sec_per_batch))
           start_time = time.time()
