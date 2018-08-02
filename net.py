@@ -189,7 +189,7 @@ class Net(object):
         shape = tf.shape(class8_313_rh)
         class8_313_rh = tf.reshape(class8_313_rh, (-1, 313))  # [N*H*W/16, 313]
         data_ab = tf.matmul(class8_313_rh, cc)  # [N*H*W/16, 2]
-        data_ab = tf.reshape(data_ab, shape[0:3] + [2])  # [N, H/4, W/4, 2]
+        data_ab = tf.reshape(data_ab, (shape[0], shape[1], shape[2], 2))  # [N, H/4, W/4, 2]
 
         return data_ab
 
