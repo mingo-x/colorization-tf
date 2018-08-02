@@ -5,8 +5,9 @@ from skimage.io import imsave
 import cv2
 
 INPUT_SIZE = 224
-IMG_DIR = '/srv/glusterfs/xieya/video/dog_frames/'
-OUTPUT_DIR = '/srv/glusterfs/xieya/video/dog_frames_color_small/'
+_RESIZE_SIZE = 0
+IMG_DIR = '/srv/glusterfs/xieya/image/grayscale'
+OUTPUT_DIR = '/srv/glusterfs/xieya/image/color'
 
 def _resize(img, resize_size=0):
     if resize_size > 0:
@@ -29,7 +30,7 @@ def _get_model(input_tensor):
 
 def _colorize_single_img(img_name, model, input_tensor, sess):
     img = cv2.imread(os.path.join(IMG_DIR, img_name))
-    img = _resize(img, 256)
+    img = _resize(img, _RESIZE_SIZE)
     img_rs = cv2.resize(img, (INPUT_SIZE, INPUT_SIZE))
     if len(img.shape) == 3:
         img_l = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
