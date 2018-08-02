@@ -136,7 +136,7 @@ class Net(object):
         new_loss = tf.reduce_sum(dl2c * conv8_313 * prior_boost_nongray) + tf.add_n(tf.get_collection('losses', scope=scope))
 
         # Adversarial loss.
-        adv_loss = -tf.reduce_sum(D_pred) / self.batch_size
+        adv_loss = -tf.reduce_sum(tf.log(D_pred)) / self.batch_size
         new_loss += self.alpha * adv_loss
 
         return new_loss, g_loss, adv_loss
