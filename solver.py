@@ -127,7 +127,7 @@ class Solver(object):
 
           new_loss_value, loss_value, adv_loss_value, D_loss_value = sess.run(
             [self.new_loss, self.total_loss, self.adv_loss, self.D_loss], 
-            feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.conv8_313_real: conv8_313_real})
+            feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_ab_real: data_ab_real})
           format_str = ('%s: step %d, G loss = %.2f, total loss = %2.f, adv loss = %.2f, D loss = %0.2f (%.1f examples/sec; %.3f '
                         'sec/batch)')
           # assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
@@ -138,7 +138,7 @@ class Solver(object):
           start_time = time.time()
         
         if step % 100 == 0:
-          summary_str = sess.run(summary_op, feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.conv8_313_real: conv8_313_real})
+          summary_str = sess.run(summary_op, feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_ab_real: data_ab_real})
           summary_writer.add_summary(summary_str, step)
 
         # Save the model checkpoint periodically.
