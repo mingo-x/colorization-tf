@@ -113,7 +113,7 @@ class Solver(object):
         _, conv8_313_real, _ = self.dataset.batch()
         t2 = time.time()
         # Discriminator training.
-        _, D_loss_value = sess.run([D_apply_gradient_op, self.D_loss], feed_dict={self.data_l: data_l, self.data_l_real: data_l_real})
+        _, D_loss_value = sess.run([D_apply_gradient_op, self.D_loss], feed_dict={self.data_l: data_l, self.conv8_313_real: conv8_313_real})
         t3 = time.time()
         # Generator training.
         _, loss_value, adv_loss_value = sess.run([train_op, self.total_loss, self.adv_loss], feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
