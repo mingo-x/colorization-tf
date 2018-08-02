@@ -136,7 +136,7 @@ class Net(object):
         new_loss = tf.reduce_sum(dl2c * conv8_313 * prior_boost_nongray) + tf.add_n(tf.get_collection('losses', scope=scope))
 
         # Adversarial loss.
-        adv_loss = -tf.reduce_sum(tf.log(D_pred)) / self.batch_size
+        adv_loss = -tf.reduce_sum(tf.log(D_pred)) * 16. / self.batch_size
         new_loss += self.alpha * adv_loss
 
         return new_loss, g_loss, adv_loss
@@ -163,12 +163,12 @@ class Net(object):
             conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [4, 4, 128, 256], stride=2, wd=None)
             
             # 8x8
-            conv_num += 1
-            conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [4, 4, 256, 512], stride=2, wd=None)
+            # conv_num += 1
+            # conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [4, 4, 256, 512], stride=2, wd=None)
 
             # 8x8
             conv_num += 1
-            conv_5 = conv2d('d_conv_{}'.format(conv_num), conv_4, [4, 4, 512, 1], stride=1, relu=False, wd=None, sigmoid=True)
+            conv_5 = conv2d('d_conv_{}'.format(conv_num), conv_3, [4, 4, 512, 1], stride=1, relu=False, wd=None, sigmoid=True)
             
             # upsampled_output = tf.image.resize_images(conv_5, original_shape[1:3], method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
 
@@ -178,7 +178,7 @@ class Net(object):
     def discriminator_loss(self, original, colorized):
         original_loss = -tf.log(original + self.eps)
         colorized_loss = -tf.log(1 - colorized + self.eps)
-        total_loss = tf.reduce_sum(original_loss + colorized_loss) * 64 / self.batch_size
+        total_loss = tf.reduce_sum(original_loss + colorized_loss) * 16. / self.batch_size
         # tf.summary.scalar('D_weight_loss', tf.add_n(tf.get_collection('losses', scope=scope)))
         # total_loss += tf.add_n(tf.get_collection('losses', scope=scope))
 
