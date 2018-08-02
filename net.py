@@ -18,6 +18,7 @@ class Net(object):
     def __init__(self, train=True, common_params=None, net_params=None):
         self.train = train
         self.weight_decay = 0.0
+        self.eps = 1e-8
         if common_params:
           gpu_nums = len(str(common_params['gpus']).split(','))
           self.batch_size = int(int(common_params['batch_size'])/gpu_nums)
@@ -167,8 +168,8 @@ class Net(object):
 
 
     def discriminator_loss(self, original, colorized):
-        original_loss = -tf.log(original)
-        colorized_loss = -tf.log(1 - colorized)
+        original_loss = -tf.log(original + self.eps)
+        colorized_loss = -tf.log(1 - colorized + self.eps)
         total_loss = tf.reduce_sum(original_loss + colorized_loss) / self.batch_size
         # tf.summary.scalar('D_weight_loss', tf.add_n(tf.get_collection('losses', scope=scope)))
         # total_loss += tf.add_n(tf.get_collection('losses', scope=scope))
