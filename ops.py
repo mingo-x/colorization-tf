@@ -3,8 +3,8 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
-import numpy as np
-import re
+# import numpy as np
+# import re
 nilboy_weight_decay = 0.001
 def _variable(name, shape, initializer):
   """Helper to create a Variable stored on CPU memory.
