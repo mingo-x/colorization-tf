@@ -48,10 +48,9 @@ class Solver(object):
 
       self.conv8_313 = self.net.inference(self.data_l)
       ab_fake = self.net.conv313_to_ab(self.conv8_313)
-      self.conv8_313_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 313))
-      ab_real = self.net.conv313_to_ab(self.conv8_313_real)
+      self.data_ab_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 2))
       self.D_fake_pred = self.net.discriminator(ab_fake)
-      self.D_real_pred = self.net.discriminator(ab_real, True)  # Reuse the variables.
+      self.D_real_pred = self.net.discriminator(data_ab_real, True)  # Reuse the variables.
 
       new_loss, g_loss, adv_loss = self.net.loss(scope, self.conv8_313, self.prior_boost_nongray, self.gt_ab_313, self.D_fake_pred)
       tf.summary.scalar('new_loss', new_loss)
@@ -69,9 +68,9 @@ class Solver(object):
       opt = tf.train.AdamOptimizer(learning_rate=learning_rate, beta1=0.9, beta2=0.99)
       D_opt = tf.train.AdamOptimizer(learning_rate=learning_rate, beta1=0.9, beta2=0.99)
       with tf.name_scope('gpu') as scope:
-        new_loss, self.total_loss, self.adv_loss, self.D_loss = self.construct_graph(scope)
+        self.new_loss, self.total_loss, self.adv_loss, self.D_loss = self.construct_graph(scope)
         self.summaries = tf.get_collection(tf.GraphKeys.SUMMARIES, scope)
-      grads = opt.compute_gradients(new_loss)
+      grads = opt.compute_gradients(self.new_loss)
       D_grads = D_opt.compute_gradients(self.D_loss)
 
       self.summaries.append(tf.summary.scalar('learning_rate', learning_rate))
@@ -91,7 +90,6 @@ class Solver(object):
       variables_averages_op = variable_averages.apply(tf.trainable_variables(scope='G'))
 
       train_op = tf.group(apply_gradient_op, variables_averages_op)
-      # losses = tf.group(self.total_loss, self.adv_loss, self.D_loss)
 
       saver = tf.train.Saver(write_version=tf.train.SaverDef.V2)
       # saver1 = tf.train.Saver()
@@ -110,11 +108,11 @@ class Solver(object):
       for step in xrange(self.max_steps):
 
         t1 = time.time()
-        data_l, gt_ab_313, prior_boost_nongray = self.dataset.batch()
-        _, conv8_313_real, _ = self.dataset.batch()
+        data_l, gt_ab_313, prior_boost_nongray, _ = self.dataset.batch()
+        _, _, _, data_ab_real = self.dataset.batch()
         t2 = time.time()
         # Discriminator training.
-        sess.run([D_apply_gradient_op], feed_dict={self.data_l: data_l, self.conv8_313_real: conv8_313_real})
+        sess.run([D_apply_gradient_op], feed_dict={self.data_l: data_l, self.data_ab_real: data_ab_real})
         t3 = time.time()
         # Generator training.
         sess.run([train_op], feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
@@ -127,19 +125,19 @@ class Solver(object):
           examples_per_sec = num_examples_per_step / duration
           sec_per_batch = duration / (self.num_gpus * _LOG_FREQ)
 
-          loss_value, adv_loss_value, D_loss_value = sess.run(
-            [self.total_loss, self.adv_loss, self.D_loss], 
+          new_loss_value, loss_value, adv_loss_value, D_loss_value = sess.run(
+            [self.new_loss, self.total_loss, self.adv_loss, self.D_loss], 
             feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.conv8_313_real: conv8_313_real})
-          format_str = ('%s: step %d, G loss = %.2f, adv loss = %.2f, D loss = %0.2f (%.1f examples/sec; %.3f '
+          format_str = ('%s: step %d, G loss = %.2f, total loss = %2.f, adv loss = %.2f, D loss = %0.2f (%.1f examples/sec; %.3f '
                         'sec/batch)')
-          assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
-          assert not np.isnan(adv_loss_value), 'Adversarial diverged with loss = NaN'
-          assert not np.isnan(D_loss_value), 'Discriminator diverged with loss = NaN'
-          print (format_str % (datetime.now(), step, loss_value, adv_loss_value, D_loss_value,
+          # assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
+          # assert not np.isnan(adv_loss_value), 'Adversarial diverged with loss = NaN'
+          # assert not np.isnan(D_loss_value), 'Discriminator diverged with loss = NaN'
+          print (format_str % (datetime.now(), step, new_loss_value, loss_value, adv_loss_value, D_loss_value,
                                examples_per_sec, sec_per_batch))
           start_time = time.time()
         
-        if step % 10 == 0:
+        if step % 100 == 0:
           summary_str = sess.run(summary_op, feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.conv8_313_real: conv8_313_real})
           summary_writer.add_summary(summary_str, step)
 
