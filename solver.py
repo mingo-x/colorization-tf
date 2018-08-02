@@ -107,17 +107,17 @@ class Solver(object):
       start_time = time.time()
       for step in xrange(self.max_steps):
 
-        t1 = time.time()
+        # t1 = time.time()
         data_l, gt_ab_313, prior_boost_nongray, _ = self.dataset.batch()
         _, _, _, data_ab_real = self.dataset.batch()
-        t2 = time.time()
+        # t2 = time.time()
         # Discriminator training.
         sess.run([D_apply_gradient_op], feed_dict={self.data_l: data_l, self.data_ab_real: data_ab_real})
-        t3 = time.time()
+        # t3 = time.time()
         # Generator training.
         sess.run([train_op], feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
-        t4 = time.time()
-        print('io: ' + str(t2 - t1) + '; D: ' + str(t3 - t2) + '; G: ' + str(t4 - t3))
+        # t4 = time.time()
+        # print('io: ' + str(t2 - t1) + '; D: ' + str(t3 - t2) + '; G: ' + str(t4 - t3))
 
         if step % _LOG_FREQ == 0:
           duration = time.time() - start_time
@@ -125,15 +125,15 @@ class Solver(object):
           examples_per_sec = num_examples_per_step / duration
           sec_per_batch = duration / (self.num_gpus * _LOG_FREQ)
 
-          new_loss_value, loss_value, adv_loss_value, D_loss_value = sess.run(
-            [self.new_loss, self.total_loss, self.adv_loss, self.D_loss], 
+          loss_value, adv_loss_value, D_loss_value = sess.run(
+            [self.total_loss, self.adv_loss, self.D_loss], 
             feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_ab_real: data_ab_real})
-          format_str = ('%s: step %d, G loss = %.2f, total loss = %.2f, adv loss = %.2f, D loss = %0.2f (%.1f examples/sec; %.3f '
+          format_str = ('%s: step %d, G loss = %.2f, adv loss = %.2f, D loss = %0.2f (%.1f examples/sec; %.3f '
                         'sec/batch)')
           # assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
           # assert not np.isnan(adv_loss_value), 'Adversarial diverged with loss = NaN'
           # assert not np.isnan(D_loss_value), 'Discriminator diverged with loss = NaN'
-          print (format_str % (datetime.now(), step, new_loss_value, loss_value, adv_loss_value, D_loss_value,
+          print (format_str % (datetime.now(), step, loss_value, adv_loss_value, D_loss_value,
                                examples_per_sec, sec_per_batch))
           start_time = time.time()
         
