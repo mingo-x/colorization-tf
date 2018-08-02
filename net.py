@@ -38,15 +38,15 @@ class Net(object):
 
             #self.nilboy = temp_conv
 
-            temp_conv = batch_norm('conv_{}'.format(conv_num), temp_conv,train=self.train)
+            temp_conv = batch_norm('bn_1'.format(conv_num), temp_conv,train=self.train)
             #conv2
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 64, 128], stride=1, wd=self.weight_decay)
             conv_num += 1
             
-            temp_conv = conv2d('conv_{}'.format(conv_num) + str(conv_num), temp_conv, [3, 3, 128, 128], stride=2, wd=self.weight_decay)
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 128, 128], stride=2, wd=self.weight_decay)
             conv_num += 1
 
-            temp_conv = batch_norm('conv_{}'.format(conv_num), temp_conv,train=self.train)
+            temp_conv = batch_norm('bn_2'.format(conv_num), temp_conv,train=self.train)
             #conv3
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 128, 256], stride=1, wd=self.weight_decay)
             conv_num += 1
@@ -124,7 +124,8 @@ class Net(object):
     def loss(self, scope, conv8_313, prior_boost_nongray, gt_ab_313, D_pred):
         flat_conv8_313 = tf.reshape(conv8_313, [-1, 313])
         flat_gt_ab_313 = tf.reshape(gt_ab_313, [-1,313])
-        g_loss = tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(logits=flat_conv8_313, labels=flat_gt_ab_313)) / (self.batch_size)
+        flat_gt_ab_313 = tf.stop_gradient(flat_gt_ab_313)
+        g_loss = tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits_v2(logits=flat_conv8_313, labels=flat_gt_ab_313)) / (self.batch_size)
         
         tf.summary.scalar('weight_loss', tf.add_n(tf.get_collection('losses', scope=scope)))
         #

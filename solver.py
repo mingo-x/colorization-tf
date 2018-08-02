@@ -15,7 +15,7 @@ import os
 import sys
 
 
-_LOG_FREQ = 10
+_LOG_FREQ = 1
 
 
 class Solver(object):
@@ -86,14 +86,9 @@ class Solver(object):
       # for var in tf.trainable_variables():
       #   self.summaries.append(tf.summary.histogram(var.op.name, var))
 
-      # Test the correctness of scope.
-      for v in tf.trainable_variables(scope='G'):
-        print(v.name)
-
       variable_averages = tf.train.ExponentialMovingAverage(
           0.999, self.global_step)
       variables_averages_op = variable_averages.apply(tf.trainable_variables(scope='G'))
-      exit()
 
       train_op = tf.group(apply_gradient_op, variables_averages_op)
 
