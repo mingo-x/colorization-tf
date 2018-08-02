@@ -53,13 +53,13 @@ class Solver(object):
       self.D_fake_pred = self.net.discriminator(ab_fake)
       self.D_real_pred = self.net.discriminator(ab_real)
 
-      new_loss, g_loss = self.net.loss(scope, self.conv8_313, self.prior_boost_nongray, self.gt_ab_313, self.D_fake)
+      new_loss, g_loss, adv_loss = self.net.loss(scope, self.conv8_313, self.prior_boost_nongray, self.gt_ab_313, self.D_fake)
       tf.summary.scalar('new_loss', new_loss)
       tf.summary.scalar('total_loss', g_loss)
 
       D_loss = self.net.discriminator_loss(self.D_real_pred, self.D_fake_pred)
       tf.summary.scalar('D loss', D_loss)
-    return new_loss, g_loss, D_loss
+    return new_loss, g_loss, adv_loss, D_loss
 
   def train_model(self):
     with tf.device('/gpu:' + str(self.device_id)):
@@ -69,7 +69,7 @@ class Solver(object):
       opt = tf.train.AdamOptimizer(learning_rate=learning_rate, beta1=0.9, beta2=0.99)
       D_opt = tf.train.AdamOptimizer(learning_rate=learning_rate, beta1=0.9, beta2=0.99)
       with tf.name_scope('gpu') as scope:
-        new_loss, self.total_loss, self.D_loss = self.construct_graph(scope)
+        new_loss, self.total_loss, self.adv_loss, self.D_loss = self.construct_graph(scope)
         self.summaries = tf.get_collection(tf.GraphKeys.SUMMARIES, scope)
       grads = opt.compute_gradients(new_loss)
       D_grads = D_opt.compute_gradients(self.D_loss)
@@ -121,7 +121,7 @@ class Solver(object):
         _, D_loss_value = sess.run([D_apply_gradient_op, self.D_loss], feed_dict={self.data_l: data_l, self.data_l_real: data_l_real})
         t3 = time.time()
         # Generator training.
-        _, loss_value = sess.run([train_op, self.total_loss], feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
+        _, loss_value, adv_loss_value = sess.run([train_op, self.total_loss, self.adv_loss], feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
         t4 = time.time()
         print('io: ' + str(t2 - t1) + '; D: ' + str(t3 - t2) + '; G: ' + str(t4 - t3))
 
@@ -134,9 +134,9 @@ class Solver(object):
           examples_per_sec = num_examples_per_step / duration
           sec_per_batch = duration / (self.num_gpus * _LOG_FREQ)
 
-          format_str = ('%s: step %d, G loss = %.2f, D loss = %0.2f (%.1f examples/sec; %.3f '
+          format_str = ('%s: step %d, G loss = %.2f, adv loss = %.2f, D loss = %0.2f (%.1f examples/sec; %.3f '
                         'sec/batch)')
-          print (format_str % (datetime.now(), step, loss_value, D_loss_value,
+          print (format_str % (datetime.now(), step, loss_value, adv_loss_value, D_loss_value,
                                examples_per_sec, sec_per_batch))
           start_time = time.time()
         

@@ -137,7 +137,7 @@ class Net(object):
         adv_loss = -tf.reduce_sum(D_pred) / self.batch_size
         new_loss += self.alpha * adv_loss
 
-        return new_loss, g_loss
+        return new_loss, g_loss, adv_loss
 
     def discriminator(self, data_ab):
         '''
