@@ -140,7 +140,7 @@ class Solver(object):
           start_time = time.time()
         
         if step % 10 == 0:
-          summary_str = sess.run(summary_op, feed_dict={self.data_l:data_l, self.data_l_real: data_l_real, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
+          summary_str = sess.run(summary_op, feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.conv8_313_real: conv8_313_real})
           summary_writer.add_summary(summary_str, step)
 
         # Save the model checkpoint periodically.
