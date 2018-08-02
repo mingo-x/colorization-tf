@@ -91,6 +91,7 @@ class Solver(object):
       variables_averages_op = variable_averages.apply(tf.trainable_variables(scope='G'))
 
       train_op = tf.group(apply_gradient_op, variables_averages_op)
+      losses = tf.group(self.total_loss, self.adv_loss, self.D_loss)
 
       saver = tf.train.Saver(write_version=tf.train.SaverDef.V2)
       # saver1 = tf.train.Saver()
@@ -113,10 +114,10 @@ class Solver(object):
         _, conv8_313_real, _ = self.dataset.batch()
         t2 = time.time()
         # Discriminator training.
-        _, D_loss_value = sess.run([D_apply_gradient_op, self.D_loss], feed_dict={self.data_l: data_l, self.conv8_313_real: conv8_313_real})
+        sess.run([D_apply_gradient_op], feed_dict={self.data_l: data_l, self.conv8_313_real: conv8_313_real})
         t3 = time.time()
         # Generator training.
-        _, loss_value, adv_loss_value = sess.run([train_op, self.total_loss, self.adv_loss], feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
+        sess.run([train_op], feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
         t4 = time.time()
         print('io: ' + str(t2 - t1) + '; D: ' + str(t3 - t2) + '; G: ' + str(t4 - t3))
 
@@ -129,6 +130,7 @@ class Solver(object):
           examples_per_sec = num_examples_per_step / duration
           sec_per_batch = duration / (self.num_gpus * _LOG_FREQ)
 
+          loss_value, adv_loss_value, D_loss_value = sess.run([losses], feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.conv8_313_real: conv8_313_real})
           format_str = ('%s: step %d, G loss = %.2f, adv loss = %.2f, D loss = %0.2f (%.1f examples/sec; %.3f '
                         'sec/batch)')
           print (format_str % (datetime.now(), step, loss_value, adv_loss_value, D_loss_value,
