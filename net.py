@@ -139,12 +139,12 @@ class Net(object):
 
         return new_loss, g_loss, adv_loss
 
-    def discriminator(self, data_ab):
+    def discriminator(self, data_ab, reuse=False):
         '''
         Args:
             data_ab
         '''
-        with tf.variable_scope('D'):
+        with tf.variable_scope('D', reuse=reuse):
             data_ab = tf.stop_gradient(data_ab)
             original_shape = tf.shape(data_ab)
 

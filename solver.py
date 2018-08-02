@@ -51,7 +51,7 @@ class Solver(object):
       self.conv8_313_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 313))
       ab_real = self.net.conv313_to_ab(self.conv8_313_real)
       self.D_fake_pred = self.net.discriminator(ab_fake)
-      self.D_real_pred = self.net.discriminator(ab_real)
+      self.D_real_pred = self.net.discriminator(ab_real, True)  # Reuse the variables.
 
       new_loss, g_loss, adv_loss = self.net.loss(scope, self.conv8_313, self.prior_boost_nongray, self.gt_ab_313, self.D_fake)
       tf.summary.scalar('new_loss', new_loss)
