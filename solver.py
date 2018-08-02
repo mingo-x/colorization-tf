@@ -121,9 +121,6 @@ class Solver(object):
         t4 = time.time()
         print('io: ' + str(t2 - t1) + '; D: ' + str(t3 - t2) + '; G: ' + str(t4 - t3))
 
-        assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
-        assert not np.isnan(D_loss_value), 'Discriminator diverged with loss = NaN'
-
         if step % _LOG_FREQ == 0:
           duration = time.time() - start_time
           num_examples_per_step = self.batch_size * self.num_gpus * _LOG_FREQ
@@ -131,6 +128,9 @@ class Solver(object):
           sec_per_batch = duration / (self.num_gpus * _LOG_FREQ)
 
           loss_value, adv_loss_value, D_loss_value = sess.run([losses], feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.conv8_313_real: conv8_313_real})
+          assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
+          assert not np.isnan(adv_loss_value), 'Adversarial diverged with loss = NaN'
+          assert not np.isnan(D_loss_value), 'Discriminator diverged with loss = NaN'
           format_str = ('%s: step %d, G loss = %.2f, adv loss = %.2f, D loss = %0.2f (%.1f examples/sec; %.3f '
                         'sec/batch)')
           print (format_str % (datetime.now(), step, loss_value, adv_loss_value, D_loss_value,
