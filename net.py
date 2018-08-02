@@ -23,6 +23,7 @@ class Net(object):
           self.batch_size = int(int(common_params['batch_size'])/gpu_nums)
         if net_params:
           self.weight_decay = float(net_params['weight_decay'])
+          self.alpha = float(net_params['alpha'])
 
     def inference(self, data_l):
         scope = 'G'
@@ -134,7 +135,7 @@ class Net(object):
 
         # Adversarial loss.
         adv_loss = -tf.reduce_sum(D_pred) / self.batch_size
-        new_loss += adv_loss
+        new_loss += self.alpha * adv_loss
 
         return new_loss, g_loss
 
