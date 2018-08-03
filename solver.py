@@ -109,17 +109,18 @@ class Solver(object):
       start_time = time.time()
       for step in xrange(self.max_steps):
 
-        # t1 = time.time()
+        t1 = time.time()
         data_l, gt_ab_313, prior_boost_nongray, _ = self.dataset.batch()
         _, _, _, data_ab_real = self.dataset.batch()
-        # t2 = time.time()
+        t2 = time.time()
+        if t2 - t1 > 0.05:
+          print ('step: {0} io: {1}'.format(step, t2 - t1))
         # Discriminator training.
         sess.run([D_apply_gradient_op], feed_dict={self.data_l: data_l, self.data_ab_real: data_ab_real})
         # t3 = time.time()
         # Generator training.
         sess.run([train_op], feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
         # t4 = time.time()
-        # print('io: ' + str(t2 - t1) + '; D: ' + str(t3 - t2) + '; G: ' + str(t4 - t3))
 
         if step % _LOG_FREQ == 0:
           duration = time.time() - start_time
