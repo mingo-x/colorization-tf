@@ -10,14 +10,18 @@ parser.add_option("-c", "--conf", dest="configure",
                   help="configure filename")
 (options, args) = parser.parse_args() 
 if options.configure:
-  conf_file = str(options.configure)
+    conf_file = str(options.configure)
 else:
-  print('please specify --conf configure filename')
-  exit(0)
+    print('please specify --conf configure filename')
+    exit(0)
+
+with open(conf_file, 'r'):
+    for line in conf_file:
+        print(line)
 
 common_params, dataset_params, net_params, solver_params = process_config(conf_file)
 if len(str(common_params['gpus']).split(','))==1:
-  solver = Solver(True, common_params, solver_params, net_params, dataset_params)
+    solver = Solver(True, common_params, solver_params, net_params, dataset_params)
 else:
-  solver = SolverMultigpu(True, common_params, solver_params, net_params, dataset_params)
+    solver = SolverMultigpu(True, common_params, solver_params, net_params, dataset_params)
 solver.train_model()
