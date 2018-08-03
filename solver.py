@@ -50,7 +50,7 @@ class Solver(object):
       self.conv8_313 = self.net.inference(self.data_l)
       ab_fake = self.net.conv313_to_ab(self.conv8_313)
       # data_l_ss = self.data_l[:, ::4, ::4, :]
-      data_lab_fake = tf.concat([data_l, ab_fake], axis=-1)
+      data_lab_fake = tf.concat([self.data_l, ab_fake], axis=-1)
       D_fake_pred = self.net.discriminator(data_lab_fake)
       # self.data_lab_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 3))
       self.data_lab_real = tf.placeholder(tf.float32, (self.batch_size, self.height, self.width, 3))
