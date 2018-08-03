@@ -179,10 +179,12 @@ class Net(object):
         original_loss = -tf.log(original + self.eps)
         colorized_loss = -tf.log(1 - colorized + self.eps)
         total_loss = tf.reduce_sum(original_loss + colorized_loss) * 16. / (self.batch_size * 2)
+        fake_score = tf.reduce_sum(colorized) * 16. / self.batch_size
+        real_score = tf.reduce_sum(original) * 16. / self.batch_size
         # tf.summary.scalar('D_weight_loss', tf.add_n(tf.get_collection('losses', scope=scope)))
         # total_loss += tf.add_n(tf.get_collection('losses', scope=scope))
 
-        return total_loss
+        return total_loss, real_score, fake_score
 
     def conv313_to_ab(self, conv8_313, rebalance=2.63):
         '''

@@ -56,9 +56,11 @@ class Solver(object):
       tf.summary.scalar('new_loss', new_loss)
       tf.summary.scalar('total_loss', g_loss)
 
-      D_loss = self.net.discriminator_loss(self.D_real_pred, self.D_fake_pred)
+      D_loss, real_score, fake_score = self.net.discriminator_loss(self.D_real_pred, self.D_fake_pred)
       tf.summary.scalar('D loss', D_loss)
-    return new_loss, g_loss, adv_loss, D_loss
+      tf.summary.scalar('real_score', real_score)
+      tf.summary.scalar('fake_score', fake_score)
+    return new_loss, g_loss, adv_loss, D_loss, real_score, fake_score
 
   def train_model(self):
     with tf.device('/gpu:' + str(self.device_id)):
@@ -68,7 +70,7 @@ class Solver(object):
       opt = tf.train.AdamOptimizer(learning_rate=learning_rate, beta1=0.9, beta2=0.99)
       D_opt = tf.train.AdamOptimizer(learning_rate=learning_rate, beta1=0.9, beta2=0.99)
       with tf.name_scope('gpu') as scope:
-        self.new_loss, self.total_loss, self.adv_loss, self.D_loss = self.construct_graph(scope)
+        self.new_loss, self.total_loss, self.adv_loss, self.D_loss, self.real_score, self.fake_score = self.construct_graph(scope)
         self.summaries = tf.get_collection(tf.GraphKeys.SUMMARIES, scope)
       grads = opt.compute_gradients(self.new_loss)
       D_grads = D_opt.compute_gradients(self.D_loss)
@@ -125,15 +127,15 @@ class Solver(object):
           examples_per_sec = num_examples_per_step / duration
           sec_per_batch = duration / (self.num_gpus * _LOG_FREQ)
 
-          loss_value, adv_loss_value, D_loss_value = sess.run(
-            [self.total_loss, self.adv_loss, self.D_loss], 
+          loss_value, adv_loss_value, D_loss_value, real_score_value, fake_score_value = sess.run(
+            [self.total_loss, self.adv_loss, self.D_loss, self.real_score, self.fake_score], 
             feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_ab_real: data_ab_real})
-          format_str = ('%s: step %d, G loss = %.2f, adv loss = %.2f, D loss = %0.2f (%.1f examples/sec; %.3f '
+          format_str = ('%s: step %d, G loss = %.2f, adv loss = %.2f, D loss = %0.2f , real score = %0.2f, fake score = %0.2f (%.1f examples/sec; %.3f '
                         'sec/batch)')
           # assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
           # assert not np.isnan(adv_loss_value), 'Adversarial diverged with loss = NaN'
           # assert not np.isnan(D_loss_value), 'Discriminator diverged with loss = NaN'
-          print (format_str % (datetime.now(), step, loss_value, adv_loss_value, D_loss_value,
+          print (format_str % (datetime.now(), step, loss_value, adv_loss_value, D_loss_value, real_score_value, fake_score_value,
                                examples_per_sec, sec_per_batch))
           start_time = time.time()
         
