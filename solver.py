@@ -29,6 +29,7 @@ class Solver(object):
       self.batch_size = int(common_params['batch_size'])
       self.num_gpus = 1
       self.correspondence = bool(common_params['correspondence'])
+      self.ckpt = common_params['ckpt'] if 'ckpt' in common_params else None
     if solver_params:
       self.learning_rate = float(solver_params['learning_rate'])
       # self.moment = float(solver_params['moment'])
@@ -109,8 +110,13 @@ class Solver(object):
       config.gpu_options.allow_growth = True
       sess = tf.Session(config=config)
       print("Session configured.")
-      sess.run(init)
-      print("Initialized.")
+      if self.ckpt is not None:
+        saver.restore(sess, self.ckpt)
+        print(self.ckpt + " restored.")
+      else:
+        sess.run(init)
+        print("Initialized.")
+
       #saver1.restore(sess, './models/model.ckpt')
       #nilboy
       summary_writer = tf.summary.FileWriter(self.train_dir, sess.graph)
