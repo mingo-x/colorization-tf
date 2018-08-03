@@ -196,9 +196,9 @@ class Net(object):
         cc = tf.constant(cc, dtype=tf.float32)  # [313, 2]
         # cc = tf.expand_dims(cc, 0) 
         # conv8_313 = conv8_313[0, :, :, :]
+        shape = tf.shape(conv8_313)
         conv8_313_rh = conv8_313 * rebalance
-        shape = tf.shape(class8_313_rh)
-        class8_313_rh = tf.reshape(class8_313_rh, (-1, 313))  # [N*H*W/16, 313]
+        conv8_313_rh = tf.reshape(conv8_313_rh, (-1, 313))  # [N*H*W/16, 313]
         class8_313_rh = tf.nn.softmax(conv8_313_rh, axis=-1)  # [N*H*W/16, 313]
         
         data_ab = tf.matmul(class8_313_rh, cc)  # [N*H*W/16, 2]
