@@ -15,11 +15,14 @@ else:
     print('please specify --conf configure filename')
     exit(0)
 
-with open(conf_file, 'r'):
-    for line in conf_file:
-        print(line)
-
 common_params, dataset_params, net_params, solver_params = process_config(conf_file)
+
+# Log configuration.
+for key in common_params:
+    print(key, common_params[key])
+for key in net_params:
+    print(key, net_params[key])
+
 if len(str(common_params['gpus']).split(','))==1:
     solver = Solver(True, common_params, solver_params, net_params, dataset_params)
 else:
