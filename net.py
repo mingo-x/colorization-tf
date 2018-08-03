@@ -150,19 +150,19 @@ class Net(object):
             # data_ab = tf.stop_gradient(data_lab)
             # original_shape = tf.shape(data_ab)
 
-            # 44x44
+            # 176x176
             conv_num = 1
-            conv_1 = conv2d('d_conv_{}'.format(conv_num), data_lab, [4, 4, 3, 64], stride=1, wd=None)
+            conv_1 = conv2d('d_conv_{}'.format(conv_num), data_lab, [4, 4, 3, 64], stride=2, wd=None)
+
+            # 88x88
+            conv_num += 1
+            conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [4, 4, 64, 128], stride=2, wd=None)
 
             # 44x44
-            conv_num += 1
-            conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [4, 4, 64, 128], stride=1, wd=None)
-
-            # 22x22
             conv_num += 1
             conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [4, 4, 128, 256], stride=2, wd=None)
             
-            # 11x11
+            # 22x22
             conv_num += 1
             conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [4, 4, 256, 512], stride=2, wd=None)
 
@@ -202,6 +202,9 @@ class Net(object):
         class8_313_rh = tf.reshape(class8_313_rh, (-1, 313))  # [N*H*W/16, 313]
         data_ab = tf.matmul(class8_313_rh, cc)  # [N*H*W/16, 2]
         data_ab = tf.reshape(data_ab, (shape[0], shape[1], shape[2], 2))  # [N, H/4, W/4, 2]
+
+        # Upscale.
+        data_ab = tf.image.resize_images(data_ab, (shape[1]*4, shape[2]*4))  # [N, H, W, 2]
 
         return data_ab
 
