@@ -149,7 +149,8 @@ class Net(object):
         with tf.variable_scope('D', reuse=reuse):
             # data_ab = tf.stop_gradient(data_lab)
             # original_shape = tf.shape(data_ab)
-
+            
+            # Upscale.
             # 176x176
             conv_num = 1
             conv_1 = conv2d('d_conv_{}'.format(conv_num), data_lab, [4, 4, 3, 64], stride=2, wd=None)

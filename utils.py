@@ -273,6 +273,7 @@ def preprocess(data, training=True):
   prior_boost_nongray = prior_boost * nongray_mask
 
   if training:
+    # Upscale.
     return data_l, gt_ab_313, prior_boost_nongray, img_lab
   else:
     return data_l, data_ab
