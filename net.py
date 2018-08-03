@@ -141,18 +141,18 @@ class Net(object):
 
         return new_loss + self.alpha * adv_loss, g_loss, new_loss
 
-    def discriminator(self, data_ab, reuse=False):
+    def discriminator(self, data_lab, reuse=False):
         '''
         Args:
-            data_ab
+            data_lab
         '''
         with tf.variable_scope('D', reuse=reuse):
-            data_ab = tf.stop_gradient(data_ab)
+            # data_ab = tf.stop_gradient(data_lab)
             # original_shape = tf.shape(data_ab)
 
             # 44x44
             conv_num = 1
-            conv_1 = conv2d('d_conv_{}'.format(conv_num), data_ab, [4, 4, 2, 64], stride=1, wd=None)
+            conv_1 = conv2d('d_conv_{}'.format(conv_num), data_lab, [4, 4, 3, 64], stride=1, wd=None)
 
             # 44x44
             conv_num += 1
