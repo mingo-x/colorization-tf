@@ -28,6 +28,7 @@ class Solver(object):
       self.width = self.image_size
       self.batch_size = int(common_params['batch_size'])
       self.num_gpus = 1
+      self.correspondence = bool(common_params['correspondence'])
     if solver_params:
       self.learning_rate = float(solver_params['learning_rate'])
       # self.moment = float(solver_params['moment'])
@@ -117,7 +118,8 @@ class Solver(object):
 
         t1 = time.time()
         data_l, gt_ab_313, prior_boost_nongray, data_lab_real = self.dataset.batch()
-        # _, _, _, data_lab_real = self.dataset.batch()
+        if not self.correspondence:
+          _, _, _, data_lab_real = self.dataset.batch()
         t2 = time.time()
         if t2 - t1 > 0.05:
           print ('step: {0} io: {1}'.format(step, t2 - t1))
