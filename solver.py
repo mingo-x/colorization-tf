@@ -72,7 +72,11 @@ class Solver(object):
 
   def train_model(self):
     with tf.device('/gpu:' + str(self.device_id)):
-      self.global_step = tf.get_variable('global_step', [], initializer=tf.constant_initializer(0), trainable=False)
+      start_step = 0
+      if self.ckpt is not None:
+        ckpt_name = os.path.split(self.ckpt)
+        start_step = int(ckpt_name.split('-')[1])
+      self.global_step = tf.get_variable('global_step', [], initializer=tf.constant_initializer(start_step), trainable=False)
       learning_rate = tf.train.exponential_decay(self.learning_rate, self.global_step,
                                            self.decay_steps, self.lr_decay, staircase=True)
       opt = tf.train.AdamOptimizer(learning_rate=learning_rate, beta1=0.9, beta2=0.99)
