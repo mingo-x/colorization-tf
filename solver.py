@@ -99,7 +99,7 @@ class Solver(object):
       #     self.summaries.append(tf.summary.histogram(var.op.name + '/gradients', grad))
 
       apply_gradient_op = opt.apply_gradients(grads, global_step=self.global_step)
-      D_apply_gradient_op = D_opt.apply_gradients(D_grads, global_step=self.global_step)
+      D_apply_gradient_op = D_opt.apply_gradients(D_grads)
 
       # for var in tf.trainable_variables():
       #   self.summaries.append(tf.summary.histogram(var.op.name, var))
