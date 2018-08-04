@@ -135,9 +135,15 @@ class Solver(object):
           print ('step: {0} io: {1}'.format(step, t2 - t1))
         # Discriminator training.
         sess.run([D_apply_gradient_op], feed_dict={self.data_l: data_l, self.data_lab_real: data_lab_real})
+        if step % _LOG_FREQ == 0:
+          fake_score_value_1 = sess.run([self.fake_score], 
+            feed_dict={self.data_l:data_l, self.data_lab_real: data_lab_real})
         # t3 = time.time()
         # Generator training.
         sess.run([train_op], feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
+        if step % _LOG_FREQ == 0:
+          fake_score_value_2 = sess.run([self.fake_score], 
+            feed_dict={self.data_l:data_l, self.data_lab_real: data_lab_real})
         # t4 = time.time()
 
         if step % _LOG_FREQ == 0:
@@ -146,15 +152,15 @@ class Solver(object):
           examples_per_sec = num_examples_per_step / duration
           sec_per_batch = duration / (self.num_gpus * _LOG_FREQ)
 
-          loss_value, new_loss_value, real_score_value, fake_score_value = sess.run(
-            [self.total_loss, self.new_loss, self.real_score, self.fake_score], 
+          loss_value, new_loss_value, real_score_value = sess.run(
+            [self.total_loss, self.new_loss, self.real_score], 
             feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_lab_real: data_lab_real})
-          format_str = ('%s: step %d, G loss = %.2f, new loss = %.2f, real score = %0.2f, fake score = %0.2f (%.1f examples/sec; %.3f '
+          format_str = ('%s: step %d, G loss = %.2f, new loss = %.2f, real score = %0.2f, fake score 1 = %0.2f, fake score 2 = %0.2f (%.1f examples/sec; %.3f '
                         'sec/batch)')
           # assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
           # assert not np.isnan(adv_loss_value), 'Adversarial diverged with loss = NaN'
           # assert not np.isnan(D_loss_value), 'Discriminator diverged with loss = NaN'
-          print (format_str % (datetime.now(), step, loss_value, new_loss_value, real_score_value, fake_score_value,
+          print (format_str % (datetime.now(), step, loss_value, new_loss_value, real_score_value, fake_score_value_1, fake_score_value_2,
                                examples_per_sec, sec_per_batch))
           start_time = time.time()
         
