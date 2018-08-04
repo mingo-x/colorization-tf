@@ -164,7 +164,7 @@ class Net(object):
             conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [4, 4, 128, 256], stride=2, wd=None)
             
             # 22x22
-            # conv_num += 1
+            conv_num += 1
             conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [4, 4, 256, 512], stride=2, wd=None)
 
             # 11x11

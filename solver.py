@@ -78,6 +78,7 @@ class Solver(object):
         ckpt_name = os.path.split(self.ckpt)[1]
         start_step = int(ckpt_name.split('-')[1])
       self.global_step = tf.get_variable('global_step', [], initializer=tf.constant_initializer(start_step), trainable=False)
+      print("Global step: {}".format(self.global_step))
       learning_rate = tf.train.exponential_decay(self.learning_rate, self.global_step,
                                            self.decay_steps, self.lr_decay, staircase=True)
       opt = tf.train.AdamOptimizer(learning_rate=learning_rate, beta1=0.9, beta2=0.99)
