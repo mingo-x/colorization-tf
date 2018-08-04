@@ -136,13 +136,13 @@ class Solver(object):
         # Discriminator training.
         sess.run([D_apply_gradient_op], feed_dict={self.data_l: data_l, self.data_lab_real: data_lab_real})
         if step % _LOG_FREQ == 0:
-          fake_score_value_1 = sess.run([self.fake_score], 
+          fake_score_value_1 = sess.run(self.fake_score, 
             feed_dict={self.data_l:data_l, self.data_lab_real: data_lab_real})
         # t3 = time.time()
         # Generator training.
         sess.run([train_op], feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
         if step % _LOG_FREQ == 0:
-          fake_score_value_2 = sess.run([self.fake_score], 
+          fake_score_value_2 = sess.run(self.fake_score, 
             feed_dict={self.data_l:data_l, self.data_lab_real: data_lab_real})
         # t4 = time.time()
 
