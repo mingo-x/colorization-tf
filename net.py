@@ -25,6 +25,7 @@ class Net(object):
         if net_params:
           self.weight_decay = float(net_params['weight_decay'])
           self.alpha = float(net_params['alpha'])
+          print('Adversarial weight {}'.format(self.alpha))
 
     def inference(self, data_l):
         with tf.variable_scope('G'):
