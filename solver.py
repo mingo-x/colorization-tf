@@ -166,7 +166,7 @@ class Solver(object):
           # assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
           # assert not np.isnan(adv_loss_value), 'Adversarial diverged with loss = NaN'
           # assert not np.isnan(D_loss_value), 'Discriminator diverged with loss = NaN'
-          print (format_str % (datetime.now(), step, loss_value, new_loss_value, adv_loss_value, real_score_value, fake_score_value,
+          print (format_str % (datetime.now(), step, loss_value, new_loss_value, real_score_value, fake_score_value,
                                examples_per_sec, sec_per_batch))
           start_time = time.time()
         
