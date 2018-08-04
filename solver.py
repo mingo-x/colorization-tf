@@ -74,7 +74,7 @@ class Solver(object):
     with tf.device('/gpu:' + str(self.device_id)):
       start_step = 0
       if self.ckpt is not None:
-        ckpt_name = os.path.split(self.ckpt)
+        ckpt_name = os.path.split(self.ckpt)[1]
         start_step = int(ckpt_name.split('-')[1])
       self.global_step = tf.get_variable('global_step', [], initializer=tf.constant_initializer(start_step), trainable=False)
       learning_rate = tf.train.exponential_decay(self.learning_rate, self.global_step,
