@@ -77,7 +77,6 @@ class Solver(object):
       if self.ckpt is not None:
         ckpt_name = os.path.split(self.ckpt)[1]
         start_step = int(ckpt_name.split('-')[1])
-      start_step = 148000
       self.global_step = tf.get_variable('global_step', [], initializer=tf.constant_initializer(0), trainable=False)
       learning_rate = tf.train.exponential_decay(self.learning_rate, self.global_step,
                                            self.decay_steps, self.lr_decay, staircase=True)
