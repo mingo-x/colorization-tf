@@ -169,7 +169,8 @@ class Net(object):
 
             # 11x11
             conv_num += 1
-            conv_5 = conv2d('d_conv_{}'.format(conv_num), conv_4, [4, 4, 256, 1], stride=1, relu=False, wd=None, sigmoid=True)
+            # Upscale.
+            conv_5 = conv2d('d_conv_{}'.format(conv_num), conv_4, [4, 4, 512, 1], stride=1, relu=False, wd=None, sigmoid=True)
             
             # upsampled_output = tf.image.resize_images(conv_5, original_shape[1:3], method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
 
