@@ -153,13 +153,13 @@ class Net(object):
             # Upscale.
             # 176x176
             conv_num = 1
-            conv_1 = conv2d('d_conv_{}'.format(conv_num), data_lab, [4, 4, 3, 64], stride=1, wd=None)
+            conv_1 = conv2d('d_conv_{}'.format(conv_num), data_lab, [4, 4, 3, 64], stride=2, wd=None)
             # conv_1 = conv2d('d_conv_{}'.format(conv_num), data_lab, [4, 4, 3, 64], stride=2, wd=None)
 
             # 88x88
             conv_num += 1
             # Upscale.
-            conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [4, 4, 64, 128], stride=1, wd=None)
+            conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [4, 4, 64, 128], stride=2, wd=None)
             # conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [4, 4, 64, 128], stride=2, wd=None)
 
             # 44x44

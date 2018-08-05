@@ -51,14 +51,14 @@ class Solver(object):
       self.conv8_313 = self.net.inference(self.data_l)
       ab_fake = self.net.conv313_to_ab(self.conv8_313)
       # Upscale.
-      data_l_ss = self.data_l[:, ::4, ::4, :]
+      # data_l_ss = self.data_l[:, ::4, ::4, :]
       # Upscale.
-      data_lab_fake = tf.concat([data_l_ss, ab_fake], axis=-1)
-      # data_lab_fake = tf.concat([self.data_l, ab_fake], axis=-1)
+      # data_lab_fake = tf.concat([data_l_ss, ab_fake], axis=-1)
+      data_lab_fake = tf.concat([self.data_l, ab_fake], axis=-1)
       D_fake_pred = self.net.discriminator(data_lab_fake)
       # Upscale.
-      self.data_lab_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 3))
-      # self.data_lab_real = tf.placeholder(tf.float32, (self.batch_size, self.height, self.width, 3))
+      # self.data_lab_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 3))
+      self.data_lab_real = tf.placeholder(tf.float32, (self.batch_size, self.height, self.width, 3))
       self.D_real_pred = self.net.discriminator(self.data_lab_real, True)  # Reuse the variables.
 
       new_loss, g_loss, adv_loss = self.net.loss(scope, self.conv8_313, self.prior_boost_nongray, self.gt_ab_313, D_fake_pred)
@@ -73,10 +73,6 @@ class Solver(object):
 
   def train_model(self):
     with tf.device('/gpu:' + str(self.device_id)):
-      start_step = 0
-      if self.ckpt is not None:
-        ckpt_name = os.path.split(self.ckpt)[1]
-        start_step = int(ckpt_name.split('-')[1])
       self.global_step = tf.get_variable('global_step', [], initializer=tf.constant_initializer(0), trainable=False)
       learning_rate = tf.train.exponential_decay(self.learning_rate, self.global_step,
                                            self.decay_steps, self.lr_decay, staircase=True)
@@ -111,7 +107,6 @@ class Solver(object):
       train_op = tf.group(apply_gradient_op, variables_averages_op)
 
       saver = tf.train.Saver(write_version=tf.train.SaverDef.V2)
-      # saver1 = tf.train.Saver()
       summary_op = tf.summary.merge(self.summaries)
       init =  tf.global_variables_initializer()
       config = tf.ConfigProto(allow_soft_placement=True)
@@ -121,20 +116,16 @@ class Solver(object):
       if self.ckpt is not None:
         saver.restore(sess, self.ckpt)
         print(self.ckpt + " restored.")
+        start_step = sess.run(self.global_step)
+        print("Global step: {}".format(start_step))
       else:
         sess.run(init)
         print("Initialized.")
+        start_step = 0
 
-      print("Global step: {}".format(sess.run(self.global_step)))
-      sess.run(self.global_step.assign(start_step))
-      print("Global step: {}".format(sess.run(self.global_step)))
-
-      #saver1.restore(sess, './models/model.ckpt')
-      #nilboy
       summary_writer = tf.summary.FileWriter(self.train_dir, sess.graph)
       start_time = time.time()
       for step in xrange(start_step, self.max_steps):
-
         t1 = time.time()
         data_l, gt_ab_313, prior_boost_nongray, data_lab_real = self.dataset.batch()
         if not self.correspondence:

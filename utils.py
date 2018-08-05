@@ -274,8 +274,8 @@ def preprocess(data, training=True):
 
   if training:
     # Upscale.
-    return data_l, gt_ab_313, prior_boost_nongray, img_lab[:, ::4, ::4, :]
-    # return data_l, gt_ab_313, prior_boost_nongray, img_lab
+    # return data_l, gt_ab_313, prior_boost_nongray, img_lab[:, ::4, ::4, :]
+    return data_l, gt_ab_313, prior_boost_nongray, img_lab
   else:
     return data_l, data_ab
 
