@@ -128,11 +128,12 @@ class Solver(object):
 
       summary_writer = tf.summary.FileWriter(self.train_dir, sess.graph)
       start_time = time.time()
+      _, _, _, data_lab_real = self.dataset.batch()
       for step in xrange(start_step, self.max_steps):
         t1 = time.time()
-        data_l, gt_ab_313, prior_boost_nongray, data_lab_real = self.dataset.batch()
-        if not self.correspondence:
-          _, _, _, data_lab_real = self.dataset.batch()
+        data_l, gt_ab_313, prior_boost_nongray, _ = self.dataset.batch()
+        # if not self.correspondence:
+        #   _, _, _, data_lab_real = self.dataset.batch()
         t2 = time.time()
         if t2 - t1 > 0.05:
           print ('step: {0} io: {1}'.format(step, t2 - t1))
