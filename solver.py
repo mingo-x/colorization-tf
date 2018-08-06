@@ -138,7 +138,7 @@ class Solver(object):
         if t2 - t1 > 0.05:
           print ('step: {0} io: {1}'.format(step, t2 - t1))
         # Discriminator training.
-        # sess.run([D_apply_gradient_op], feed_dict={self.data_l: data_l, self.data_lab_real: data_lab_real})
+        sess.run([D_apply_gradient_op], feed_dict={self.data_l: data_l, self.data_lab_real: data_lab_real})
         # if step % _LOG_FREQ == 0:
         #   fake_score_value_1 = sess.run(self.fake_score, 
         #     feed_dict={self.data_l:data_l, self.data_lab_real: data_lab_real})
