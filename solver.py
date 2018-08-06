@@ -28,7 +28,8 @@ class Solver(object):
       self.width = self.image_size
       self.batch_size = int(common_params['batch_size'])
       self.num_gpus = 1
-      self.correspondence = bool(common_params['correspondence'])
+      self.correspondence = common_params['correspondence'] == "1"
+      print('correspondence ', self.correspondence)
       self.ckpt = common_params['ckpt'] if 'ckpt' in common_params else None
     if solver_params:
       self.learning_rate = float(solver_params['learning_rate'])
@@ -137,7 +138,7 @@ class Solver(object):
         if t2 - t1 > 0.05:
           print ('step: {0} io: {1}'.format(step, t2 - t1))
         # Discriminator training.
-        # sess.run([D_apply_gradient_op], feed_dict={self.data_l: data_l, self.data_lab_real: data_lab_real})
+        sess.run([D_apply_gradient_op], feed_dict={self.data_l: data_l, self.data_lab_real: data_lab_real})
         # if step % _LOG_FREQ == 0:
         #   fake_score_value_1 = sess.run(self.fake_score, 
         #     feed_dict={self.data_l:data_l, self.data_lab_real: data_lab_real})

@@ -26,6 +26,8 @@ class Net(object):
           self.weight_decay = float(net_params['weight_decay'])
           self.alpha = float(net_params['alpha'])
           print('Adversarial weight {}'.format(self.alpha))
+          self.easy = True if net_params['easy'] == '1' else False
+          print('Discriminator easy {}'.format(self.easy))
 
     def inference(self, data_l):
         with tf.variable_scope('G'):
@@ -148,35 +150,52 @@ class Net(object):
             data_lab
         '''
         with tf.variable_scope('D', reuse=reuse):
-            # data_ab = tf.stop_gradient(data_lab)
-            # original_shape = tf.shape(data_ab)
-            # Upscale.
-            # 176x176
-            conv_num = 1
-            conv_1 = conv2d('d_conv_{}'.format(conv_num), data_lab, [4, 4, 3, 64], stride=1, wd=None)
-            # conv_1 = conv2d('d_conv_{}'.format(conv_num), data_lab, [4, 4, 3, 64], stride=2, wd=None)
+            if self.easy:
+                # 44x44
+                conv_num = 1
+                conv_1 = conv2d('d_conv_{}'.format(conv_num), data_lab, [4, 4, 3, 64], stride=2, wd=None)
 
-            # 88x88
-            conv_num += 1
-            # Upscale.
-            conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [4, 4, 64, 128], stride=1, wd=None)
-            # conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [4, 4, 64, 128], stride=2, wd=None)
+                # 22x22
+                conv_num += 1
+                conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [4, 4, 64, 128], stride=2, wd=None)
 
-            # 44x44
-            conv_num += 1
-            conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [4, 4, 128, 256], stride=2, wd=None)
-            
-            # 22x22
-            conv_num += 1
-            conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [4, 4, 256, 512], stride=2, wd=None)
+                # 11x11
+                conv_num += 1
+                conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [4, 4, 128, 1], stride=1, relu=False, wd=None, sigmoid=True)
 
-            # 11x11
-            conv_num += 1
-            conv_5 = conv2d('d_conv_{}'.format(conv_num), conv_4, [4, 4, 512, 1], stride=1, relu=False, wd=None, sigmoid=True)
-            
-            # upsampled_output = tf.image.resize_images(conv_5, original_shape[1:3], method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+                discriminator = conv_3
+            else:
+                # data_ab = tf.stop_gradient(data_lab)
+                # original_shape = tf.shape(data_ab)
+                # Upscale.
+                # 176x176
+                conv_num = 1
+                conv_1 = conv2d('d_conv_{}'.format(conv_num), data_lab, [4, 4, 3, 64], stride=1, wd=None)
+                # conv_1 = conv2d('d_conv_{}'.format(conv_num), data_lab, [4, 4, 3, 64], stride=2, wd=None)
 
-        return conv_5
+                # 88x88
+                conv_num += 1
+                # Upscale.
+                conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [4, 4, 64, 128], stride=1, wd=None)
+                # conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [4, 4, 64, 128], stride=2, wd=None)
+
+                # 44x44
+                conv_num += 1
+                conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [4, 4, 128, 256], stride=2, wd=None)
+                
+                # 22x22
+                conv_num += 1
+                conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [4, 4, 256, 512], stride=2, wd=None)
+
+                # 11x11
+                conv_num += 1
+                conv_5 = conv2d('d_conv_{}'.format(conv_num), conv_4, [4, 4, 512, 1], stride=1, relu=False, wd=None, sigmoid=True)
+                
+                # upsampled_output = tf.image.resize_images(conv_5, original_shape[1:3], method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+
+                discriminator = conv_5
+
+        return discriminator
 
 
     def discriminator_loss(self, original, colorized):

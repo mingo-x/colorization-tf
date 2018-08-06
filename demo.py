@@ -57,7 +57,7 @@ def main():
     saver = tf.train.Saver()
 
     with tf.Session() as sess:
-        saver.restore(sess, '/srv/glusterfs/xieya/colorization-gan/models/model.ckpt-351000')
+        saver.restore(sess, '/srv/glusterfs/xieya/colorization-gan/models/model.ckpt-356000')
         for img_name in os.listdir(IMG_DIR):
             if img_name.endswith('.jpg') or img_name.endswith('.JPEG'):
                 print(img_name)
