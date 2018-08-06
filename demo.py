@@ -8,6 +8,7 @@ INPUT_SIZE = 224
 _RESIZE_SIZE = 0
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
 OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/colorization_test'
+T = 2.63
 
 def _resize(img, resize_size=0):
     if resize_size > 0:
@@ -46,7 +47,7 @@ def _colorize_single_img(img_name, model, input_tensor, sess):
     img_l = (img_l.astype(dtype=np.float32)) / 255.0 * 100 - 50
     img_l_rs = (img_l_rs.astype(dtype=np.float32)) / 255.0 * 100 - 50
     img_313_rs = sess.run(model,  feed_dict={input_tensor: img_l_rs})
-    img_rgb, _ = decode(img_l, img_313_rs, 2.63)
+    img_rgb, _ = decode(img_l, img_313_rs, T)
     imsave(os.path.join(OUTPUT_DIR, img_name), img_rgb)
 
 
@@ -56,7 +57,7 @@ def main():
     saver = tf.train.Saver()
 
     with tf.Session() as sess:
-        saver.restore(sess, '/srv/glusterfs/xieya/colorization-gan/models/model.ckpt-10000')
+        saver.restore(sess, '/srv/glusterfs/xieya/colorization-gan/models/model.ckpt-351000')
         for img_name in os.listdir(IMG_DIR):
             if img_name.endswith('.jpg') or img_name.endswith('.JPEG'):
                 print(img_name)
