@@ -170,7 +170,7 @@ class PriorFactor():
         self.prior_mix = (1-self.gamma)*self.prior_probs + self.gamma*self.uni_probs
 
         # set prior factor
-        self.prior_factor = (self.prior_mix + 1e-6)**-self.alpha
+        self.prior_factor = self.prior_mix**-self.alpha
         self.prior_factor = self.prior_factor/np.sum(self.prior_probs*self.prior_factor) # re-normalize
 
         # implied empirical prior
@@ -208,7 +208,7 @@ def _prior_boost(gt_ab_313, gamma=0.5, alpha=1.0):
   gamma = gamma
   alpha = alpha
 
-  pc = PriorFactor(alpha, gamma, priorFile='/srv/glusterfs/xieya/prior/probs_0.npy')
+  pc = PriorFactor(alpha, gamma, priorFile=os.path.join(enc_dir, 'prior_probs.npy'))
 
   gt_ab_313 = np.transpose(gt_ab_313, (0, 3, 1, 2))
   prior_boost = pc.forward(gt_ab_313, axis=1)
