@@ -29,6 +29,8 @@ from skimage import color
 from skimage.transform import resize
 from multiprocessing import Pool
 
+import utils
+
 
 _NUM_TASKS = 1
 _IMG_PATHS = '/home/xieya/img_list.txt'
@@ -80,7 +82,7 @@ def _calculate_prior(img_path, points, probs):
   # nd_index = _get_index(img_ab, points)
   # for i in nd_index:
     # probs[i] += 1
-  gt_ab_313 = _nnencode(img_ab)
+  gt_ab_313 = utils._nnencode(img_ab)
   probs += np.sum(gt_ab_313, axis=(0, 1, 2))
 
 
