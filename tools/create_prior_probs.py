@@ -75,11 +75,13 @@ def _calculate_prior(img_path, points, probs):
     return probs
   img_lab = color.rgb2lab(img)
   # print(img_lab[:, :, 1:])
-  img_lab = img_lab.reshape((-1, 3))
-  img_ab = img_lab[:, 1:]
-  nd_index = _get_index(img_ab, points)
-  for i in nd_index:
-    probs[i] += 1
+  # img_lab = img_lab.reshape((-1, 3))
+  img_ab = img_lab[None:, :, :, 1:]
+  # nd_index = _get_index(img_ab, points)
+  # for i in nd_index:
+    # probs[i] += 1
+  gt_ab_313 = _nnencode(img_ab)
+  probs += np.sum(gt_ab_313, axis=(0, 1, 2))
 
 
 def main():
