@@ -170,7 +170,7 @@ class PriorFactor():
         self.prior_mix = (1-self.gamma)*self.prior_probs + self.gamma*self.uni_probs
 
         # set prior factor
-        self.prior_factor = self.prior_mix**-self.alpha
+        self.prior_factor = (self.prior_mix + 1e-6)**-self.alpha
         self.prior_factor = self.prior_factor/np.sum(self.prior_probs*self.prior_factor) # re-normalize
 
         # implied empirical prior
