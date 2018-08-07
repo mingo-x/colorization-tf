@@ -174,8 +174,8 @@ class PriorFactor():
         self.prior_factor = self.prior_factor/np.sum(self.prior_probs*self.prior_factor) # re-normalize
 
         # implied empirical prior
-        self.implied_prior = self.prior_probs*self.prior_factor
-        self.implied_prior = self.implied_prior/np.sum(self.implied_prior) # re-normalize
+        # self.implied_prior = self.prior_probs*self.prior_factor
+        # self.implied_prior = self.implied_prior/np.sum(self.implied_prior) # re-normalize
 
         if(self.verbose):
             self.print_correction_stats()
