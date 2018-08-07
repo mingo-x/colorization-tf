@@ -12,3 +12,4 @@ _, data_ab = utils.preprocess(img, training=False)
 prior = utils.get_prior(data_ab)
 prior = prior[0, :, :, 0]
 e = np.sum(prior) / (prior.shape[0] * prior.shape[1])
+print(e, prior.shape)
