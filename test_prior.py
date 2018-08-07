@@ -9,7 +9,9 @@ img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 img = [img]
 img = np.asarray(img, dtype=np.uint8)
 _, data_ab = utils.preprocess(img, training=False)
+print(data_ab)
 prior = utils.get_prior(data_ab)
 prior = prior[0, :, :, 0]
+print(prior)
 e = np.sum(prior) / (prior.shape[0] * prior.shape[1])
 print(e, prior.shape)
