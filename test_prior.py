@@ -9,8 +9,8 @@ import utils
 _IMG_PATH = '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val/ILSVRC2012_val_00050000.JPEG'
 img = imread(_IMG_PATH)
 img = resize(img, (224, 224), preserve_range=True)
-img_lab = color.rgb2lab(img)
-img_ab = img_lab[:, :, 1:]
+# img_lab = color.rgb2lab(img)
+# img_ab = img_lab[:, :, 1:]
 # print(img)
 # img_ab = img_ab.reshape((-1, 2))
 # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -20,7 +20,7 @@ img = np.asarray(img)
 _, data_ab = utils.preprocess(img, training=False)
 # test_ab = data_ab.reshape((-1, 2))
 
-print(img_ab)
+# print(img_ab)
 print(data_ab)
 prior = utils.get_prior(data_ab)
 prior = prior[0, :, :, 0]
