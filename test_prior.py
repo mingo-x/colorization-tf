@@ -16,7 +16,7 @@ img_ab = img_lab[:, :, 1:]
 # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
 img = [img]
-# img = np.asarray(img, dtype=np.uint8)
+img = np.asarray(img)
 _, data_ab = utils.preprocess(img, training=False)
 # test_ab = data_ab.reshape((-1, 2))
 
