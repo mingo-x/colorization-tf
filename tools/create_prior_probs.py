@@ -76,6 +76,7 @@ def _calculate_prior(img_path, points, probs):
   img_lab = color.rgb2lab(img)
   img_lab = img_lab.reshape((-1, 3))
   img_ab = img_lab[:, 1:]
+  print(img_ab)
   nd_index = _get_index(img_ab, points)
   for i in nd_index:
     probs[i] += 1
