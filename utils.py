@@ -208,7 +208,7 @@ def _prior_boost(gt_ab_313, gamma=0.5, alpha=1.0):
   gamma = gamma
   alpha = alpha
 
-  pc = PriorFactor(alpha, gamma, priorFile='/srv/glusterfs/xieya/prior/probs_0.npy')
+  pc = PriorFactor(alpha, gamma, priorFile='/home/xieya/colorization-tf/resources/prior_probs.npy')
 
   gt_ab_313 = np.transpose(gt_ab_313, (0, 3, 1, 2))
   prior_boost = pc.forward(gt_ab_313, axis=1)
