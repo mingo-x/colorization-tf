@@ -11,14 +11,11 @@ img = imread(_IMG_PATH)
 img = resize(img, (224, 224), preserve_range=True)
 img_lab = color.rgb2lab(img)
 img_ab = img_lab[:, :, 1:]
-print(img_ab)
+print(img)
 # img_ab = img_ab.reshape((-1, 2))
 # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
 img = [img]
-img_lab = color.rgb2lab(img)
-img_ab = img_lab[0, :, :, 1:]
-print(img_ab)
 img = np.asarray(img, dtype=np.uint8)
 _, data_ab = utils.preprocess(img, training=False)
 # test_ab = data_ab.reshape((-1, 2))
