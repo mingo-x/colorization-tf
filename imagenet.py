@@ -133,9 +133,10 @@ def _validation_data(func):
 
 
 def main():
-    _validation_data(_to_gray)
-    _training_data(_to_gray)
-
+    # _validation_data(_to_gray)
+    # _training_data(_to_gray)
+    _colorize_data_wrapper('val')
+    _colorize_data_wrapper('train')
 
 if __name__ == "__main__":
     main()
