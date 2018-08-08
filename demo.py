@@ -57,18 +57,12 @@ def _colorize_single_img(img_name, model, input_tensor, sess):
     imsave(os.path.join(OUTPUT_DIR, img_name), img_rgb)
 
 
-def _unpickle(file):
-    with open(file, 'rb') as fo:
-        dict = pickle.load(fo, encoding='bytes')
-    return dict
-
-
 def _get_cifar_data(training=True):
     data = []
     if training:
         for i in range(1, 6):
             filename = '{}/data_batch_{}'.format(IMG_DIR, i)
-            batch_data = _unpickle(filename)
+            batch_data = pickle.load(open(filename, 'rb'))
             if len(data) > 0:
                 data = np.vstack((data, batch_data[b'data']))
             else:
