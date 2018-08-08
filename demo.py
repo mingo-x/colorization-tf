@@ -3,7 +3,7 @@ import tensorflow as tf
 from utils import *
 from net import Net
 from skimage.io import imsave
-from skimage import color
+from skimage import color, transform
 import cv2
 
 INPUT_SIZE = 224
@@ -87,6 +87,10 @@ def _get_cifar_data(training=True):
 def _colorize_cifar_batch(img_batch, model, input_tensor, sess):
     global _CIFAR_COUNT
 
+    # Upscale.
+    img_batch = transform.resize(img_batch, (-1, INPUT_SIZE, INPUT_SIZE, -1))
+    print(img_batch.shape)
+    exit()
     img_lab_batch = color.rgb2lab(img_batch)
     img_l_batch = img_lab_batch[:, :, :, 0:1]
     img_l_batch = img_l_batch - 50.
