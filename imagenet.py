@@ -91,7 +91,7 @@ def _colorize_data_wrapper(phase):
 
             img_names_batch = img_names[i * _BATCH_SIZE: min(len(img_names), (i + 1) * _BATCH_SIZE)]
             img_paths_batch = map(lambda x: os.path.join(in_dir, x), img_names_batch)
-            _colorize(img_paths, out_dir, model, input_tensor, sess)
+            _colorize(img_paths_batch, out_dir, model, input_tensor, sess)
 
 def _log(curr_idx):
     if (curr_idx / _TASK_NUM) % _LOG_FREQ == 0:
