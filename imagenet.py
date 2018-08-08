@@ -76,7 +76,7 @@ def _colorize_data_wrapper(phase):
     img_names = os.listdir(in_dir)
 
     input_tensor = tf.placeholder(
-        tf.float32, shape=(1, INPUT_SIZE, INPUT_SIZE, 1))
+        tf.float32, shape=(_BATCH_SIZE, _INPUT_SIZE, _INPUT_SIZE, 1))
     model = demo._get_model(input_tensor)
     saver = tf.train.Saver()
 
