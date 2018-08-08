@@ -27,11 +27,39 @@ if _TASK_ID is not None:
     print("Task id: {}".format(_TASK_ID))
     _TASK_ID = int(_TASK_ID) - 1
 
+_COLOR_DIR = '/srv/glusterfs/xieya/data/imagenet_colorized/'
 _GRAY_DIR = '/srv/glusterfs/xieya/data/imagenet_gray/'
 _IMG_LIST_PATH = '/home/xieya/colorization-tf/data/train.txt'
 _LOG_FREQ = 100
 _VAL_DIR = '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val'
 _TASK_NUM = 100
+_BATCH_SIZE = 32
+_INPUT_SIZE = 224
+
+
+def _colorize(img_paths):
+    img_l_batch = []
+    img_l_rs_batch = []
+    for img_path in img_paths:
+        img = cv2.imread(img_path)
+        img_rs = cv2.resize(img, (_INPUT_SIZE, _INPUT_SIZE))
+
+        # Input gray image.
+        img_l = img[:, :, None]
+        img_l_rs = img_rs[:, :, None]
+        img_l = (img_l.astype(dtype=np.float32)) / 255. * 100 - 50
+        img_l_rs = (img_l_rs.astype(dtype=np.float32)) / 255.0 * 100 - 50
+
+        img_l_batch.append(img_l)
+        img_l_rs_batch.append(img_l_rs)
+    img_l_batch = np.asarray(img_l_batch)
+    img_l_rs_batch = np.asarray(img_l_rs_batch)
+
+    img_313_rs_batch = sess.run(model, feed_dict={input_tensor: img_l_rs_batch})
+    for i in xrange(_BATCH_SIZE):
+        img_rgb, _ = decode(img_l_batch[i: i + 1], img_313_rs_batch[i: i + 1], T)
+        img_name = os.path.split(img_paths[i])[1]
+        imsave(os.path.join(OUTPUT_DIR, img_name), img_rgb)
 
 
 def _log(curr_idx):
