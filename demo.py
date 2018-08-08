@@ -97,7 +97,7 @@ def _colorize_cifar_batch(img_batch, model, input_tensor, sess):
         img_l = img_l_batch[i]
         img_l = img_l[None, :, :, :]
         img_rgb, _ = decode(img_l, img_313, T)
-        imsave(os.path.join(OUTPUT_DIR, str(_CIFAR_COUNT).zfill(5)), img_rgb)
+        imsave(os.path.join(OUTPUT_DIR, str(_CIFAR_COUNT).zfill(5)+'.jpg'), img_rgb)
         _CIFAR_COUNT += 1
     print('Progress: {}'.format(_CIFAR_COUNT))
 
