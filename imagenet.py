@@ -17,6 +17,7 @@
 
 #$ -j y
 
+import functools
 from multiprocessing import Pool
 import os
 import sys
@@ -122,6 +123,11 @@ def _colorize_data_train():
 
     p = Pool(8)
 
+    def save_fn(idx, img_l_batch, img_313_rs_batch, T, out_dir, img_name_batch):
+        img_l = img_l_batch[idx]
+        img_rgb, _ = utils.decode(img_l, img_313_rs_batch[idx: idx + 1], ET)
+        io.imsave(os.path.join(out_dir, img_name_batch[idx]), img_rgb)
+
     with tf.Session(config=config) as sess:
         saver.restore(sess, _CKPT_PATH)
 
@@ -136,12 +142,9 @@ def _colorize_data_train():
             
             img_313_rs_batch = sess.run(model, feed_dict={input_tensor: img_l_rs_batch})
 
-            def save_fn(idx):
-                img_l = img_l_batch[idx]
-                img_rgb, _ = utils.decode(img_l, img_313_rs_batch[idx: idx + 1], _T)
-                io.imsave(os.path.join(out_dir, img_name_batch[idx]), img_rgb)
+            save = functools.partial(save_fn, img_l_batch=img_l_batch, img_313_rs_batch=img_313_rs_batch, T=_T, out_dir=out_dir, img_name_batch=img_name_batch)
 
-            p.map(save_fn, range(_BATCH_SIZE))
+            p.map(save, [x for x in range(_BATCH_SIZE)])
 
             i += _BATCH_SIZE
 
