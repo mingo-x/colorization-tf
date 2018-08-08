@@ -26,6 +26,7 @@ import numpy as np
 from skimage import color, io
 import tensorflow as tf
 
+from data_color import DataSet
 import demo
 import utils
 
@@ -98,9 +99,45 @@ def _colorize_data_wrapper(phase):
                 print("Image count: {0} Time: {1}".format(i, monotonic.monotonic() - start_time))
                 start_time = monotonic.monotonic()
 
-            img_names_batch = img_names[i: min(len(img_names), i + _BATCH_SIZE)]
+            if i + _BATCH_SIZE > len(img_names):
+                img_names_batch = img_names[len(img_names) - _BATCH_SIZE: len(img_names)]
+            else:
+                img_names_batch = img_names[i: min(len(img_names), i + _BATCH_SIZE)]
             img_paths_batch = map(lambda x: os.path.join(in_dir, x), img_names_batch)
             _colorize(img_paths_batch, out_dir, model, input_tensor, sess)
+
+
+def _colorize_data_train():
+    ds = DataSet()
+
+    input_tensor = tf.placeholder(
+        tf.float32, shape=(_BATCH_SIZE, _INPUT_SIZE, _INPUT_SIZE, 1))
+    model = demo._get_model(input_tensor)
+    saver = tf.train.Saver()
+
+    config = tf.ConfigProto(allow_soft_placement=True)
+    config.gpu_options.allow_growth = True
+    with tf.Session(config=config) as sess:
+        saver.restore(sess, _CKPT_PATH)
+
+        start_time = monotonic.monotonic()
+        i = 0
+        while i < ds.record_number:
+            if i % (_BATCH_SIZE * _LOG_FREQ) == 0:
+                print("Image count: {0} Time: {1}".format(i, monotonic.monotonic() - start_time))
+                start_time = monotonic.monotonic()
+
+            img_l_batch, img_l_rs_batch, img_name_batch = ds.batch()
+            
+            img_313_rs_batch = sess.run(model, feed_dict={input_tensor: img_l_rs_batch})
+
+            for j in xrange(len(img_name_batch)):
+                img_l = img_l_batch[j]
+                img_rgb, _ = utils.decode(img_l, img_313_rs_batch[j: j + 1], _T)
+                io.imsave(os.path.join(out_dir, img_name_batch[j]), img_rgb)
+
+            i += _BATCH_SIZE
+
 
 def _log(curr_idx):
     if (curr_idx / _TASK_NUM) % _LOG_FREQ == 0:
@@ -144,8 +181,10 @@ def _validation_data(func):
 def main():
     # _validation_data(_to_gray)
     # _training_data(_to_gray)
-    _colorize_data_wrapper('val')
-    _colorize_data_wrapper('train')
+    # _colorize_data_wrapper('val')
+    # _colorize_data_wrapper('train')
+    _colorize_data_train()
+    
 
 if __name__ == "__main__":
     main()
