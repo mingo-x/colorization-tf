@@ -43,6 +43,7 @@ _VAL_DIR = '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val'
 _TASK_NUM = 100
 _BATCH_SIZE = 32
 _INPUT_SIZE = 224
+_T = 2.63
 
 
 def _colorize(img_paths_batch, out_dir, model, input_tensor, sess):
@@ -70,7 +71,7 @@ def _colorize(img_paths_batch, out_dir, model, input_tensor, sess):
     for i in xrange(len(img_paths_batch)):
         img_rgb, _ = utils.decode(img_l_batch[i: i + 1], img_313_rs_batch[i: i + 1], T)
         img_name = os.path.split(img_paths_batch[i])[1]
-        imsave(os.path.join(out_dir, img_name), img_rgb)
+        io.imsave(os.path.join(out_dir, img_name), img_rgb)
 
 
 def _colorize_data_wrapper(phase):
