@@ -76,10 +76,10 @@ def _colorize(img_paths_batch, out_dir, model, input_tensor, sess):
 
 
 def _colorize_data_wrapper(phase):
-    print("Phase: {}".format(phase))
     in_dir = _GRAY_DIR + phase
     out_dir = _COLOR_DIR + phase
     img_names = os.listdir(in_dir)
+    print("Phase: {0} Total: {1}".format(phase, len(img_names)))
 
     input_tensor = tf.placeholder(
         tf.float32, shape=(_BATCH_SIZE, _INPUT_SIZE, _INPUT_SIZE, 1))
