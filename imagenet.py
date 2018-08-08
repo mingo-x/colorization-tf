@@ -108,6 +108,7 @@ def _colorize_data_wrapper(phase):
 
 
 def _colorize_data_train():
+    out_dir = _COLOR_DIR + 'train'
     ds = DataSet()
     input_tensor = tf.placeholder(
         tf.float32, shape=(_BATCH_SIZE, _INPUT_SIZE, _INPUT_SIZE, 1))
