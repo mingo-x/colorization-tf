@@ -20,6 +20,7 @@
 import os
 import sys
 
+import monotonic
 import numpy as np
 from skimage import color, io
 import tensorflow as tf
@@ -82,12 +83,15 @@ def _colorize_data_wrapper(phase):
     with tf.Session() as sess:
         saver.restore(sess, _CKPT_PATH)
 
+        start_time = monotonic.monotonic()
         for i in xrange(0, len(img_names), _BATCH_SIZE):
-            print(i)
+            if i % (_BATCH_SIZE * _LOG_FREQ) == 0:
+                print("Image count: {0} Time: {1}".format(i, monotonic.monotonic() - start_time))
+                start_time = monotonic.monotonic()
+
             img_names_batch = img_names[i * _BATCH_SIZE: min(len(img_names), (i + 1) * _BATCH_SIZE)]
             img_paths_batch = map(lambda x: os.path.join(in_dir, x), img_names_batch)
             _colorize(img_paths, out_dir, model, input_tensor, sess)
-
 
 def _log(curr_idx):
     if (curr_idx / _TASK_NUM) % _LOG_FREQ == 0:
