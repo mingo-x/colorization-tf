@@ -17,7 +17,7 @@ LABEL_PATH = '/home/xieya/colorization-tf/resources/val.txt'
 # LOG_PATH = '/home/xieya/metrics.txt'
 MODEL_CHECKPOINT = '/srv/glusterfs/xieya/colorization-gan/models/model.ckpt-499000'
 # CLASS_ID_DICT_PATH = '/srv/glusterfs/xieya/colorization-tf/resources/class_index_dict.pkl'
-NUM_IMGS = 10000
+NUM_IMGS = 100
 # CLASS_ID_DICT = pickle.load(open(CLASS_ID_DICT_PATH, 'rb'))
 THRESHOLD = 150
 _BATCH_SIZE = 20
@@ -189,6 +189,8 @@ def main():
             img_batch = _batch_process(img_name_batch)
             predicted_rgb_batch, predicted_ab_batch, data_ab_batch, prior_batch = _predict_image_batch(
                 img_batch, model, input_tensor, sess)
+            print(predicted_rgb_batch[0])
+            exit()
             _save_batch(predicted_rgb_batch, img_name_batch, False)
             # img_ab, data_ab, prior = _predict_single_image(img_name, model, input_tensor, sess)
 
