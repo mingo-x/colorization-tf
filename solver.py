@@ -28,8 +28,7 @@ class Solver(object):
       self.width = self.image_size
       self.batch_size = int(common_params['batch_size'])
       self.num_gpus = 1
-      self.correspondence = common_params['correspondence'] == "1"
-      print('correspondence ', self.correspondence)
+      self.g_repeat = int(common_params['g_repeat'])
       self.ckpt = common_params['ckpt'] if 'ckpt' in common_params else None
     if solver_params:
       self.learning_rate = float(solver_params['learning_rate'])
@@ -129,14 +128,9 @@ class Solver(object):
 
       summary_writer = tf.summary.FileWriter(self.train_dir, sess.graph)
       start_time = time.time()
-      for step in xrange(start_step, self.max_steps):
-        t1 = time.time()
-        data_l, gt_ab_313, prior_boost_nongray, data_lab_real = self.dataset.batch()
-        if not self.correspondence:
-          _, _, _, data_lab_real = self.dataset.batch()
-        t2 = time.time()
-        if t2 - t1 > 0.05:
-          print ('step: {0} io: {1}'.format(step, t2 - t1))
+      for step in xrange(start_step, self.max_steps, self.g_repeat):
+        data_l, gt_ab_313, prior_boost_nongray, _ = self.dataset.batch()
+        _, _, _, data_lab_real = self.dataset.batch()
         # Discriminator training.
         sess.run([D_apply_gradient_op], feed_dict={self.data_l: data_l, self.data_lab_real: data_lab_real})
         # if step % _LOG_FREQ == 0:
@@ -145,6 +139,9 @@ class Solver(object):
         # t3 = time.time()
         # Generator training.
         sess.run([train_op], feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
+        for _ in xrange(self.g_repeat - 1):
+          data_l, gt_ab_313, prior_boost_nongray, _ = self.dataset.batch()
+          sess.run([train_op], feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
         # if step % _LOG_FREQ == 0:
         #   fake_score_value_2 = sess.run(self.fake_score, 
         #     feed_dict={self.data_l:data_l, self.data_lab_real: data_lab_real})
