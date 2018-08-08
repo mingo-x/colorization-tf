@@ -54,7 +54,7 @@ def _colorize(img_paths_batch, out_dir, model, input_tensor, sess):
         img_rs = cv2.resize(img, (_INPUT_SIZE, _INPUT_SIZE))
 
         img_l = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        img_l = img_l[:, :, None]
+        img_l = img_l[None, :, :, None]
         img_l_rs = cv2.cvtColor(img_rs, cv2.COLOR_BGR2GRAY)
         img_l_rs = img_l_rs[:, :, None]
 
@@ -70,17 +70,16 @@ def _colorize(img_paths_batch, out_dir, model, input_tensor, sess):
 
     for i in xrange(len(img_paths_batch)):
         img_l = img_l_batch[i]
-        img_l = img_l[None, :, :, :]
         img_rgb, _ = utils.decode(img_l, img_313_rs_batch[i: i + 1], _T)
         img_name = os.path.split(img_paths_batch[i])[1]
         io.imsave(os.path.join(out_dir, img_name), img_rgb)
 
 
 def _colorize_data_wrapper(phase):
-    print("Phase: {}".format(phase))
     in_dir = _GRAY_DIR + phase
     out_dir = _COLOR_DIR + phase
     img_names = os.listdir(in_dir)
+    print("Phase: {0} Total: {1}".format(phase, len(img_names)))
 
     input_tensor = tf.placeholder(
         tf.float32, shape=(_BATCH_SIZE, _INPUT_SIZE, _INPUT_SIZE, 1))
