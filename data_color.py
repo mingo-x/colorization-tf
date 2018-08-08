@@ -65,7 +65,6 @@ class DataSet(object):
         self.record_point = 0
       self.record_queue.put(self.record_list[self.record_point])
       self.record_point += 1
-    print("Record producer finished.")
 
   def image_process(self, img_batch):
     img_l_batch = []
@@ -99,7 +98,6 @@ class DataSet(object):
       if len(out.shape)==3 and out.shape[2]==3:
         self.image_queue.put((out, item))
 
-    print("Record custormer finished.")
 
   def image_customer(self):
     while True:
@@ -112,7 +110,6 @@ class DataSet(object):
 
       self.batch_queue.put(image_process(images))
 
-    print('Image customer finished.')
 
   def batch(self):
     """get batch
