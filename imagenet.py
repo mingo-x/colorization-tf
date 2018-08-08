@@ -121,18 +121,31 @@ def _colorize_data_train():
     config = tf.ConfigProto(allow_soft_placement=True)
     config.gpu_options.allow_growth = True
 
-    p = Pool(8)
+    save_queue = Queue(320)
 
-    def save_fn(idx, img_l_batch, img_313_rs_batch, T, out_dir, img_name_batch):
-        img_l = img_l_batch[idx]
-        img_rgb, _ = utils.decode(img_l, img_313_rs_batch[idx: idx + 1], ET)
-        io.imsave(os.path.join(out_dir, img_name_batch[idx]), img_rgb)
+    i = 0
+
+    def save_fn():
+        print(save_queue.qsize())
+        img_l_batch, img_313_rs_batch, img_name_batch = save_queue.get()
+        for idx in range(_BATCH_SIZE):
+            img_l = img_l_batch[idx]
+            img_rgb, _ = utils.decode(img_l, img_313_rs_batch[idx: idx + 1], _T)
+            io.imsave(os.path.join(out_dir, img_name_batch[idx]), img_rgb)
+
+        global i
+        i += _BATCH_SIZE
+
+    for _ in range(8):
+      t = Process(target=save_fn)
+      t.daemon = True
+      t.start()
 
     with tf.Session(config=config) as sess:
         saver.restore(sess, _CKPT_PATH)
 
         start_time = monotonic.monotonic()
-        i = 0
+        
         while i < ds.record_number:
             if i % (_BATCH_SIZE * _LOG_FREQ) == 0:
                 print("Image count: {0} Time: {1}".format(i, monotonic.monotonic() - start_time))
@@ -142,12 +155,9 @@ def _colorize_data_train():
             
             img_313_rs_batch = sess.run(model, feed_dict={input_tensor: img_l_rs_batch})
 
-            save = functools.partial(save_fn, img_l_batch=img_l_batch, img_313_rs_batch=img_313_rs_batch, T=_T, out_dir=out_dir, img_name_batch=img_name_batch)
+            save_queue.put((img_l_batch, img_313_rs_batch, img_name_batch))
 
-            p.map(save, [x for x in range(_BATCH_SIZE)])
-
-            i += _BATCH_SIZE
-
+            
 
 def _log(curr_idx):
     if (curr_idx / _TASK_NUM) % _LOG_FREQ == 0:
