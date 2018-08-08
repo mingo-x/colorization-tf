@@ -20,6 +20,7 @@
 import os
 import sys
 
+import cv2
 import monotonic
 import numpy as np
 from skimage import color, io
