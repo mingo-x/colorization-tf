@@ -123,6 +123,8 @@ def _colorize_data_train():
 
     save_queue = Queue(320)
 
+    i = 0
+
     def save_fn():
         print(save_queue.qsize())
         img_l_batch, img_313_rs_batch, img_name_batch = save_queue.get()
@@ -130,6 +132,9 @@ def _colorize_data_train():
             img_l = img_l_batch[idx]
             img_rgb, _ = utils.decode(img_l, img_313_rs_batch[idx: idx + 1], _T)
             io.imsave(os.path.join(out_dir, img_name_batch[idx]), img_rgb)
+
+        global i
+        i += _BATCH_SIZE
 
     for _ in range(8):
       t = Process(target=save_fn)
@@ -140,7 +145,7 @@ def _colorize_data_train():
         saver.restore(sess, _CKPT_PATH)
 
         start_time = monotonic.monotonic()
-        i = 0
+        
         while i < ds.record_number:
             if i % (_BATCH_SIZE * _LOG_FREQ) == 0:
                 print("Image count: {0} Time: {1}".format(i, monotonic.monotonic() - start_time))
@@ -152,8 +157,7 @@ def _colorize_data_train():
 
             save_queue.put((img_l_batch, img_313_rs_batch, img_name_batch))
 
-            i += _BATCH_SIZE
-
+            
 
 def _log(curr_idx):
     if (curr_idx / _TASK_NUM) % _LOG_FREQ == 0:
