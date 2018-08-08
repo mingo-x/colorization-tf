@@ -149,9 +149,9 @@ class Solver(object):
 
         if step % _LOG_FREQ == 0:
           duration = time.time() - start_time
-          num_examples_per_step = self.batch_size * self.num_gpus * _LOG_FREQ
+          num_examples_per_step = self.batch_size * self.g_repeat * self.num_gpus * _LOG_FREQ
           examples_per_sec = num_examples_per_step / duration
-          sec_per_batch = duration / (self.num_gpus * _LOG_FREQ)
+          sec_per_batch = duration / (self.num_gpus * _LOG_FREQ * self.g_repeat)
 
           loss_value, new_loss_value, real_score_value, fake_score_value = sess.run(
             [self.total_loss, self.new_loss, self.real_score, self.fake_score], 
