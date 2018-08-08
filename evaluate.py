@@ -189,14 +189,13 @@ def main():
             img_batch = _batch_process(img_name_batch)
             predicted_rgb_batch, predicted_ab_batch, data_ab_batch, prior_batch = _predict_image_batch(
                 img_batch, model, input_tensor, sess)
-            print(predicted_rgb_batch[0])
-            exit()
             _save_batch(predicted_rgb_batch, img_name_batch, False)
             # img_ab, data_ab, prior = _predict_single_image(img_name, model, input_tensor, sess)
 
             # img_rgb = tf.keras.preprocessing.image.load_img(os.path.join(OUT_DIR, img_name), target_size=(224, 224))
             # img_rgb = tf.keras.preprocessing.image.img_to_array(img_rgb)
             # img_rgb = img_rgb.reshape((1, img_rgb.shape[0], img_rgb.shape[1], img_rgb.shape[2]))
+            predicted_rgb_batch *= 255.  # [0, 1] -> [0, 255]
             vgg16_loss = _vgg_loss(predicted_rgb_batch, img_label_batch, vgg16)
             vgg16_losses.append(vgg16_loss)
 
