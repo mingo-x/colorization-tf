@@ -51,18 +51,22 @@ def _colorize(img_paths_batch, out_dir, model, input_tensor, sess):
     img_l_rs_batch = []
     for img_path in img_paths_batch:
         img = cv2.imread(img_path)
-        print img_path
+        print img.shape
         img_rs = cv2.resize(img, (_INPUT_SIZE, _INPUT_SIZE))
 
         img_l = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        print img_l.shape
         img_l = img_l[:, :, None]
+        print img_l.shape
         img_l_rs = cv2.cvtColor(img_rs, cv2.COLOR_BGR2GRAY)
         img_l_rs = img_l_rs[:, :, None]
 
         img_l = (img_l.astype(dtype=np.float32)) / 255. * 100 - 50
+        print img_l.shape
         img_l_rs = (img_l_rs.astype(dtype=np.float32)) / 255.0 * 100 - 50
 
         img_l_batch.append(img_l)
+        print img_l_batch.shape
         img_l_rs_batch.append(img_l_rs)
     img_l_batch = np.asarray(img_l_batch)
     img_l_rs_batch = np.asarray(img_l_rs_batch)
