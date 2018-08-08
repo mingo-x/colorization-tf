@@ -14,11 +14,11 @@ IMG_SIZE = 224
 IMG_DIR = '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val'
 OUT_DIR = '/srv/glusterfs/xieya/colorization-tf/prediction'
 LABEL_PATH = '/home/xieya/colorization-tf/resources/val.txt'
-LOG_PATH = '/home/xieya/metrics.txt'
-MODEL_CHECKPOINT = '/srv/glusterfs/xieya/colorization-gan-2/models/model.ckpt-341000'
-#CLASS_ID_DICT_PATH = '/srv/glusterfs/xieya/colorization-tf/resources/class_index_dict.pkl'
-NUM_IMGS = 100
-#CLASS_ID_DICT = pickle.load(open(CLASS_ID_DICT_PATH, 'rb'))
+# LOG_PATH = '/home/xieya/metrics.txt'
+MODEL_CHECKPOINT = '/srv/glusterfs/xieya/colorization-gan/models/model.ckpt-499000'
+# CLASS_ID_DICT_PATH = '/srv/glusterfs/xieya/colorization-tf/resources/class_index_dict.pkl'
+NUM_IMGS = 10000
+# CLASS_ID_DICT = pickle.load(open(CLASS_ID_DICT_PATH, 'rb'))
 THRESHOLD = 150
 _BATCH_SIZE = 20
 
@@ -60,10 +60,10 @@ def _predict_image_batch(img_batch, model, input_tensor, sess):
     predicted_ab_batch = []
     for i in range(_BATCH_SIZE):
         predicted_rgb, predicted_ab = utils.decode(
-            data_l_batch[i], predicted_313_batch[i], 2.63)
+            data_l_batch[i: i + 1], predicted_313_batch[i: i + 1], 2.63)
         predicted_rgb_batch.append(predicted_rgb)
         predicted_ab_batch.append(predicted_ab)
-    predicted_rgb_batch = np.asarray(predicted_rgb_batch, np.uint8)
+    predicted_rgb_batch = np.asarray(predicted_rgb_batch)
     predicted_ab_batch = np.asarray(predicted_ab_batch)
 
     return predicted_rgb_batch, predicted_ab_batch, data_ab_batch, prior_batch
@@ -135,6 +135,14 @@ def _batch_process(img_name_list):
     return img_batch
 
 
+def _save_batch(predicted_rgb_batch, img_name_batch, save=True):
+    if save:
+        for i in range(_BATCH_SIZE):
+            imsave(
+                os.path.join(
+                    OUT_DIR, img_name_batch[i]), predicted_rgb_batch[i])
+
+
 def main():
     img_list = os.listdir(IMG_DIR)
     img_list.sort()
@@ -171,7 +179,7 @@ def main():
                 img_label_batch.append(img_label)
             img_label_batch = np.asarray(img_label_batch)
 
-            if img_idx < NUM_IMGS:
+            if img_idx <= NUM_IMGS:
                 continue
 
             for img_name in img_name_batch:
@@ -181,6 +189,7 @@ def main():
             img_batch = _batch_process(img_name_batch)
             predicted_rgb_batch, predicted_ab_batch, data_ab_batch, prior_batch = _predict_image_batch(
                 img_batch, model, input_tensor, sess)
+            _save_batch(predicted_rgb_batch, img_name_batch, False)
             # img_ab, data_ab, prior = _predict_single_image(img_name, model, input_tensor, sess)
 
             # img_rgb = tf.keras.preprocessing.image.load_img(os.path.join(OUT_DIR, img_name), target_size=(224, 224))
@@ -194,7 +203,7 @@ def main():
             l2_loss_re = _l2_loss(
                 data_ab_batch, predicted_ab_batch, prior=prior_batch)
             l2_losses_re.append(l2_loss_re)
-            # prior_sums.append(np.sum(prior))
+            prior_sums.append(np.sum(prior_batch))
 
     # print("Prior mean, {}".format(np.mean(prior_sums) / (IMG_SIZE * IMG_SIZE)))
     vgg16_acc = np.mean(vgg16_losses)

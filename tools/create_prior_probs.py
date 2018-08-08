@@ -27,14 +27,16 @@ import numpy as np
 from skimage.io import imread
 from skimage import color
 from skimage.transform import resize
-from multiprocessing import Pool
+
+import utils
 
 
 _NUM_TASKS = 1
 _IMG_PATHS = '/home/xieya/img_list.txt'
 _POINTS_PATH = '/home/xieya/colorization-tf/resources/pts_in_hull.npy'
-_PRINT_FREQ = 10
+_PRINT_FREQ = 100
 _TASK_ID = 0
+_BATCH_SIZE = 50
 # _TASK_ID = os.environ.get('SGE_TASK_ID')
 # if _TASK_ID is not None:
 #   print("Task id: {}".format(_TASK_ID))
@@ -68,40 +70,51 @@ def _get_index(in_data, points):
   return index
 
 
-def _calculate_prior(img_path, points, probs):
-  img = imread(img_path)
-  img = resize(img, (224, 224), preserve_range=True)
-  if len(img.shape)!=3 or img.shape[2]!=3:
-    return probs
-  img_lab = color.rgb2lab(img)
-  print(img_lab.shape)
-  img_lab = img_lab.reshape((-1, 3))
-  img_ab = img_lab[:, 1:]
-  nd_index = _get_index(img_ab, points)
-  for i in nd_index:
-    probs[i] += 1
+def _calculate_prior(img_paths, points, probs):
+    img_batch = []
+    for img_path in img_paths:
+        img = imread(img_path)
+        img = resize(img, (224, 224), preserve_range=True)
+        if len(img.shape) != 3 or img.shape[2] != 3:
+            continue
+        img_batch.append(img)
+
+    img_batch = np.asarray(img_batch)
+    img_lab_batch = color.rgb2lab(img_batch)
+
+    # img_lab = img_lab.reshape((-1, 3))
+    # img_ab = img_lab[:, 1:]
+    # nd_index = _get_index(img_ab, points)
+
+    img_ab_batch = img_lab_batch[:, :, :, 1:]
+    img_313_batch = utils._nnencode(img_ab_batch)
+    probs += np.sum(img_313_batch, axis=(0, 1, 2))
+
+    # for i in nd_index:
+    #     probs[i] += 1
 
 
 def main():
-  points = np.load(_POINTS_PATH)
-  points = points.astype(np.float64)
-  points = points[None, :, :]
-  
-  img_list = _get_img_list()
-  probs = np.zeros((313), dtype=np.float64)   
-  img_count = 0
-  start_time = monotonic.monotonic()
+    points = np.load(_POINTS_PATH)
+    points = points.astype(np.float64)
+    points = points[None, :, :]
 
-  for img_path in img_list:
-    _calculate_prior(img_path, points, probs)
-    img_count += 1
-    if img_count % _PRINT_FREQ == 0:
-      print(img_count, monotonic.monotonic()-start_time)
-      sys.stdout.flush()
-      start_time = monotonic.monotonic()
+    img_list = _get_img_list()
+    probs = np.zeros((313), dtype=np.float64)
+    img_count = 0
+    start_time = monotonic.monotonic()
 
-  probs = probs / np.sum(probs)
-  np.save('/srv/glusterfs/xieya/prior/probs_{}'.format(_TASK_ID), probs)
+    while img_count < len(img_list):
+        img_paths = img_list[img_count: img_count + _BATCH_SIZE]
+        img_count += _BATCH_SIZE
+        _calculate_prior(img_paths, points, probs)
+        if img_count % _PRINT_FREQ == 0:
+            print(img_count, monotonic.monotonic() - start_time)
+            sys.stdout.flush()
+            start_time = monotonic.monotonic()
+
+    probs = probs / np.sum(probs)
+    np.save('/srv/glusterfs/xieya/prior/probs_{}'.format(_TASK_ID), probs)
 
 
 def merge():
@@ -122,5 +135,5 @@ def merge():
 
 
 if __name__ == "__main__":
-  main()
-  # merge()
+    main()
+    # merge()
