@@ -87,7 +87,9 @@ def _colorize_data_wrapper(phase):
     model = demo._get_model(input_tensor)
     saver = tf.train.Saver()
 
-    with tf.Session() as sess:
+    config = tf.ConfigProto(allow_soft_placement=True)
+    config.gpu_options.allow_growth = True
+    with tf.Session(config=config) as sess:
         saver.restore(sess, _CKPT_PATH)
 
         start_time = monotonic.monotonic()
