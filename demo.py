@@ -80,6 +80,7 @@ def _get_cifar_data(training=True):
     data = np.dstack((data[:, :s], data[:, s:2 * s], data[:, 2 * s:]))
     data = data.reshape((-1, w, h, 3))
     print('Cifar data size: {}'.format(data.shape))
+    print(data[0])
 
     return data
 
