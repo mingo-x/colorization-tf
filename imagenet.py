@@ -49,6 +49,7 @@ def _colorize(img_paths_batch, out_dir, model, input_tensor, sess):
     img_l_rs_batch = []
     for img_path in img_paths_batch:
         img = cv2.imread(img_path)
+        print(img.shape)
         img_rs = cv2.resize(img, (_INPUT_SIZE, _INPUT_SIZE))
 
         # Input gray image.
