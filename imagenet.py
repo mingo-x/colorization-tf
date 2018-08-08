@@ -17,12 +17,14 @@
 
 #$ -j y
 
+from multiprocessing import Pool
 import os
 import sys
 
 import cv2
 import monotonic
 import numpy as np
+from Queue import Queue
 from skimage import color, io
 import tensorflow as tf
 
@@ -117,6 +119,9 @@ def _colorize_data_train():
 
     config = tf.ConfigProto(allow_soft_placement=True)
     config.gpu_options.allow_growth = True
+
+    p = Pool(8)
+
     with tf.Session(config=config) as sess:
         saver.restore(sess, _CKPT_PATH)
 
@@ -131,10 +136,12 @@ def _colorize_data_train():
             
             img_313_rs_batch = sess.run(model, feed_dict={input_tensor: img_l_rs_batch})
 
-            for j in xrange(len(img_name_batch)):
-                img_l = img_l_batch[j]
-                img_rgb, _ = utils.decode(img_l, img_313_rs_batch[j: j + 1], _T)
-                io.imsave(os.path.join(out_dir, img_name_batch[j]), img_rgb)
+            def save_fn(idx):
+                img_l = img_l_batch[idx]
+                img_rgb, _ = utils.decode(img_l, img_313_rs_batch[idx: idx + 1], _T)
+                io.imsave(os.path.join(out_dir, img_name_batch[idx]), img_rgb)
+
+            p.map(save_fn, range(_BATCH_SIZE))
 
             i += _BATCH_SIZE
 
