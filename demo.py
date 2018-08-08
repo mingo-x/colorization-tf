@@ -6,8 +6,8 @@ import cv2
 
 INPUT_SIZE = 224
 _RESIZE_SIZE = 0
-IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
-OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/colorization_test'
+IMG_DIR = '/srv/glusterfs/xieya/video/duck_frames'
+OUTPUT_DIR = '/srv/glusterfs/xieya/video/duck_color'
 T = 2.63
 
 def _resize(img, resize_size=0):
@@ -57,7 +57,7 @@ def main():
     saver = tf.train.Saver()
 
     with tf.Session() as sess:
-        saver.restore(sess, '/srv/glusterfs/xieya/colorization-gan-4/models/model.ckpt-105000')
+        saver.restore(sess, '/srv/glusterfs/xieya/colorization-gan/models/model.ckpt-499000')
         for img_name in os.listdir(IMG_DIR):
             if img_name.endswith('.jpg') or img_name.endswith('.JPEG'):
                 print(img_name)
