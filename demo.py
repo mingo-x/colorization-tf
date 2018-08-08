@@ -89,6 +89,10 @@ def _colorize_cifar_batch(img_batch, model, input_tensor, sess):
     global _CIFAR_COUNT
 
     img_l_batch = color.rgb2gray(img_batch)
+    test = img_l_batch[0]
+    print(np.min(test), np.max(test), np.mean(test))
+    print(test)
+    exit()
     img_l_batch = img_l_batch[:, :, :, None]
     img_l_batch = (img_l_batch.astype(dtype=np.float32)) / 255.0 * 100 - 50
     img_313_batch = sess.run(model,  feed_dict={input_tensor: img_l_batch})
