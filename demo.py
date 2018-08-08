@@ -89,6 +89,7 @@ def _colorize_cifar_batch(img_batch, model, input_tensor, sess):
 
     img_lab_batch = color.rgb2lab(img_batch)
     img_l_batch = img_lab_batch[:, :, :, 0:1]
+    img_l_batch = img_l_batch - 50.
 
     img_313_batch = sess.run(model,  feed_dict={input_tensor: img_l_batch})
     for i in range(_CIFAR_BATCH_SIZE):
