@@ -66,7 +66,7 @@ def _colorize(img_paths_batch, out_dir, model, input_tensor, sess):
         img_l_rs = (img_l_rs.astype(dtype=np.float32)) / 255.0 * 100 - 50
 
         img_l_batch.append(img_l)
-        print img_l_batch.shape
+        print len(img_l_batch)
         img_l_rs_batch.append(img_l_rs)
     img_l_batch = np.asarray(img_l_batch)
     img_l_rs_batch = np.asarray(img_l_rs_batch)
