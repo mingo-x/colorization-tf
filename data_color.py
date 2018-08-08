@@ -115,7 +115,7 @@ class DataSet(object):
         images.append(image)
       # images = np.asarray(images, dtype=np.uint8)
 
-      self.batch_queue.put(image_process(images))
+      self.batch_queue.put(self.image_process(images))
 
 
   def batch(self):
