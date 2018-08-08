@@ -66,6 +66,7 @@ def _colorize(img_paths_batch, out_dir, model, input_tensor, sess):
     img_l_batch = np.asarray(img_l_batch)
     img_l_rs_batch = np.asarray(img_l_rs_batch)
     print(img_l_batch.shape, img_l_rs_batch.shape)
+    exit()
 
     img_313_rs_batch = sess.run(model, feed_dict={input_tensor: img_l_rs_batch})
 
