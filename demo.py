@@ -1,3 +1,4 @@
+import pickle
 import tensorflow as tf
 from utils import *
 from net import Net
@@ -129,7 +130,7 @@ def main():
     saver = tf.train.Saver()
 
     with tf.Session() as sess:
-        saver.restore(sess, '/srv/glusterfs/xieya/colorization-gan/models/model.ckpt-499000')
+        saver.restore(sess, _CKPT_PATH)
         for img_name in os.listdir(IMG_DIR):
             if img_name.endswith('.jpg') or img_name.endswith('.JPEG'):
                 print(img_name)
