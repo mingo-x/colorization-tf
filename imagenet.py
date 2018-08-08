@@ -79,6 +79,7 @@ def _colorize_data_wrapper(phase):
     in_dir = _GRAY_DIR + phase
     out_dir = _COLOR_DIR + phase
     img_names = os.listdir(in_dir)
+    img_names.sort()
     print("Phase: {0} Total: {1}".format(phase, len(img_names)))
 
     input_tensor = tf.placeholder(
@@ -95,7 +96,7 @@ def _colorize_data_wrapper(phase):
                 print("Image count: {0} Time: {1}".format(i, monotonic.monotonic() - start_time))
                 start_time = monotonic.monotonic()
 
-            img_names_batch = img_names[i * _BATCH_SIZE: min(len(img_names), (i + 1) * _BATCH_SIZE)]
+            img_names_batch = img_names[i: min(len(img_names), i + _BATCH_SIZE)]
             img_paths_batch = map(lambda x: os.path.join(in_dir, x), img_names_batch)
             _colorize(img_paths_batch, out_dir, model, input_tensor, sess)
 
