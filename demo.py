@@ -80,7 +80,6 @@ def _get_cifar_data(training=True):
     data = np.dstack((data[:, :s], data[:, s:2 * s], data[:, 2 * s:]))
     data = data.reshape((-1, w, h, 3))
     print('Cifar data size: {}'.format(data.shape))
-    print(data[0])
 
     return data
 
@@ -88,13 +87,9 @@ def _get_cifar_data(training=True):
 def _colorize_cifar_batch(img_batch, model, input_tensor, sess):
     global _CIFAR_COUNT
 
-    img_l_batch = color.rgb2gray(img_batch)
-    test = img_l_batch[0]
-    print(np.min(test), np.max(test), np.mean(test))
-    print(test)
-    exit()
-    img_l_batch = img_l_batch[:, :, :, None]
-    img_l_batch = (img_l_batch.astype(dtype=np.float32)) / 255.0 * 100 - 50
+    img_lab_batch = color.rgb2lab(img_batch)
+    img_l_batch = img_lab_batch[:, :, :, 0:1]
+
     img_313_batch = sess.run(model,  feed_dict={input_tensor: img_l_batch})
     for i in range(_CIFAR_BATCH_SIZE):
         img_313 = img_313_batch[i]
