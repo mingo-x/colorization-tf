@@ -39,7 +39,7 @@ _CKPT_PATH = '/srv/glusterfs/xieya/colorization-gan/models/model.ckpt-499000'
 _COLOR_DIR = '/srv/glusterfs/xieya/data/imagenet_colorized/'
 _GRAY_DIR = '/srv/glusterfs/xieya/data/imagenet_gray/'
 _IMG_LIST_PATH = '/home/xieya/colorization-tf/data/train.txt'
-_LOG_FREQ = 100
+_LOG_FREQ = 10
 _VAL_DIR = '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val'
 _TASK_NUM = 100
 _BATCH_SIZE = 32
@@ -109,7 +109,6 @@ def _colorize_data_wrapper(phase):
 
 def _colorize_data_train():
     ds = DataSet()
-
     input_tensor = tf.placeholder(
         tf.float32, shape=(_BATCH_SIZE, _INPUT_SIZE, _INPUT_SIZE, 1))
     model = demo._get_model(input_tensor)
@@ -184,7 +183,7 @@ def main():
     # _colorize_data_wrapper('val')
     # _colorize_data_wrapper('train')
     _colorize_data_train()
-    
+
 
 if __name__ == "__main__":
     main()

@@ -26,7 +26,8 @@ class DataSet(object):
     """
     self.input_size = 224
     self.batch_size = 32
-      
+    
+    self.data_path = 'data/train.txt'
     self.gray_dir = '/srv/glusterfs/xieya/data/imagenet_gray/train'
     self.thread_num = 8
     self.thread_num2 = 8
@@ -36,8 +37,14 @@ class DataSet(object):
 
     self.batch_queue = Queue(maxsize=200)
 
-    self.record_list = os.listdir(self.gray_dir)
-    self.record_list.sort()
+    self.record_list = []  
+    input_file = open(self.data_path, 'r')
+
+    for line in input_file:
+      line = line.strip()
+      name = os.path.split(line)[1]
+      self.record_list.append(name)
+    # self.record_list.sort()
 
     self.record_point = 0
     self.record_number = len(self.record_list)
@@ -65,7 +72,6 @@ class DataSet(object):
         self.record_point = 0
       self.record_queue.put(self.record_list[self.record_point])
       self.record_point += 1
-    print("Record producer finished.")
 
   def image_process(self, img_batch):
     img_l_batch = []
@@ -99,7 +105,6 @@ class DataSet(object):
       if len(out.shape)==3 and out.shape[2]==3:
         self.image_queue.put((out, item))
 
-    print("Record custormer finished.")
 
   def image_customer(self):
     while True:
@@ -112,7 +117,6 @@ class DataSet(object):
 
       self.batch_queue.put(image_process(images))
 
-    print('Image customer finished.')
 
   def batch(self):
     """get batch
