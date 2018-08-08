@@ -69,7 +69,9 @@ def _colorize(img_paths_batch, out_dir, model, input_tensor, sess):
     img_313_rs_batch = sess.run(model, feed_dict={input_tensor: img_l_rs_batch})
 
     for i in xrange(len(img_paths_batch)):
-        img_rgb, _ = utils.decode(img_l_batch[i: i + 1], img_313_rs_batch[i: i + 1], _T)
+        img_l = img_l_batch[i]
+        img_l = img_l[None, :, :, :]
+        img_rgb, _ = utils.decode(img_l, img_313_rs_batch[i: i + 1], _T)
         img_name = os.path.split(img_paths_batch[i])[1]
         io.imsave(os.path.join(out_dir, img_name), img_rgb)
 
