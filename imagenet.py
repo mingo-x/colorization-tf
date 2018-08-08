@@ -20,13 +20,18 @@
 import os
 import sys
 
+import numpy as np
 from skimage import color, io
+import tensorflow as tf
+
+import demo
 
 _TASK_ID = os.environ.get('SGE_TASK_ID')
 if _TASK_ID is not None:
     print("Task id: {}".format(_TASK_ID))
     _TASK_ID = int(_TASK_ID) - 1
 
+_CKPT_PATH = '/srv/glusterfs/xieya/colorization-gan/models/model.ckpt-499000'
 _COLOR_DIR = '/srv/glusterfs/xieya/data/imagenet_colorized/'
 _GRAY_DIR = '/srv/glusterfs/xieya/data/imagenet_gray/'
 _IMG_LIST_PATH = '/home/xieya/colorization-tf/data/train.txt'
@@ -37,10 +42,10 @@ _BATCH_SIZE = 32
 _INPUT_SIZE = 224
 
 
-def _colorize(img_paths):
+def _colorize(img_paths_batch, out_dir, model, input_tensor, sess):
     img_l_batch = []
     img_l_rs_batch = []
-    for img_path in img_paths:
+    for img_path in img_paths_batch:
         img = cv2.imread(img_path)
         img_rs = cv2.resize(img, (_INPUT_SIZE, _INPUT_SIZE))
 
@@ -56,10 +61,32 @@ def _colorize(img_paths):
     img_l_rs_batch = np.asarray(img_l_rs_batch)
 
     img_313_rs_batch = sess.run(model, feed_dict={input_tensor: img_l_rs_batch})
-    for i in xrange(_BATCH_SIZE):
+
+    for i in xrange(len(img_paths_batch)):
         img_rgb, _ = decode(img_l_batch[i: i + 1], img_313_rs_batch[i: i + 1], T)
-        img_name = os.path.split(img_paths[i])[1]
-        imsave(os.path.join(OUTPUT_DIR, img_name), img_rgb)
+        img_name = os.path.split(img_paths_batch[i])[1]
+        imsave(os.path.join(out_dir, img_name), img_rgb)
+
+
+def _colorize_data_wrapper(phase):
+    print("Phase: {}".format(phase))
+    in_dir = _GRAY_DIR + phase
+    out_dir = _COLOR_DIR + phase
+    img_names = os.listdir(in_dir)
+
+    input_tensor = tf.placeholder(
+        tf.float32, shape=(1, INPUT_SIZE, INPUT_SIZE, 1))
+    model = demo._get_model(input_tensor)
+    saver = tf.train.Saver()
+
+    with tf.Session() as sess:
+        saver.restore(sess, _CKPT_PATH)
+
+        for i in xrange(0, len(img_names), _BATCH_SIZE):
+            print(i)
+            img_names_batch = img_names[i * _BATCH_SIZE: min(len(img_names), (i + 1) * _BATCH_SIZE)]
+            img_paths_batch = map(lambda x: os.path.join(in_dir, x), img_names_batch)
+            _colorize(img_paths, out_dir, model, input_tensor, sess)
 
 
 def _log(curr_idx):
