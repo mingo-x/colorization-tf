@@ -2,12 +2,17 @@ import tensorflow as tf
 from utils import *
 from net import Net
 from skimage.io import imsave
+from skimage import color
 import cv2
 
 INPUT_SIZE = 224
 _RESIZE_SIZE = 0
-IMG_DIR = '/srv/glusterfs/xieya/video/duck_frames'
-OUTPUT_DIR = '/srv/glusterfs/xieya/video/duck_color'
+_CIFAR_IMG_SIZE = 32
+_CIFAR_BATCH_SIZE = 100
+_CIFAR_COUNT = 0
+_CKPT_PATH = '/srv/glusterfs/xieya/colorization-gan/models/model.ckpt-499000'
+IMG_DIR = '/srv/glusterfs/xieya/cifar-10-batches-py'
+OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/colorization_test'
 T = 2.63
 
 def _resize(img, resize_size=0):
@@ -51,6 +56,73 @@ def _colorize_single_img(img_name, model, input_tensor, sess):
     imsave(os.path.join(OUTPUT_DIR, img_name), img_rgb)
 
 
+def _unpickle(file):
+    with open(file, 'rb') as fo:
+        dict = pickle.load(fo, encoding='bytes')
+    return dict
+
+
+def _get_cifar_data(training=True):
+    data = []
+    if training:
+        for i in range(1, 6):
+            filename = '{}/data_batch_{}'.format(IMG_DIR, i)
+            batch_data = _unpickle(filename)
+            if len(data) > 0:
+                data = np.vstack((data, batch_data[b'data']))
+            else:
+                data = batch_data[b'data']
+
+    else:
+        filename = '{}/test_batch'.format(IMG_DIR)
+        batch_data = unpickle(filename)
+        data = batch_data[b'data']
+
+    w = 32
+    h = 32
+    s = w * h
+    data = np.array(data)
+    data = np.dstack((data[:, :s], data[:, s:2 * s], data[:, 2 * s:]))
+    data = data.reshape((-1, w, h, 3))
+    print('Cifar data size: {}'.format(data.shape))
+
+    return data
+
+
+def _colorize_cifar_batch(img_batch, model, input_tensor, sess):
+    global _CIFAR_COUNT
+
+    img_l_batch = color.rgb2gray(img_batch)
+    img_l_batch = img_l_batch[:, :, :, None]
+    img_l_batch = (img_l_batch.astype(dtype=np.float32)) / 255.0 * 100 - 50
+    img_313_batch = sess.run(model,  feed_dict={input_tensor: img_l_batch})
+    for i in range(_CIFAR_BATCH_SIZE):
+        img_313 = img_313_batch[i]
+        img_313 = img_313[None, :, :, :]
+        img_l = img_l_batch[i]
+        img_l = img_l[None, :, :, :]
+        img_rgb, _ = decode(img_l, img_313, T)
+        imsave(os.path.join(OUTPUT_DIR, str(_CIFAR_COUNT).zfill(5)), img_rgb)
+        _CIFAR_COUNT += 1
+    print('Progress: {}'.format(_CIFAR_COUNT))
+
+
+def cifar():
+    cifar_data = _get_cifar_data(True)  # True for training.
+    cifar_data_size = cifar_data.shape[0]
+
+    input_tensor = tf.placeholder(tf.float32, shape=(_CIFAR_BATCH_SIZE, _CIFAR_IMG_SIZE, _CIFAR_IMG_SIZE, 1))
+    model = _get_model(input_tensor)
+    saver = tf.train.Saver()
+
+    with tf.Session() as sess:
+        saver.restore(sess, _CKPT_PATH)
+
+        for i in range(cifar_data_size / _CIFAR_BATCH_SIZE):
+            cifar_batch = cifar_data[i * _CIFAR_BATCH_SIZE: (i + 1) * _CIFAR_BATCH_SIZE, :, :, :]
+            _colorize_cifar_batch(cifar_batch, model, input_tensor, sess)
+
+
 def main():
     input_tensor = tf.placeholder(tf.float32, shape=(1, INPUT_SIZE, INPUT_SIZE, 1))
     model = _get_model(input_tensor)
@@ -65,6 +137,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # main()
+    cifar()
 
     
