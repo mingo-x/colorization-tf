@@ -104,6 +104,7 @@ def subsample(in_dir, out_dir):
 def merge_uncolorized():
     prefix = '/srv/glusterfs/xieya/log/train_data.py.o3860889.'
 
+    total_count = 0
     with open('data/uncolor_train.txt', 'w') as fout:
         for i in range(_TASK_NUM):
             fname = prefix + str(i+1)
@@ -115,10 +116,12 @@ def merge_uncolorized():
                         un_count += 1
                         fout.write(os.path.join(_ORIGINAL_TRAIN_DIR, line) + '\n')
             print('Task {0} Count {1}'.format(i+1, un_count))
+            total_count += un_count
 
 
 if __name__ == "__main__":
     # count =  count_img()
     # print('Total: {}'.format(count))
     # structure(_COLOR_DIR)
-    subsample(_GRAY_TRAIN_DIR, _GRAY_TRAIN_SS_DIR)
+    # subsample(_GRAY_TRAIN_DIR, _GRAY_TRAIN_SS_DIR)
+    merge_uncolorized()
