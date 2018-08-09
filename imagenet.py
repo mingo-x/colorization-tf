@@ -18,9 +18,9 @@
 #$ -j y
 
 import functools
-from multiprocessing import Pool
 import os
 import sys
+from threading import Thread as Process
 
 import cv2
 import monotonic
