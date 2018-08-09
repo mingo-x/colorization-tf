@@ -30,7 +30,7 @@ _COLOR_DIR = '/srv/glusterfs/xieya/data/imagenet_colorized/train'
 _GRAY_TRAIN_DIR = '/srv/glusterfs/xieya/data/imagenet_gray/train'
 _LOG_FREQ = 100
 _TASK_NUM = 100
-_TRAIN_DATA_LIST = 'data/train.txt'
+_TRAIN_DATA_LIST = '/home/xieya/colorization-tf/data/train.txt'
 
 def count_img():
     line_idx = 0
@@ -39,12 +39,13 @@ def count_img():
         for line in fin:
             if line_idx % _TASK_NUM == _TASK_ID:
                 img_path = line.strip()
-                img_name = os.path.split(img_path)
+                img_name = os.path.split(img_path)[1]
                 color_path = os.path.join(_COLOR_DIR, img_name)
                 if os.path.isfile(color_path):
                     count += 1
                     if count % _LOG_FREQ == 0:
                         print(count)
+			sys.stdout.flush()
                 else:
                     print(img_name)
             line_idx += 1
