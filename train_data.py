@@ -136,8 +136,8 @@ def merge_uncolorized():
 if __name__ == "__main__":
     # count =  count_img()
     # print('Total: {}'.format(count))
-    structure('data/uncolor_train.txt', _COLOR_DIR)
-    print("<<<<<<<<<<<<<<<")
+    # structure('data/uncolor_train.txt', _COLOR_DIR)
+    # print("<<<<<<<<<<<<<<<")
     subsample_color('/home/xieya/train.txt', _COLOR_DIR, _COLOR_TRAIN_SS_DIR)
     # subsample(_GRAY_TRAIN_DIR, _GRAY_TRAIN_SS_DIR)
     # merge_uncolorized()
