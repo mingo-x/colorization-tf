@@ -140,7 +140,7 @@ def _colorize_data_train():
             i += _BATCH_SIZE
             lock.release()
 
-    for _ in range(16):
+    for _ in range(12):
       t = Process(target=save_fn)
       t.daemon = True
       t.start()
