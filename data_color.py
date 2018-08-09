@@ -29,8 +29,8 @@ class DataSet(object):
     
     self.data_path = 'data/train.txt'
     self.gray_dir = '/srv/glusterfs/xieya/data/imagenet_gray/train'
-    self.thread_num = 8
-    self.thread_num2 = 8
+    self.thread_num = 5
+    self.thread_num2 = 5
     #record and image_label queue
     self.record_queue = Queue(maxsize=16000)
     self.image_queue = Queue(maxsize=4000)
@@ -123,5 +123,5 @@ class DataSet(object):
     Returns:
       images: 4-D ndarray [batch_size, height, width, 3]
     """
-    # print(self.record_queue.qsize(), self.image_queue.qsize(), self.batch_queue.qsize())
+    print(self.record_queue.qsize(), self.image_queue.qsize(), self.batch_queue.qsize())
     return self.batch_queue.get()
