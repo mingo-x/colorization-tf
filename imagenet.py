@@ -149,13 +149,11 @@ def _colorize_data_train():
         saver.restore(sess, _CKPT_PATH)
 
         start_time = monotonic.monotonic()
-        prev_i = i
         while i < ds.record_number:
             lock.acquire()
-            if i - prev_i == (_BATCH_SIZE * _LOG_FREQ):
+            if i % (_BATCH_SIZE * _LOG_FREQ) == 0:
                 print("Image count: {0} Time: {1}".format(i, monotonic.monotonic() - start_time))
                 start_time = monotonic.monotonic()
-                prev_i = i
             lock.release()
 
             img_l_batch, img_l_rs_batch, img_name_batch = ds.batch()
@@ -164,7 +162,7 @@ def _colorize_data_train():
 
             save_queue.put((img_l_batch, img_313_rs_batch, img_name_batch))
             print("Save queue size: {}".format(save_queue.qsize()))
-
+    print("Colorized: {}".format(i))
             
 
 def _log(curr_idx):
@@ -209,9 +207,9 @@ def _validation_data(func):
 def main():
     # _validation_data(_to_gray)
     # _training_data(_to_gray)
-    # _colorize_data_wrapper('val')
+    _colorize_data_wrapper('val')
     # _colorize_data_wrapper('train')
-    _colorize_data_train()
+    # _colorize_data_train()
 
 
 if __name__ == "__main__":
