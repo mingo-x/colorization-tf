@@ -32,6 +32,7 @@ _LOG_FREQ = 100
 _TASK_NUM = 100
 _TRAIN_DATA_LIST = '/home/xieya/colorization-tf/data/train.txt'
 
+
 def count_img():
     line_idx = 0
     count = 0
@@ -45,11 +46,12 @@ def count_img():
                     count += 1
                     if count % _LOG_FREQ == 0:
                         print(count)
-			sys.stdout.flush()
+                        sys.stdout.flush()
                 else:
                     print(img_name)
             line_idx += 1
     return count
+
 
 def structure_gray():
     line_idx = 0
@@ -61,7 +63,10 @@ def structure_gray():
                 img_name = os.path.split(img_path)
                 class_name = img_name.split('_')[0]
                 class_path = os.path.join(_GRAY_TRAIN_DIR, class_name)
-                subprocess.check_call(['mkdir', '-p', class_path])
+                if not os.path.isdir(class_path):
+                    subprocess.check_call(['mkdir', class_path])
+                    print('Created {}'.format(class_name))
+
                 gray_path = os.path.join(_GRAY_TRAIN_DIR, img_name)
                 subprocess.check_call(['mv', gray_path, class_path + '/'])
                 count += 1
@@ -72,5 +77,6 @@ def structure_gray():
 
 
 if __name__ == "__main__":
-    count =  count_img()
-    print('Total: {}'.format(count))
+    # count =  count_img()
+    # print('Total: {}'.format(count))
+    structure_gray()
