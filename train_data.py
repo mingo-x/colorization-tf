@@ -93,7 +93,7 @@ def subsample(in_dir, out_dir):
                     # Keep.
                     in_path = os.path.join(class_in_path, img_name)
                     out_path = os.path.join(class_out_path, img_name)
-                    subprocess.check_call(['ln', in_path, out_path])
+                    subprocess.check_call(['ln', '-s', in_path, out_path])
                     kept_count += 1
 
             print('Class {0} Kept {1}'.format(c, kept_count))
