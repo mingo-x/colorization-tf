@@ -139,7 +139,7 @@ def _colorize_data_train(data_path, in_dir, out_dir):
             i += _BATCH_SIZE
             lock.release()
 
-    for _ in range(12):
+    for _ in range(20):
       t = Process(target=save_fn)
       t.daemon = True
       t.start()
@@ -208,7 +208,7 @@ def main():
     # _training_data(_to_gray)
     # _colorize_data_wrapper('val')
     # _colorize_data_wrapper('train')
-    _colorize_data_train('data/val.txt', '/srv/glusterfs/xieya/data/imagenet_gray/val', '/srv/glusterfs/xieya/data/imagenet_colorized/val')
+    _colorize_data_train('data/uncolor_train.txt', '/srv/glusterfs/xieya/data/imagenet_gray/train', '/srv/glusterfs/xieya/data/imagenet_colorized/train')
 
 
 if __name__ == "__main__":
