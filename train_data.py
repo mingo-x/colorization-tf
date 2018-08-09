@@ -68,14 +68,11 @@ def structure(data_list, out_dir):
                 class_name = img_name.split('_')[0]
                 class_path = os.path.join(out_dir, class_name)
                 in_path = os.path.join(out_dir, img_name)
-                if os.paht.isfile(in_path):
-                    subprocess.check_call(['mv', in_path, class_path + '/'])
-                    count += 1
-                    if count % _LOG_FREQ == 0:
-                        print(count)
-                        sys.stdout.flush()
-                else:
-                    print(img_name)
+                subprocess.check_call(['mv', in_path, class_path + '/'])
+                count += 1
+                if count % _LOG_FREQ == 0:
+                    print(count)
+                    sys.stdout.flush()
             line_idx += 1
 
 
@@ -121,6 +118,6 @@ def merge_uncolorized():
 if __name__ == "__main__":
     # count =  count_img()
     # print('Total: {}'.format(count))
-    structure(_COLOR_DIR)
+    structure('data/uncolor_train.txt', _COLOR_DIR)
     # subsample(_GRAY_TRAIN_DIR, _GRAY_TRAIN_SS_DIR)
     # merge_uncolorized()
