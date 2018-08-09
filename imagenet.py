@@ -140,7 +140,7 @@ def _colorize_data_train():
             i += _BATCH_SIZE
             lock.release()
 
-    for _ in range(8):
+    for _ in range(16):
       t = Process(target=save_fn)
       t.daemon = True
       t.start()
@@ -149,11 +149,14 @@ def _colorize_data_train():
         saver.restore(sess, _CKPT_PATH)
 
         start_time = monotonic.monotonic()
-        
+        prev_i = i
         while i < ds.record_number:
-            if i % (_BATCH_SIZE * _LOG_FREQ) == 0:
+            lock.acquire()
+            if i - prev_i == (_BATCH_SIZE * _LOG_FREQ):
                 print("Image count: {0} Time: {1}".format(i, monotonic.monotonic() - start_time))
                 start_time = monotonic.monotonic()
+                prev_i = i
+            lock.release()
 
             img_l_batch, img_l_rs_batch, img_name_batch = ds.batch()
             

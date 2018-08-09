@@ -29,8 +29,8 @@ class DataSet(object):
     
     self.data_path = 'data/train.txt'
     self.gray_dir = '/srv/glusterfs/xieya/data/imagenet_gray/train'
-    self.thread_num = 8
-    self.thread_num2 = 8
+    self.thread_num = 5
+    self.thread_num2 = 5
     #record and image_label queue
     self.record_queue = Queue(maxsize=16000)
     self.image_queue = Queue(maxsize=4000)
