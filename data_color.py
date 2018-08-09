@@ -18,7 +18,7 @@ class DataSet(object):
     image_path
   """
 
-  def __init__(self):
+  def __init__(self, data_path, in_dir):
     """
     Args:
       common_params: A dict
@@ -27,8 +27,8 @@ class DataSet(object):
     self.input_size = 224
     self.batch_size = 32
     
-    self.data_path = 'data/train.txt'
-    self.gray_dir = '/srv/glusterfs/xieya/data/imagenet_gray/train'
+    self.data_path = data_path
+    self.gray_dir = in_dir
     self.thread_num = 5
     self.thread_num2 = 5
     #record and image_label queue

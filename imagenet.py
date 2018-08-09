@@ -112,9 +112,8 @@ def _colorize_data_wrapper(phase):
             _colorize(img_paths_batch, out_dir, model, input_tensor, sess)
 
 
-def _colorize_data_train():
-    out_dir = _COLOR_DIR + 'train'
-    ds = DataSet()
+def _colorize_data_train(data_path, in_dir, out_dir):
+    ds = DataSet(data_path, in_dir)
     input_tensor = tf.placeholder(
         tf.float32, shape=(_BATCH_SIZE, _INPUT_SIZE, _INPUT_SIZE, 1))
     model = demo._get_model(input_tensor)
@@ -207,9 +206,9 @@ def _validation_data(func):
 def main():
     # _validation_data(_to_gray)
     # _training_data(_to_gray)
-    _colorize_data_wrapper('val')
+    # _colorize_data_wrapper('val')
     # _colorize_data_wrapper('train')
-    # _colorize_data_train()
+    _colorize_data_train('data/val.txt', '/srv/glusterfs/xieya/data/imagenet_gray/val', '/srv/glusterfs/xieya/data/imagenet_colorized/val')
 
 
 if __name__ == "__main__":

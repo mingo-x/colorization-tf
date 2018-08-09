@@ -31,7 +31,7 @@ _COLOR_DIR = '/srv/glusterfs/xieya/data/imagenet_colorized/train'
 _GRAY_TRAIN_DIR = '/srv/glusterfs/xieya/data/imagenet_gray/train'
 _GRAY_TRAIN_SS_DIR = '/srv/glusterfs/xieya/data/imagenet_gray_ss/train'
 _LOG_FREQ = 100
-_ORIGINAL_TRAIN_DIR = '/srv/glusterfs/xieya/data/imagenet_colorized/train'
+_ORIGINAL_TRAIN_DIR = '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/train'
 _SS_RATE = 3
 _TASK_NUM = 100
 _TRAIN_DATA_LIST = '/home/xieya/colorization-tf/data/train.txt'
@@ -98,6 +98,22 @@ def subsample(in_dir, out_dir):
 
             print('Class {0} Kept {1}'.format(c, kept_count))
         class_idx += 1
+
+
+def merge_uncolorized():
+    prefix = '/srv/glusterfs/xieya/log/train_data.py.o3860889.'
+
+    with open('data/uncolor_train.txt', 'w') as fout:
+        for i in range(_TASK_NUM):
+            fname = prefix + str(i+1)
+            un_count = 0
+            with open(fname, 'r') as fin:
+                for line in fin:
+                    line = line.strip()
+                    if line.endswith('.JPEG'):
+                        un_count += 1
+                        fout.write(os.path.join(_ORIGINAL_TRAIN_DIR, line) + '\n')
+            print('Task {0} Count {1}'.format(i+1, un_count))
 
 
 if __name__ == "__main__":
