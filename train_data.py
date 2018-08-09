@@ -53,7 +53,7 @@ def count_img():
     return count
 
 
-def structure_gray():
+def structure(out_dir):
     line_idx = 0
     count = 0
     with open(_TRAIN_DATA_LIST, 'r') as fin:
@@ -62,21 +62,20 @@ def structure_gray():
                 img_path = line.strip()
                 img_name = os.path.split(img_path)[1]
                 class_name = img_name.split('_')[0]
-                class_path = os.path.join(_GRAY_TRAIN_DIR, class_name)
-                if not os.path.isdir(class_path):
-                    subprocess.check_call(['mkdir', class_path])
-                    print('Created {}'.format(class_name))
-
-                gray_path = os.path.join(_GRAY_TRAIN_DIR, img_name)
-                subprocess.check_call(['mv', gray_path, class_path + '/'])
-                count += 1
-                if count % _LOG_FREQ == 0:
-                    print(count)
-                    sys.stdout.flush()
+                class_path = os.path.join(out_dir, class_name)
+                in_path = os.path.join(out_dir, img_name)
+                if os.path.isfile(in_path):
+                    subprocess.check_call(['mv', in_path, class_path + '/'])
+                    count += 1
+                    if count % _LOG_FREQ == 0:
+                        print(count)
+                        sys.stdout.flush()
+                else:
+                    print(img_name)
             line_idx += 1
 
 
 if __name__ == "__main__":
     # count =  count_img()
     # print('Total: {}'.format(count))
-    structure_gray()
+    structure(_COLOR_DIR)
