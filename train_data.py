@@ -33,6 +33,7 @@ _GRAY_TRAIN_DIR = '/srv/glusterfs/xieya/data/imagenet_gray/train'
 _GRAY_TRAIN_SS_DIR = '/srv/glusterfs/xieya/data/imagenet_gray_ss/train'
 _LOG_FREQ = 100
 _ORIGINAL_TRAIN_DIR = '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/train'
+_ORIGINAL_TRAIN_SS_DIR = '/srv/glusterfs/xieya/data/imagenet_true_ss/train'
 _SS_RATE = 3
 _TASK_NUM = 100
 _TRAIN_DATA_LIST = '/home/xieya/colorization-tf/data/train.txt'
@@ -98,7 +99,7 @@ def subsample(in_dir, out_dir):
         class_idx += 1
 
 
-def subsample_color(keep_list, in_dir, out_dir):
+def subsample_by_list(keep_list, in_dir, out_dir):
     line_idx = 0
     count = 0
     with open(keep_list, 'r') as fin:
@@ -135,8 +136,8 @@ def merge_uncolorized():
 if __name__ == "__main__":
     # count =  count_img()
     # print('Total: {}'.format(count))
-    structure('data/uncolor_train.txt', _COLOR_DIR)
-    print("<<<<<<<<<<<<<<<")
-    subsample_color('/home/xieya/train.txt', _COLOR_DIR, _COLOR_TRAIN_SS_DIR)
+    # structure('data/uncolor_train.txt', _COLOR_DIR)
+    # print("<<<<<<<<<<<<<<<")
+    subsample_by_list('/home/xieya/train.txt', _ORIGINAL_TRAIN_DIR, _ORIGINAL_TRAIN_SS_DIR)
     # subsample(_GRAY_TRAIN_DIR, _GRAY_TRAIN_SS_DIR)
     # merge_uncolorized()
