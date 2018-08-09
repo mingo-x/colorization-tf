@@ -33,9 +33,9 @@ class DataSet(object):
     self.thread_num2 = 8
     #record and image_label queue
     self.record_queue = Queue(maxsize=16000)
-    self.image_queue = Queue(maxsize=8000)
+    self.image_queue = Queue(maxsize=4000)
 
-    self.batch_queue = Queue(maxsize=200)
+    self.batch_queue = Queue(maxsize=100)
 
     self.record_list = []  
     input_file = open(self.data_path, 'r')
