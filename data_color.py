@@ -29,8 +29,8 @@ class DataSet(object):
     
     self.data_path = data_path
     self.gray_dir = in_dir
-    self.thread_num = 5
-    self.thread_num2 = 5
+    self.thread_num = 20
+    self.thread_num2 = 20
     #record and image_label queue
     self.record_queue = Queue(maxsize=16000)
     self.image_queue = Queue(maxsize=4000)
@@ -43,7 +43,8 @@ class DataSet(object):
     for line in input_file:
       line = line.strip()
       name = os.path.split(line)[1]
-      self.record_list.append(name)
+      class_name = name.split('_')[0]
+      self.record_list.append(class_name+'/'+name)
     # self.record_list.sort()
 
     self.record_point = 0

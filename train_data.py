@@ -57,10 +57,10 @@ def count_img():
     return count
 
 
-def structure(out_dir):
+def structure(data_list, out_dir):
     line_idx = 0
     count = 0
-    with open(_TRAIN_DATA_LIST, 'r') as fin:
+    with open(data_list, 'r') as fin:
         for line in fin:
             if line_idx % _TASK_NUM == _TASK_ID:
                 img_path = line.strip()
@@ -122,6 +122,6 @@ def merge_uncolorized():
 if __name__ == "__main__":
     # count =  count_img()
     # print('Total: {}'.format(count))
-    # structure(_COLOR_DIR)
+    structure(_COLOR_DIR)
     # subsample(_GRAY_TRAIN_DIR, _GRAY_TRAIN_SS_DIR)
-    merge_uncolorized()
+    # merge_uncolorized()
