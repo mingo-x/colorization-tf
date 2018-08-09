@@ -21,6 +21,7 @@ import functools
 import os
 import sys
 from threading import Thread as Process
+from threading import RLock
 
 import cv2
 import monotonic
@@ -124,6 +125,7 @@ def _colorize_data_train():
 
     save_queue = Queue(320)
 
+    lock = RLock()
 
     def save_fn():
         img_l_batch, img_313_rs_batch, img_name_batch = save_queue.get()
@@ -132,8 +134,10 @@ def _colorize_data_train():
             img_rgb, _ = utils.decode(img_l, img_313_rs_batch[idx: idx + 1], _T)
             io.imsave(os.path.join(out_dir, img_name_batch[idx]), img_rgb)
 
+        lock.acquire()
         global i
         i += _BATCH_SIZE
+        lock.release()
 
     for _ in range(8):
       t = Process(target=save_fn)
