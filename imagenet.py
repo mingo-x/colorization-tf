@@ -128,16 +128,17 @@ def _colorize_data_train():
     lock = RLock()
 
     def save_fn():
-        img_l_batch, img_313_rs_batch, img_name_batch = save_queue.get()
-        for idx in range(_BATCH_SIZE):
-            img_l = img_l_batch[idx]
-            img_rgb, _ = utils.decode(img_l, img_313_rs_batch[idx: idx + 1], _T)
-            io.imsave(os.path.join(out_dir, img_name_batch[idx]), img_rgb)
+        while True:
+            img_l_batch, img_313_rs_batch, img_name_batch = save_queue.get()
+            for idx in range(_BATCH_SIZE):
+                img_l = img_l_batch[idx]
+                img_rgb, _ = utils.decode(img_l, img_313_rs_batch[idx: idx + 1], _T)
+                io.imsave(os.path.join(out_dir, img_name_batch[idx]), img_rgb)
 
-        lock.acquire()
-        global i
-        i += _BATCH_SIZE
-        lock.release()
+            lock.acquire()
+            global i
+            i += _BATCH_SIZE
+            lock.release()
 
     for _ in range(8):
       t = Process(target=save_fn)
