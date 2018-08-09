@@ -126,7 +126,6 @@ def _colorize_data_train():
 
 
     def save_fn():
-        print(save_queue.qsize())
         img_l_batch, img_313_rs_batch, img_name_batch = save_queue.get()
         for idx in range(_BATCH_SIZE):
             img_l = img_l_batch[idx]
@@ -156,6 +155,7 @@ def _colorize_data_train():
             img_313_rs_batch = sess.run(model, feed_dict={input_tensor: img_l_rs_batch})
 
             save_queue.put((img_l_batch, img_313_rs_batch, img_name_batch))
+            print("Save queue size: {}".format(save_queue.qsize()))
 
             
 
