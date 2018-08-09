@@ -60,7 +60,7 @@ def structure_gray():
         for line in fin:
             if line_idx % _TASK_NUM == _TASK_ID:
                 img_path = line.strip()
-                img_name = os.path.split(img_path)
+                img_name = os.path.split(img_path)[1]
                 class_name = img_name.split('_')[0]
                 class_path = os.path.join(_GRAY_TRAIN_DIR, class_name)
                 if not os.path.isdir(class_path):
