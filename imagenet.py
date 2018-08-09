@@ -49,6 +49,7 @@ _BATCH_SIZE = 32
 _INPUT_SIZE = 224
 _T = 2.63
 
+i = 0
 
 def _colorize(img_paths_batch, out_dir, model, input_tensor, sess):
     img_l_batch = []
@@ -123,7 +124,6 @@ def _colorize_data_train():
 
     save_queue = Queue(320)
 
-    i = 0
 
     def save_fn():
         print(save_queue.qsize())
