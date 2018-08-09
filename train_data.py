@@ -86,7 +86,7 @@ def subsample(in_dir, out_dir):
         if class_idx % _TASK_NUM == _TASK_ID:
             class_in_path = os.path.join(in_dir, c)
             class_out_path = os.path.join(out_dir, c)
-            subprocess.check_call(['mkdir', class_out_path])
+            subprocess.check_call(['mkdir', '-p', class_out_path])
             kept_count = 0
             for img_name in os.listdir(class_in_path):
                 if random.randint(1, _SS_RATE) == 1:
@@ -97,6 +97,7 @@ def subsample(in_dir, out_dir):
                     kept_count += 1
 
             print('Class {0} Kept {1}'.format(c, kept_count))
+            sys.stdout.flush()
         class_idx += 1
 
 
