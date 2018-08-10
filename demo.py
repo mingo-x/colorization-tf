@@ -12,7 +12,7 @@ _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
 _CKPT_PATH = '/srv/glusterfs/xieya/colorization-gan/models/model.ckpt-499000'
-IMG_DIR = '/srv/glusterfs/xieya/cifar-10-batches-py'
+IMG_DIR = '/srv/glusterfs/xieya/uncolor'
 OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/colorization_test'
 T = 2.63
 
