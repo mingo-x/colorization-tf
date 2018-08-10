@@ -140,11 +140,11 @@ def check_zero(keep_list, in_dir):
     print('Zero {}'.format(zero_count))
 
 
-def merge_uncolorized():
-    prefix = '/srv/glusterfs/xieya/log/train_data.py.o3860889.'
+def merge(out_file):
+    prefix = '/srv/glusterfs/xieya/log/train_data.py.o3861047.'
 
     total_count = 0
-    with open('data/uncolor_train.txt', 'w') as fout:
+    with open(out_file, 'w') as fout:
         for i in range(_TASK_NUM):
             fname = prefix + str(i+1)
             un_count = 0
@@ -165,5 +165,5 @@ if __name__ == "__main__":
     # print("<<<<<<<<<<<<<<<")
     # subsample_by_list('/home/xieya/train.txt', _COLOR_DIR, _COLOR_TRAIN_SS_DIR)
     # subsample(_GRAY_TRAIN_DIR, _GRAY_TRAIN_SS_DIR)
-    # merge_uncolorized()
-    check_zero('/home/xieya/train.txt', _COLOR_DIR)
+    merge('/home/xieya/zero.txt')
+    # check_zero('/home/xieya/train.txt', _COLOR_DIR)
