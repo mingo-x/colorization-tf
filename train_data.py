@@ -118,6 +118,28 @@ def subsample_by_list(keep_list, in_dir, out_dir):
     print('Kept {}'.format(count))
 
 
+def check_zero(keep_list, in_dir):
+    line_idx = 0
+    count = 0
+    zero_count = 0
+    with open(keep_list, 'r') as fin:
+        for line in fin:
+            if line_idx % _TASK_NUM == _TASK_ID:
+                img_name = line.strip().split()[0]
+                in_path = os.path.join(in_dir, img_name)
+                s = os.path.getsize(in_path)
+                if s == 0:
+                    print(img_name)
+                    zero_count += 1
+
+                count += 1
+                if count % _LOG_FREQ == 0:
+                    print(count)
+                    sys.stdout.flush()
+            line_idx += 1
+    print('Zero {}'.format(zero_count))
+
+
 def merge_uncolorized():
     prefix = '/srv/glusterfs/xieya/log/train_data.py.o3860889.'
 
@@ -141,6 +163,7 @@ if __name__ == "__main__":
     # print('Total: {}'.format(count))
     # structure('data/uncolor_train.txt', _COLOR_DIR)
     # print("<<<<<<<<<<<<<<<")
-    subsample_by_list('/home/xieya/train.txt', _COLOR_DIR, _COLOR_TRAIN_SS_DIR)
+    # subsample_by_list('/home/xieya/train.txt', _COLOR_DIR, _COLOR_TRAIN_SS_DIR)
     # subsample(_GRAY_TRAIN_DIR, _GRAY_TRAIN_SS_DIR)
     # merge_uncolorized()
+    check_zero('/home/xieya/train.txt', _COLOR_DIR)
