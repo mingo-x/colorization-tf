@@ -39,10 +39,10 @@ class DataSet(object):
       self.thread_num = int(int(dataset_params['thread_num']) / 2)
       self.thread_num2 = int(int(dataset_params['thread_num']) / 2)
     #record and image_label queue
-    self.record_queue = Queue(maxsize=16000)
-    self.image_queue = Queue(maxsize=8000)
+    self.record_queue = Queue(maxsize=20000)
+    self.image_queue = Queue(maxsize=12000)
 
-    self.batch_queue = Queue(maxsize=200)
+    self.batch_queue = Queue(maxsize=300)
 
     self.record_list = []  
 
