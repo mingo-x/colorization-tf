@@ -151,6 +151,7 @@ class Solver(object):
             start_time = time.time()
 
             for step in xrange(start_step, self.max_steps, self.g_repeat):
+                data_l, gt_ab_313, prior_boost_nongray, _ = self.dataset.batch()
                 if self.gan:
                     _, _, _, data_lab_real = self.dataset.batch()
                     # Discriminator training.
@@ -158,7 +159,9 @@ class Solver(object):
                               feed_dict={self.data_l: data_l, self.data_lab_real: data_lab_real})
 
                 # Generator training.
-                for _ in xrange(self.g_repeat):
+                sess.run([train_op], 
+                          feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
+                for _ in xrange(self.g_repeat - 1):
                     data_l, gt_ab_313, prior_boost_nongray, _ = self.dataset.batch()
                     sess.run([train_op], 
                               feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})

@@ -175,7 +175,7 @@ def merge_g(out_file):
             with open(fname, 'r') as fin:
                 for line in fin:
                     fout.write(line)
-            print('Task {}'.format(i+1)
+            print('Task {}'.format(i+1))
 
 
 def merge_l():
