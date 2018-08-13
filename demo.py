@@ -11,8 +11,8 @@ _RESIZE_SIZE = 0
 _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
-_CKPT_PATH = '/srv/glusterfs/xieya/colorization-gan/models/model.ckpt-499000'
-IMG_DIR = '/srv/glusterfs/xieya/uncolor'
+_CKPT_PATH = '/srv/glusterfs/xieya/colorization-gan-6/models/model.ckpt-445000'
+IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/'
 OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/colorization_test'
 T = 2.63
 
