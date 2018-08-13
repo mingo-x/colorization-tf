@@ -41,6 +41,7 @@ _GRAY_TRAIN_SS_DIR = '/srv/glusterfs/xieya/data/imagenet_gray_ss/train'
 _LOG_FREQ = 100
 _ORIGINAL_TRAIN_DIR = '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/train'
 _ORIGINAL_TRAIN_SS_DIR = '/srv/glusterfs/xieya/data/imagenet_true_ss/train'
+_ORIGINAL_VAL_DIR = '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val'
 _SS_RATE = 3
 _TASK_NUM = 100
 _TRAIN_DATA_LIST = '/home/xieya/colorization-tf/data/train.txt'
@@ -194,6 +195,7 @@ def merge_l():
 def keep_ab(keep_list, in_dir, out_dir, mean_l):
     line_idx = 0
     count = 0
+    gray_count = 0
     with open(keep_list, 'r') as fin:
         for line in fin:
             if line_idx % _TASK_NUM == _TASK_ID:
@@ -208,12 +210,17 @@ def keep_ab(keep_list, in_dir, out_dir, mean_l):
                     img_lab[:, :, 0] = mean_l  # Remove l.
                     img_rgb = color.lab2rgb(img_lab)
                     io.imsave(out_path, img_rgb)
+                else:
+                    print(img_name)
+                    gray_count += 1
 
                 count += 1
                 if count % _LOG_FREQ == 0:
                     print(count)
                     sys.stdout.flush()
             line_idx += 1
+
+    print("Gray {}".format(gray_count))
 
 
 def get_mean_l(keep_list, in_dir):
@@ -251,6 +258,16 @@ def get_mean_l(keep_list, in_dir):
         print("{0} {1}".format(class_name, class_graycount_dict[class_name]))
 
 
+def get_nongray_list(in_list, out_file):
+    with open(in_list, 'r') as fin, open(out_file, 'w') as fout:
+        for line in fin:
+            img_name = line.strip().split()[0]
+            in_path = os.path.join(_ORIGINAL_TRAIN_DIR, img_name)
+            img = io.imread(in_path)
+            if (len(img.shape) == 3 and img.shape[2] == 3):  # Non-gray.
+                fout.write(line)
+
+
 if __name__ == "__main__":
     # count =  count_img()
     # print('Total: {}'.format(count))
@@ -262,4 +279,4 @@ if __name__ == "__main__":
     # check_zero('/home/xieya/train.txt', _COLOR_DIR)
     # get_mean_l('/home/xieya/train.txt', _ORIGINAL_TRAIN_DIR)
     # merge_l()
-    keep_ab('/home/xieya/train.txt', _ORIGINAL_TRAIN_DIR, _AB_TRAIN_SS_DIR, 48.5744)
+    keep_ab('/home/xieya/colorization-tf/resources/val.txt', _ORIGINAL_VAL_DIR, _AB_VAL_SS_DIR, 48.5744)
