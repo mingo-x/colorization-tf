@@ -22,11 +22,18 @@ import random
 import subprocess
 import sys
 
+import numpy as np
+from skimage import color, io
+
 _TASK_ID = os.environ.get('SGE_TASK_ID')
 if _TASK_ID is not None:
     print("Task id: {}".format(_TASK_ID))
     _TASK_ID = int(_TASK_ID) - 1
+else:
+    _TASK_ID = 0
 
+_AB_TRAIN_SS_DIR = '/srv/glusterfs/xieya/data/imagenet_ab_ss/train'
+_AB_VAL_SS_DIR = '/srv/glusterfs/xieya/data/imagenet_ab_ss/val'
 _COLOR_DIR = '/srv/glusterfs/xieya/data/imagenet_colorized/train'
 _COLOR_TRAIN_SS_DIR = '/srv/glusterfs/xieya/data/imagenet_colorized_ss/train'
 _GRAY_TRAIN_DIR = '/srv/glusterfs/xieya/data/imagenet_gray/train'
@@ -158,6 +165,92 @@ def merge(out_file):
             total_count += un_count
 
 
+def merge_l():
+    prefix = '/srv/glusterfs/xieya/log/train_data.py.o3862485.'
+
+    mean_list = []
+    count_list = []
+    gray_count = 0
+    for i in range(_TASK_NUM):
+        fname = prefix + str(i + 1)
+        with open(fname, 'r') as fin:
+            for line in fin:
+                line = line.strip()
+                if line.startswith('('):
+                    mean, count = line[1: -1].split(', ')
+                    mean = float(mean)
+                    count = int(count)
+                    mean_list.append(mean)
+                    count_list.append(count)
+                elif line.startswith('Gray'):
+                    gray = int(line.split()[1])
+                    gray_count += gray
+            print('Task {0} finished.'.format(i + 1))
+
+    mean_l = np.average(mean_list, weights=count_list)
+    print("MeanL {0}, GrayCount {1}".format(mean_l, gray_count))
+
+
+def keep_ab(keep_list, in_dir, out_dir, mean_l):
+    line_idx = 0
+    count = 0
+    with open(keep_list, 'r') as fin:
+        for line in fin:
+            if line_idx % _TASK_NUM == _TASK_ID:
+                img_name = line.strip().split()[0]
+                in_path = os.path.join(in_dir, img_name)
+                out_path = os.path.join(out_dir, img_name)
+
+                img_rgb = io.imread(in_path)
+
+                if len(img_rgb.shape) == 3 and img_rgb.shape[2] == 3:
+                    img_lab = color.rgb2lab(img_rgb)
+                    img_lab[:, :, 0] = mean_l  # Remove l.
+                    img_rgb = color.lab2rgb(img_lab)
+                    io.imsave(out_path, img_name)
+
+                count += 1
+                if count % _LOG_FREQ == 0:
+                    print(count)
+                    sys.stdout.flush()
+            line_idx += 1
+
+
+def get_mean_l(keep_list, in_dir):
+    line_idx = 0
+    mean_l = []
+    gray_count = 0
+    class_graycount_dict = {}
+    with open(keep_list, 'r') as fin:
+        for line in fin:
+            if line_idx % _TASK_NUM == _TASK_ID:
+                img_name = line.strip().split()[0]
+                class_name = img_name.split('/')[0]
+                in_path = os.path.join(in_dir, img_name)
+
+                img_rgb = io.imread(in_path)
+                if len(img_rgb.shape) != 3 or img_rgb.shape[2] != 3:
+                    gray_count += 1
+                    if class_name not in class_graycount_dict:
+                        class_graycount_dict[class_name] = 0
+                    class_graycount_dict[class_name] += 1
+                else:
+                    img_lab = color.rgb2lab(img_rgb)
+                    mean_l.append(np.mean(img_lab[:, :, 0]))  # Get l data.
+
+                    if len(mean_l) % _LOG_FREQ == 0:
+                        print(len(mean_l))
+                        sys.stdout.flush()
+
+            line_idx += 1
+
+    mean = np.mean(mean_l)
+    print("({0}, {1})".format(mean, len(mean_l)))
+    print('Gray {}'.format(gray_count))
+    for class_name in class_graycount_dict:
+        print("{0} {1}".format(class_name, class_graycount_dict[class_name]))
+
+
 if __name__ == "__main__":
     # count =  count_img()
     # print('Total: {}'.format(count))
@@ -165,5 +258,8 @@ if __name__ == "__main__":
     # print("<<<<<<<<<<<<<<<")
     # subsample_by_list('/home/xieya/train.txt', _COLOR_DIR, _COLOR_TRAIN_SS_DIR)
     # subsample(_GRAY_TRAIN_DIR, _GRAY_TRAIN_SS_DIR)
-    merge('/home/xieya/zero.txt')
+    # merge('/home/xieya/zero.txt')
     # check_zero('/home/xieya/train.txt', _COLOR_DIR)
+    # get_mean_l('/home/xieya/train.txt', _ORIGINAL_TRAIN_DIR)
+    # merge_l()
+    keep_ab('/home/xieya/train.txt', _ORIGINAL_TRAIN_DIR, _AB_TRAIN_SS_DIR, 48.5744)

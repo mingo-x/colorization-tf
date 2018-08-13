@@ -11,9 +11,10 @@ _RESIZE_SIZE = 0
 _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
-_CKPT_PATH = '/srv/glusterfs/xieya/colorization-gan-6/models/model.ckpt-457000'
-IMG_DIR = '/srv/glusterfs/xieya/image/grayscale'
-OUTPUT_DIR = '/srv/glusterfs/xieya/image/color'
+_CKPT_PATH = '/srv/glusterfs/xieya/colorization-gan/models/model.ckpt-499000'
+IMG_DIR = '/srv/glusterfs/xieya/video/cow_frames'
+OUTPUT_DIR = '/srv/glusterfs/xieya/video/cow_color'
+_IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
 T = 2.63
 
 
@@ -132,30 +133,25 @@ def cifar():
             _colorize_cifar_batch(cifar_batch, model, input_tensor, sess)
 
 
-def _colorize_high_res_img():
-    for img_name in os.listdir(IMG_DIR):
-        if img_name.endswith('.jpg') or img_name.endswith('.JPEG'):
-            print(img_name)
+def _colorize_high_res_img(img_name):
+    img = cv2.imread(os.path.join(IMG_DIR, img_name))
+    if len(img.shape) == 3:
+        img_l = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        img_l = img_l[None, :, :, None]
+    else:
+        img_l = img[None, :, :, None]
 
-            img = cv2.imread(os.path.join(IMG_DIR, img_name))
-            if len(img.shape) == 3:
-                img_l = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-                img_l = img_l[None, :, :, None]
-            else:
-                img_l = img[None, :, :, None]
+        img_l = (img_l.astype(dtype=np.float32)) / 255.0 * 100 - 50
+        autocolor = Net(train=False)
+        conv8_313 = autocolor.inference(img_l)
+        saver = tf.train.Saver()
 
-            img_l = (img_l.astype(dtype=np.float32)) / 255.0 * 100 - 50
-            autocolor = Net(train=False)
-            conv8_313 = autocolor.inference(img_l)
-            saver = tf.train.Saver()
+        with tf.Session() as sess:
+            saver.restore(sess, _CKPT_PATH)
+            img_313 = sess.run(conv8_313)
 
-            with tf.Session() as sess:
-                saver.restore(sess, _CKPT_PATH)
-                img_313 = sess.run(conv8_313)
-
-            img_rgb, _ = decode(img_l, img_313, T)
-            imsave(os.path.join(OUTPUT_DIR, img_name), img_rgb)
-        
+        img_rgb, _ = decode(img_l, img_313, T)
+        imsave(os.path.join(OUTPUT_DIR, img_name), img_rgb)
     
 
 def main():
@@ -173,6 +169,6 @@ def main():
 
 
 if __name__ == "__main__":
-    # main()
-    _colorize_high_res_img()
+    main()
+    # _colorize_high_res_img(_IMG_NAME)
     # cifar()
