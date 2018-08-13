@@ -133,7 +133,6 @@ def cifar():
 
 
 def _colorize_high_res_img():
-    autocolor = Net(train=False)
     for img_name in os.listdir(IMG_DIR):
         if img_name.endswith('.jpg') or img_name.endswith('.JPEG'):
             print(img_name)
@@ -146,6 +145,7 @@ def _colorize_high_res_img():
                 img_l = img[None, :, :, None]
 
             img_l = (img_l.astype(dtype=np.float32)) / 255.0 * 100 - 50
+            autocolor = Net(train=False)
             conv8_313 = autocolor.inference(img_l)
             saver = tf.train.Saver()
 
