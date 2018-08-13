@@ -207,7 +207,7 @@ def keep_ab(keep_list, in_dir, out_dir, mean_l):
                     img_lab = color.rgb2lab(img_rgb)
                     img_lab[:, :, 0] = mean_l  # Remove l.
                     img_rgb = color.lab2rgb(img_lab)
-                    io.imsave(out_path, img_name)
+                    io.imsave(out_path, img_rgb)
 
                 count += 1
                 if count % _LOG_FREQ == 0:
