@@ -168,10 +168,14 @@ def merge(out_file):
 
 def merge_g(out_file):
     prefix = out_file
-    for i in range(_TASK_NUM):
-        fname = prefix + str(i+1)
-        subprocess.check_call(['cat', fname, '>>', out_file ])
-        print(i)
+    total_count = 0
+    with open(out_file, 'w') as fout:
+        for i in range(_TASK_NUM):
+            fname = prefix + str(i+1)
+            with open(fname, 'r') as fin:
+                for line in fin:
+                    fout.write(line)
+            print('Task {}'.format(i+1)
 
 
 def merge_l():
