@@ -166,6 +166,14 @@ def merge(out_file):
             total_count += un_count
 
 
+def merge_g(out_file):
+    prefix = '/home/xieya/colorization-tf/val_nongray.txt'
+
+    for i in range(_TASK_NUM):
+        fname = prefix + str(i+1)
+        subprocess.check_call(['cat' ])
+
+
 def merge_l():
     prefix = '/srv/glusterfs/xieya/log/train_data.py.o3862485.'
 
@@ -258,14 +266,14 @@ def get_mean_l(keep_list, in_dir):
         print("{0} {1}".format(class_name, class_graycount_dict[class_name]))
 
 
-def get_nongray_list(in_list, out_file):
+def get_nongray_list(in_list, out_file, in_dir):
     line_idx = 0
     count = 0
     with open(in_list, 'r') as fin, open(out_file + str(_TASK_NUM + 1), 'w') as fout:
         for line in fin:
             if line_idx % _TASK_NUM == _TASK_ID:
                 img_name = line.strip().split()[0]
-                in_path = os.path.join(_ORIGINAL_TRAIN_DIR, img_name)
+                in_path = os.path.join(in_dir, img_name)
                 img = io.imread(in_path)
                 if (len(img.shape) == 3 and img.shape[2] == 3):  # Non-gray.
                     fout.write(line)
@@ -289,4 +297,4 @@ if __name__ == "__main__":
     # get_mean_l('/home/xieya/train.txt', _ORIGINAL_TRAIN_DIR)
     # merge_l()
     # keep_ab('/home/xieya/colorization-tf/resources/val.txt', _ORIGINAL_VAL_DIR, _AB_VAL_SS_DIR, 48.5744)
-    get_nongray_list('/home/xieya/colorization-tf/data/train.txt', '/home/xieya/colorization-tf/data/train_ss_nongray.txt')
+    get_nongray_list('/home/xieya/colorization-tf/data/val.txt', '/home/xieya/colorization-tf/data/val_nongray.txt', _ORIGINAL_VAL_DIR)
