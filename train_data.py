@@ -279,4 +279,5 @@ if __name__ == "__main__":
     # check_zero('/home/xieya/train.txt', _COLOR_DIR)
     # get_mean_l('/home/xieya/train.txt', _ORIGINAL_TRAIN_DIR)
     # merge_l()
-    keep_ab('/home/xieya/train.txt', _ORIGINAL_TRAIN_DIR, _AB_TRAIN_SS_DIR, 48.5744)
+    # keep_ab('/home/xieya/colorization-tf/resources/val.txt', _ORIGINAL_VAL_DIR, _AB_VAL_SS_DIR, 48.5744)
+    get_nongray_list('/home/xieya/train.txt', '/home/xieya/colorization-tf/resources/train_nongray.txt')
