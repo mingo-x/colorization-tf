@@ -167,11 +167,11 @@ def merge(out_file):
 
 
 def merge_g(out_file):
-    prefix = '/home/xieya/colorization-tf/val_nongray.txt'
-
+    prefix = out_file
     for i in range(_TASK_NUM):
         fname = prefix + str(i+1)
-        subprocess.check_call(['cat' ])
+        subprocess.check_call(['cat', fname, '>>', out_file ])
+        print(i)
 
 
 def merge_l():
@@ -297,4 +297,5 @@ if __name__ == "__main__":
     # get_mean_l('/home/xieya/train.txt', _ORIGINAL_TRAIN_DIR)
     # merge_l()
     # keep_ab('/home/xieya/colorization-tf/resources/val.txt', _ORIGINAL_VAL_DIR, _AB_VAL_SS_DIR, 48.5744)
-    get_nongray_list('/home/xieya/colorization-tf/data/val.txt', '/home/xieya/colorization-tf/data/val_nongray.txt', _ORIGINAL_VAL_DIR)
+    # get_nongray_list('/home/xieya/colorization-tf/data/val.txt', '/home/xieya/colorization-tf/data/val_nongray.txt', _ORIGINAL_VAL_DIR)
+    merge_g('/home/xieya/colorization-tf/val_nongray.txt')
