@@ -55,5 +55,5 @@ python tools/train.py -c conf/train.cfg
 
 ### cmd line
 '''
-ssh xieya@biwirender17 ". /srv/glusterfs/xieya/anaconda2/etc/profile.d/conda.sh; export PATH="/srv/glusterfs/xieya/cuda-9.0/bin${PATH:+:${PATH}}"; export LD_LIBRARY_PATH="/srv/glusterfs/xieya/cuda-9.0/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"; echo \$PATH; conda activate; cd ~/colorization-tf; CUDA_VISIBLE_DEVICES=1 python -u tools/train.py -c conf/train.cfg > ~/tf.log"
+ssh xieya@biwirender15 ". /srv/glusterfs/xieya/anaconda2/etc/profile.d/conda.sh; export PATH="/srv/glusterfs/xieya/cuda-9.0/bin${PATH:+:${PATH}}"; export LD_LIBRARY_PATH="/srv/glusterfs/xieya/cuda-9.0/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"; echo \$PATH; conda activate; cd ~/colorization-gan-7; CUDA_VISIBLE_DEVICES=5 python -u tools/train.py -c conf/train.cfg > ~/gan7.log"
 '''
