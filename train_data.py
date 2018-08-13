@@ -259,6 +259,7 @@ def get_mean_l(keep_list, in_dir):
 
 
 def get_nongray_list(in_list, out_file):
+    line_count = 0
     with open(in_list, 'r') as fin, open(out_file, 'w') as fout:
         for line in fin:
             img_name = line.strip().split()[0]
@@ -266,6 +267,9 @@ def get_nongray_list(in_list, out_file):
             img = io.imread(in_path)
             if (len(img.shape) == 3 and img.shape[2] == 3):  # Non-gray.
                 fout.write(line)
+            line_count += 1
+            if line_count % _LOG_FREQ == 0:
+                print(line_count)
 
 
 if __name__ == "__main__":
