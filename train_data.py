@@ -269,7 +269,7 @@ def get_mean_l(keep_list, in_dir):
 def get_nongray_list(in_list, out_file, in_dir):
     line_idx = 0
     count = 0
-    with open(in_list, 'r') as fin, open(out_file + str(_TASK_NUM + 1), 'w') as fout:
+    with open(in_list, 'r') as fin, open(out_file + str(_TASK_ID + 1), 'w') as fout:
         for line in fin:
             if line_idx % _TASK_NUM == _TASK_ID:
                 img_name = line.strip().split()[0]
