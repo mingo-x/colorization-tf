@@ -175,7 +175,7 @@ def merge_g(out_file):
             with open(fname, 'r') as fin:
                 for line in fin:
                     fout.write(line)
-            print('Task {}'.format(i+1)
+            print('Task {}'.format(i+1))
 
 
 def merge_l():
@@ -302,4 +302,4 @@ if __name__ == "__main__":
     # merge_l()
     # keep_ab('/home/xieya/colorization-tf/resources/val.txt', _ORIGINAL_VAL_DIR, _AB_VAL_SS_DIR, 48.5744)
     # get_nongray_list('/home/xieya/colorization-tf/data/val.txt', '/home/xieya/colorization-tf/data/val_nongray.txt', _ORIGINAL_VAL_DIR)
-    merge_g('/home/xieya/colorization-tf/data/train_ss_nongray.txt')
+    merge_g('/home/xieya/colorization-tf/data/val_nongray.txt')
