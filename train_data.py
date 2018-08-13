@@ -259,18 +259,23 @@ def get_mean_l(keep_list, in_dir):
 
 
 def get_nongray_list(in_list, out_file):
-    line_count = 0
-    with open(in_list, 'r') as fin, open(out_file, 'w') as fout:
+    line_idx = 0
+    count = 0
+    with open(in_list, 'r') as fin, open(out_file + str(_TASK_NUM + 1), 'w') as fout:
         for line in fin:
-            img_name = line.strip().split()[0]
-            in_path = os.path.join(_ORIGINAL_TRAIN_DIR, img_name)
-            img = io.imread(in_path)
-            if (len(img.shape) == 3 and img.shape[2] == 3):  # Non-gray.
-                fout.write(line)
-            line_count += 1
-            if line_count % _LOG_FREQ == 0:
-                print(line_count)
+            if line_idx % _TASK_NUM == _TASK_ID:
+                img_name = line.strip().split()[0]
+                in_path = os.path.join(_ORIGINAL_TRAIN_DIR, img_name)
+                img = io.imread(in_path)
+                if (len(img.shape) == 3 and img.shape[2] == 3):  # Non-gray.
+                    fout.write(line)
+                count += 1
+                if count % _LOG_FREQ == 0:
+                    print(count)
+                    sys.stdout.flush()
 
+            line_idx += 1
+            
 
 if __name__ == "__main__":
     # count =  count_img()
