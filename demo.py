@@ -132,6 +132,32 @@ def cifar():
             _colorize_cifar_batch(cifar_batch, model, input_tensor, sess)
 
 
+def _colorize_high_res_img():
+    autocolor = Net(train=False)
+    for img_name in os.listdir(IMG_DIR):
+        if img_name.endswith('.jpg') or img_name.endswith('.JPEG'):
+            print(img_name)
+
+            img = cv2.imread(os.path.join(IMG_DIR, img_name))
+            if len(img.shape) == 3:
+                img_l = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                img_l = img_l[None, :, :, None]
+            else:
+                img_l = img[None, :, :, None]
+
+            img_l = (img_l.astype(dtype=np.float32)) / 255.0 * 100 - 50
+            conv8_313 = autocolor.inference(img_l)
+            saver = tf.train.Saver()
+
+            with tf.Session() as sess:
+                saver.restore(sess, _CKPT_PATH)
+                img_313 = sess.run(conv8_313)
+
+            img_rgb, _ = decode(img_l, img_313, T)
+            imsave(os.path.join(OUTPUT_DIR, img_name), img_rgb)
+        
+    
+
 def main():
     input_tensor = tf.placeholder(
         tf.float32, shape=(1, INPUT_SIZE, INPUT_SIZE, 1))
@@ -147,5 +173,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # main()
+    _colorize_high_res_img()
     # cifar()
