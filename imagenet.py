@@ -208,7 +208,7 @@ def main():
     # _training_data(_to_gray)
     # _colorize_data_wrapper('val')
     # _colorize_data_wrapper('train')
-    _colorize_data_train('data/uncolor_train.txt', '/srv/glusterfs/xieya/data/imagenet_gray/train', '/srv/glusterfs/xieya/data/imagenet_colorized/train')
+    _colorize_data_train('/srv/glusterfs/xieya/data/DAVIS/list.txt', '/srv/glusterfs/xieya/data/DAVIS/JPEGImages/Full-Resolution', '/srv/glusterfs/xieya/data/DAVIS/colorized')
 
 
 if __name__ == "__main__":

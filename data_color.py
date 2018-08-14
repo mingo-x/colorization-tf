@@ -42,9 +42,10 @@ class DataSet(object):
 
     for line in input_file:
       line = line.strip()
-      name = os.path.split(line)[1]
-      class_name = name.split('_')[0]
-      self.record_list.append(class_name+'/'+name)
+      # name = os.path.split(line)[1]
+      # class_name = name.split('_')[0]
+      # self.record_list.append(class_name+'/'+name)
+      self.record_list.append(line)
     # self.record_list.sort()
 
     self.record_point = 0
