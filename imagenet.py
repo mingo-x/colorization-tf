@@ -39,7 +39,7 @@ if _TASK_ID is not None:
     print("Task id: {}".format(_TASK_ID))
     _TASK_ID = int(_TASK_ID) - 1
 
-_CKPT_PATH = '/srv/glusterfs/xieya/colorization-gan/models/model.ckpt-499000'
+_CKPT_PATH = '/srv/glusterfs/xieya/colorization-gan-6/models/model.ckpt-499000'
 _COLOR_DIR = '/srv/glusterfs/xieya/data/imagenet_colorized/'
 _GRAY_DIR = '/srv/glusterfs/xieya/data/imagenet_gray/'
 _IMG_LIST_PATH = '/home/xieya/colorization-tf/data/train.txt'
