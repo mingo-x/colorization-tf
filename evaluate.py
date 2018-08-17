@@ -211,14 +211,17 @@ def main():
     print("VGG16 acc, {}".format(vgg16_acc))
     l2_accs = np.mean(l2_losses, axis=0)
     l2_accs_re = np.average(l2_losses_re, axis=0, weights=prior_sums)
+    l2_accs_re_1 = np.average(l2_losses_re, axis=0)
     x = [i for i in range(0, THRESHOLD + 1)]
     auc_score = auc(x, l2_accs)
     auc_score_re = auc(x, l2_accs_re)
-    print("L2 auc, {0}, {1}, {2}, {3}".format(
+    auc_score_re_1 = auc(x, l2_accs_re_1)
+    print("L2 auc, {0}, {1}, {2}, {3}, {4}, {5}".format(
         auc_score, auc_score / THRESHOLD,
-        auc_score_re, auc_score_re / THRESHOLD))
+        auc_score_re, auc_score_re / THRESHOLD,
+        auc_score_re_1, auc_score_re_1 / THRESHOLD))
     for i in range(0, THRESHOLD + 1):
-        print("L2 acc, {0}, {1}, {2}".format(i, l2_accs[i], l2_accs_re[i]))
+        print("L2 acc, {0}, {1}, {2}, {3}".format(i, l2_accs[i], l2_accs_re[i], l2_accs_re_1[i]))
 
 
 if __name__ == "__main__":

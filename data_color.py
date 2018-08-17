@@ -39,6 +39,7 @@ class DataSet(object):
 
     self.record_list = []  
     input_file = open(self.data_path, 'r')
+    print('Dataset {}'.format(self.data_path))
 
     for line in input_file:
       line = line.strip()
