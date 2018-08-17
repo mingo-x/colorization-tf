@@ -122,7 +122,7 @@ def _colorize_data_train(data_path, in_dir, out_dir):
     config = tf.ConfigProto(allow_soft_placement=True)
     config.gpu_options.allow_growth = True
 
-    save_queue = Queue(320)
+    save_queue = Queue(100)
 
     lock = RLock()
 

@@ -166,7 +166,7 @@ class Solver(object):
                     sess.run([train_op], 
                               feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
 
-                if step % _LOG_FREQ == 0:
+                if step % _LOG_FREQ == 2:
                     duration = time.time() - start_time
                     num_examples_per_step = self.batch_size * self.num_gpus * _LOG_FREQ
                     examples_per_sec = num_examples_per_step / duration
