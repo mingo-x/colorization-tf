@@ -76,7 +76,7 @@ class Solver(object):
             # Upscale.
             self.data_lab_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 3))
             # self.data_lab_real = tf.placeholder(tf.float32, (self.batch_size, self.height, self.width, 3))
-            self.D_real_pred = self.net.discriminator(self.data_lab_real, True)  # Reuse the variables.
+            D_real_pred = self.net.discriminator(self.data_lab_real, True)  # Reuse the variables.
 
             new_loss, g_loss, adv_loss = self.net.loss(
                 scope, self.conv8_313, self.prior_boost_nongray, self.gt_ab_313, D_fake_pred, self.gan)
@@ -84,7 +84,7 @@ class Solver(object):
             tf.summary.scalar('total_loss', g_loss)
 
             if self.gan:
-                D_loss, real_score, fake_score = self.net.discriminator_loss(self.D_real_pred, D_fake_pred)
+                D_loss, real_score, fake_score = self.net.discriminator_loss(D_real_pred, D_fake_pred)
                 tf.summary.scalar('D loss', D_loss)
                 tf.summary.scalar('real_score', real_score)
                 tf.summary.scalar('fake_score', fake_score)
