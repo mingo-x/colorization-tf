@@ -125,7 +125,8 @@ class Net(object):
         conv8_313 = temp_conv
         return conv8_313
 
-    def loss(self, scope, conv8_313, prior_boost_nongray, gt_ab_313, D_pred, is_gan):
+    def loss(self, scope, conv8_313, prior_boost_nongray,
+             gt_ab_313, D_pred, is_gan, is_boost):
         flat_conv8_313 = tf.reshape(conv8_313, [-1, 313])
         flat_gt_ab_313 = tf.reshape(gt_ab_313, [-1, 313])
         flat_gt_ab_313 = tf.stop_gradient(flat_gt_ab_313)
@@ -136,11 +137,18 @@ class Net(object):
 
         tf.summary.scalar(
             'weight_loss', tf.add_n(tf.get_collection('losses', scope=scope)))
-        #
-        dl2c = tf.gradients(g_loss, conv8_313)
-        dl2c = tf.stop_gradient(dl2c)
-        #
-        new_loss = tf.reduce_sum(dl2c * conv8_313 * prior_boost_nongray) + tf.add_n(tf.get_collection('losses', scope=scope))
+
+        if is_boost:
+            #
+            dl2c = tf.gradients(g_loss, conv8_313)
+            dl2c = tf.stop_gradient(dl2c)
+            #
+            new_loss = tf.reduce_sum(
+                dl2c * conv8_313 * prior_boost_nongray) + tf.add_n(
+                tf.get_collection('losses', scope=scope))
+        else:
+            new_loss = g_loss + tf.add_n(
+                tf.get_collection('losses', scope=scope))
 
         # Adversarial loss.
         if is_gan:

@@ -35,10 +35,15 @@ class Solver(object):
             self.g_repeat = int(common_params['g_repeat'])
             self.ckpt = common_params['ckpt'] if 'ckpt' in common_params else None
             self.gan = True if common_params['gan'] == '1' else False
+            self.prior_boost = True if common_params['prior_boost'] == '1' else False
             if self.gan:
                 print('Using GAN.')
             else:
                 print('Not using GAN.')
+            if self.prior_boost:
+                print('Using prior boost.')
+            else:
+                print('Not using prior boost.')
 
         if solver_params:
             self.learning_rate = float(solver_params['learning_rate'])
@@ -48,8 +53,10 @@ class Solver(object):
             self.lr_decay = float(solver_params['lr_decay'])
             self.decay_steps = int(solver_params['decay_steps'])
         self.train = train
-        self.net = Net(train=train, common_params=common_params, net_params=net_params)
-        self.dataset = DataSet(common_params=common_params, dataset_params=dataset_params)
+        self.net = Net(
+            train=train, common_params=common_params, net_params=net_params)
+        self.dataset = DataSet(
+            common_params=common_params, dataset_params=dataset_params)
         print("Solver initialization done.")
 
     def construct_graph(self, scope):
@@ -61,7 +68,7 @@ class Solver(object):
                 (self.batch_size, int(self.height / 4), int(self.width / 4), 313)
             )
             self.prior_boost_nongray = tf.placeholder(
-                tf.float32, 
+                tf.float32,
                 (self.batch_size, int(self.height / 4), int(self.width / 4), 1)
             )
 
@@ -79,7 +86,9 @@ class Solver(object):
             D_real_pred = self.net.discriminator(self.data_lab_real, True)  # Reuse the variables.
 
             new_loss, g_loss, adv_loss = self.net.loss(
-                scope, self.conv8_313, self.prior_boost_nongray, self.gt_ab_313, D_fake_pred, self.gan)
+                scope, self.conv8_313, self.prior_boost_nongray,
+                self.gt_ab_313, D_fake_pred, self.gan,
+                self.prior_boost)
             tf.summary.scalar('new_loss', new_loss)
             tf.summary.scalar('total_loss', g_loss)
 
