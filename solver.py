@@ -81,7 +81,7 @@ class Solver(object):
             self.gt_ab_313_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 313))
             # self.data_lab_real = tf.placeholder(tf.float32, (self.batch_size, self.height, self.width, 3)
             data_l_ss_real = self.data_l_real[:, ::4, ::4, :]
-            data_real = tf.concat([data_l_ss_real, gt_ab_313_real], axis=-1)
+            data_real = tf.concat([data_l_ss_real, self.gt_ab_313_real], axis=-1)
             D_real_pred = self.net.discriminator(data_real, True)  # Reuse the variables.
 
             new_loss, g_loss, adv_loss = self.net.loss(
