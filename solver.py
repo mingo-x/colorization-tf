@@ -119,6 +119,11 @@ class Solver(object):
                 learning_rate=learning_rate, beta1=0.9, beta2=0.99)
             G_vars = tf.trainable_variables(scope='G')
             grads = opt.compute_gradients(self.new_loss, var_list=G_vars)
+
+            for grad, var in grads:
+                if grad is not None:
+                    self.summaries.append(tf.summary.histogram(var.op.name + '/gradients', grad))
+
             apply_gradient_op = opt.apply_gradients(
                 grads, global_step=self.global_step)
             variable_averages = tf.train.ExponentialMovingAverage(
