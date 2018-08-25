@@ -152,14 +152,14 @@ class Net(object):
 
         # Adversarial loss.
         if is_gan:
-            adv_loss = -tf.reduce_sum(tf.log(D_pred + self.eps)) * 16. / self.batch_size
+            adv_loss = -tf.reduce_sum(tf.log(D_pred + self.eps)) / self.batch_size
             new_loss += self.alpha * adv_loss
             return new_loss, g_loss, adv_loss
         else:
             return new_loss, g_loss, None
 
 
-    def discriminator(self, data_lab, reuse=False):
+    def discriminator(self, data_313, reuse=False):
         '''
         Args:
             data_lab
@@ -168,15 +168,15 @@ class Net(object):
             if self.easy:
                 # 44x44
                 conv_num = 1
-                conv_1 = conv2d('d_conv_{}'.format(conv_num), data_lab, [4, 4, 3, 64], stride=2, wd=None)
+                conv_1 = conv2d('d_conv_{}'.format(conv_num), data_313, [4, 4, 314, 128], stride=1, wd=None)
 
                 # 22x22
                 conv_num += 1
-                conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [4, 4, 64, 128], stride=2, wd=None)
+                conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [4, 4, 128, 64], stride=1, wd=None)
 
                 # 11x11
                 conv_num += 1
-                conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [4, 4, 128, 1], stride=1, relu=False, wd=None, sigmoid=True)
+                conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [4, 4, 64, 1], stride=1, relu=False, wd=None, sigmoid=True)
 
                 discriminator = conv_3
             else:
@@ -216,9 +216,9 @@ class Net(object):
     def discriminator_loss(self, original, colorized):
         original_loss = -tf.log(original + self.eps)
         colorized_loss = -tf.log(1 - colorized + self.eps)
-        total_loss = tf.reduce_sum(original_loss + colorized_loss) * 16. / (self.batch_size * 2)
-        fake_score = tf.reduce_sum(colorized) * 16. / self.batch_size
-        real_score = tf.reduce_sum(original) * 16. / self.batch_size
+        total_loss = tf.reduce_sum(original_loss + colorized_loss) / (self.batch_size * 2)
+        fake_score = tf.reduce_sum(colorized) / self.batch_size
+        real_score = tf.reduce_sum(original) / self.batch_size
         # tf.summary.scalar('D_weight_loss', tf.add_n(tf.get_collection('losses', scope=scope)))
         # total_loss += tf.add_n(tf.get_collection('losses', scope=scope))
 

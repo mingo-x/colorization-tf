@@ -72,21 +72,20 @@ class Solver(object):
                 (self.batch_size, int(self.height / 4), int(self.width / 4), 1)
             )
 
-            self.conv8_313 = self.net.inference(self.data_l)
-            ab_fake = self.net.conv313_to_ab(self.conv8_313)
-            # Upscale.
+            conv8_313 = self.net.inference(self.data_l)
+            # ab_fake = self.net.conv313_to_ab(self.conv8_313)
             data_l_ss = self.data_l[:, ::4, ::4, :]
-            # Upscale.
-            data_lab_fake = tf.concat([data_l_ss, ab_fake], axis=-1)
-            # data_lab_fake = tf.concat([self.data_l, ab_fake], axis=-1)
-            D_fake_pred = self.net.discriminator(data_lab_fake)
-            # Upscale.
-            self.data_lab_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 3))
-            # self.data_lab_real = tf.placeholder(tf.float32, (self.batch_size, self.height, self.width, 3))
-            D_real_pred = self.net.discriminator(self.data_lab_real, True)  # Reuse the variables.
+            data_fake = tf.concat([data_l_ss, conv8_313], axis=-1)
+            D_fake_pred = self.net.discriminator(data_fake)
+            self.data_l_real = tf.placeholder(tf.float32, (self.batch_size, self.height, self.width, 1))
+            self.gt_ab_313_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 313))
+            # self.data_lab_real = tf.placeholder(tf.float32, (self.batch_size, self.height, self.width, 3)
+            data_l_ss_real = self.data_l_real[:, ::4, ::4, :]
+            data_real = tf.concat([data_l_ss_real, gt_ab_313_real], axis=-1)
+            D_real_pred = self.net.discriminator(data_real, True)  # Reuse the variables.
 
             new_loss, g_loss, adv_loss = self.net.loss(
-                scope, self.conv8_313, self.prior_boost_nongray,
+                scope, conv8_313, self.prior_boost_nongray,
                 self.gt_ab_313, D_fake_pred, self.gan,
                 self.prior_boost)
             tf.summary.scalar('new_loss', new_loss)
@@ -160,22 +159,22 @@ class Solver(object):
             start_time = time.time()
 
             for step in xrange(start_step, self.max_steps, self.g_repeat):
-                data_l, gt_ab_313, prior_boost_nongray, _ = self.dataset.batch()
+                data_l, gt_ab_313, prior_boost_nongray = self.dataset.batch()
                 if self.gan:
-                    _, _, _, data_lab_real = self.dataset.batch()
+                    data_l_real, gt_ab_313_real, _ = self.dataset.batch()
                     # Discriminator training.
                     sess.run([D_apply_gradient_op],
-                              feed_dict={self.data_l: data_l, self.data_lab_real: data_lab_real})
+                              feed_dict={self.data_l: data_l, self.data_l_real: data_l_real, self.gt_ab_313_real: gt_ab_313_real})
 
                 # Generator training.
                 sess.run([train_op], 
                           feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
                 for _ in xrange(self.g_repeat - 1):
-                    data_l, gt_ab_313, prior_boost_nongray, _ = self.dataset.batch()
+                    data_l, gt_ab_313, prior_boost_nongray = self.dataset.batch()
                     sess.run([train_op], 
                               feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
 
-                if step % _LOG_FREQ == 2:
+                if step % _LOG_FREQ == 0:
                     duration = time.time() - start_time
                     num_examples_per_step = self.batch_size * self.num_gpus * _LOG_FREQ
                     examples_per_sec = num_examples_per_step / duration
