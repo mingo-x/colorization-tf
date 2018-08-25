@@ -124,6 +124,9 @@ class Solver(object):
                 if grad is not None:
                     self.summaries.append(tf.summary.histogram(var.op.name + '/gradients', grad))
 
+            for var in G_vars:
+                self.summaries.append(tf.summary.histogram(var.op.name, var))
+
             apply_gradient_op = opt.apply_gradients(
                 grads, global_step=self.global_step)
             variable_averages = tf.train.ExponentialMovingAverage(
