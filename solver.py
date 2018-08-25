@@ -188,7 +188,7 @@ class Solver(object):
                     if self.gan:
                         loss_value, new_loss_value, real_score_value, fake_score_value = sess.run(
                           [self.total_loss, self.new_loss, self.real_score, self.fake_score], 
-                          feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_lab_real: data_lab_real})
+                          feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_l_real: data_l_real, self.gt_ab_313_real: gt_ab_313_real})
                         format_str = ('%s: step %d, G loss = %.2f, new loss = %.2f, real score = %0.2f, fake score = %0.2f (%.1f examples/sec; %.3f '
                                       'sec/batch)')
                         # assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
@@ -212,7 +212,7 @@ class Solver(object):
 
                 if step % 100 == 0:
                     if self.gan:
-                        summary_str = sess.run(summary_op, feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_lab_real: data_lab_real})
+                        summary_str = sess.run(summary_op, feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_l_real: data_l_real, self.gt_ab_313_real: gt_ab_313_real})
                     else:
                         summary_str = sess.run(summary_op, feed_dict={
                             self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray})
