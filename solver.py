@@ -71,18 +71,17 @@ class Solver(object):
                 tf.float32,
                 (self.batch_size, int(self.height / 4), int(self.width / 4), 1)
             )
+            self.data_l_ss = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 1))
 
             conv8_313 = self.net.inference(self.data_l)
             conv8_313_prob = tf.nn.softmax(conv8_313)
             # ab_fake = self.net.conv313_to_ab(self.conv8_313)
-            data_l_ss = self.data_l[:, ::4, ::4, :]
-            data_fake = tf.concat([data_l_ss, conv8_313_prob], axis=-1)
+            data_fake = tf.concat([self.data_l_ss, conv8_313_prob], axis=-1)
             D_fake_pred = self.net.discriminator(data_fake)
-            self.data_l_real = tf.placeholder(tf.float32, (self.batch_size, self.height, self.width, 1))
+            self.data_l_ss_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 1))
             self.gt_ab_313_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 313))
             # self.data_lab_real = tf.placeholder(tf.float32, (self.batch_size, self.height, self.width, 3)
-            data_l_ss_real = self.data_l_real[:, ::4, ::4, :]
-            data_real = tf.concat([data_l_ss_real, self.gt_ab_313_real], axis=-1)
+            data_real = tf.concat([self.data_l_ss_real, self.gt_ab_313_real], axis=-1)
             D_real_pred = self.net.discriminator(data_real, True)  # Reuse the variables.
 
             new_loss, g_loss, adv_loss = self.net.loss(
@@ -91,13 +90,13 @@ class Solver(object):
                 self.prior_boost)
             tf.summary.scalar('new_loss', new_loss)
             tf.summary.scalar('total_loss', g_loss)
-            tf.summary.scalar('adv_loss', adv_loss)
-
+            
             if self.gan:
                 D_loss, real_score, fake_score = self.net.discriminator_loss(D_real_pred, D_fake_pred)
                 tf.summary.scalar('D loss', D_loss)
                 tf.summary.scalar('real_score', real_score)
                 tf.summary.scalar('fake_score', fake_score)
+                tf.summary.scalar('adv_loss', adv_loss)
                 return (new_loss, g_loss, adv_loss, D_loss, real_score, fake_score)
             else:
                 return (new_loss, g_loss, adv_loss, None, None, None)
@@ -133,8 +132,7 @@ class Solver(object):
                 grads, global_step=self.global_step)
             variable_averages = tf.train.ExponentialMovingAverage(
                 0.999, self.global_step)
-            variables_averages_op = variable_averages.apply(
-                tf.trainable_variables(scope='G'))
+            variables_averages_op = variable_averages.apply(G_vars)
             train_op = tf.group(apply_gradient_op, variables_averages_op)
 
             if self.gan:
@@ -169,20 +167,20 @@ class Solver(object):
             start_time = time.time()
 
             for step in xrange(start_step, self.max_steps, self.g_repeat):
-                data_l, gt_ab_313, prior_boost_nongray = self.dataset.batch()
+                data_l, gt_ab_313, prior_boost_nongray, data_l_ss = self.dataset.batch()
                 if self.gan:
-                    data_l_real, gt_ab_313_real, _ = self.dataset.batch()
+                    _, gt_ab_313_real, _, data_l_ss_real = self.dataset.batch()
                     # Discriminator training.
                     sess.run([D_apply_gradient_op],
-                              feed_dict={self.data_l: data_l, self.data_l_real: data_l_real, self.gt_ab_313_real: gt_ab_313_real})
+                              feed_dict={self.data_l: data_l, self.data_l_ss_real: data_l_ss_real, self.gt_ab_313_real: gt_ab_313_real})
 
                 # Generator training.
                 sess.run([train_op], 
-                          feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
+                          feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_l_ss: data_l_ss})
                 for _ in xrange(self.g_repeat - 1):
-                    data_l, gt_ab_313, prior_boost_nongray = self.dataset.batch()
+                    data_l, gt_ab_313, prior_boost_nongray, data_l_ss = self.dataset.batch()
                     sess.run([train_op], 
-                              feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
+                              feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_l_ss: data_l_ss})
 
                 if step % _LOG_FREQ == 0:
                     duration = time.time() - start_time
@@ -191,20 +189,20 @@ class Solver(object):
                     sec_per_batch = duration / (self.num_gpus * _LOG_FREQ)
 
                     if self.gan:
-                        loss_value, new_loss_value, real_score_value, fake_score_value, adv_loss_value = sess.run(
-                          [self.total_loss, self.new_loss, self.real_score, self.fake_score, self.adv_loss], 
-                          feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_l_real: data_l_real, self.gt_ab_313_real: gt_ab_313_real})
-                        format_str = ('%s: step %d, G loss = %.2f, new loss = %.2f, adv loss = %.2f, real score = %0.2f, fake score = %0.2f (%.1f examples/sec; %.3f '
+                        loss_value, new_loss_value, real_score_value, fake_score_value = sess.run(
+                          [self.total_loss, self.new_loss, self.real_score, self.fake_score], 
+                          feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_l_ss: data_l_ss, self.data_l_ss_real: data_l_ss_real, self.gt_ab_313_real: gt_ab_313_real})
+                        format_str = ('%s: step %d, G loss = %.2f, new loss = %.2f, real score = %0.2f, fake score = %0.2f (%.1f examples/sec; %.3f '
                                       'sec/batch)')
                         # assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
                         # assert not np.isnan(adv_loss_value), 'Adversarial diverged with loss = NaN'
                         # assert not np.isnan(D_loss_value), 'Discriminator diverged with loss = NaN'
-                        print (format_str % (datetime.now(), step, loss_value, new_loss_value, adv_loss_value, real_score_value, fake_score_value,
+                        print (format_str % (datetime.now(), step, loss_value, new_loss_value, real_score_value, fake_score_value,
                                              examples_per_sec, sec_per_batch))
                     else:
                         loss_value, new_loss_value = sess.run(
                             [self.total_loss, self.new_loss],
-                            feed_dict={self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray})
+                            feed_dict={self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray, self.data_l_ss: data_l_ss})
                         format_str = ('%s: step %d, G loss = %.2f, new loss = %.2f(%.1f examples/sec; %.3f '
                                       'sec/batch)')
                         # assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
@@ -217,7 +215,7 @@ class Solver(object):
 
                 if step % 100 == 0:
                     if self.gan:
-                        summary_str = sess.run(summary_op, feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_l_real: data_l_real, self.gt_ab_313_real: gt_ab_313_real})
+                        summary_str = sess.run(summary_op, feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_l_ss: data_l_ss, self.data_l_ss_real: data_l_ss_real, self.gt_ab_313_real: gt_ab_313_real})
                     else:
                         summary_str = sess.run(summary_op, feed_dict={
                             self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray})
