@@ -73,9 +73,10 @@ class Solver(object):
             )
 
             conv8_313 = self.net.inference(self.data_l)
+            conv8_313_prob = tf.nn.softmax(conv8_313)
             # ab_fake = self.net.conv313_to_ab(self.conv8_313)
             data_l_ss = self.data_l[:, ::4, ::4, :]
-            data_fake = tf.concat([data_l_ss, conv8_313], axis=-1)
+            data_fake = tf.concat([data_l_ss, conv8_313_prob], axis=-1)
             D_fake_pred = self.net.discriminator(data_fake)
             self.data_l_real = tf.placeholder(tf.float32, (self.batch_size, self.height, self.width, 1))
             self.gt_ab_313_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 313))
