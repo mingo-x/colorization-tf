@@ -71,12 +71,12 @@ class Solver(object):
                 tf.float32,
                 (self.batch_size, int(self.height / 4), int(self.width / 4), 1)
             )
-            self.data_l_ss = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 1))
 
             conv8_313 = self.net.inference(self.data_l)
             conv8_313_prob = tf.nn.softmax(conv8_313)
             # ab_fake = self.net.conv313_to_ab(self.conv8_313)
-            data_fake = tf.concat([self.data_l_ss, conv8_313_prob], axis=-1)
+            data_l_ss = self.data_l[:, ::4, ::4, :]
+            data_fake = tf.concat([data_l_ss, conv8_313_prob], axis=-1)
             D_fake_pred = self.net.discriminator(data_fake)
             self.data_l_ss_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 1))
             self.gt_ab_313_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 313))
@@ -167,7 +167,7 @@ class Solver(object):
             start_time = time.time()
 
             for step in xrange(start_step, self.max_steps, self.g_repeat):
-                data_l, gt_ab_313, prior_boost_nongray, data_l_ss = self.dataset.batch()
+                data_l, gt_ab_313, prior_boost_nongray, _ = self.dataset.batch()
                 if self.gan:
                     _, gt_ab_313_real, _, data_l_ss_real = self.dataset.batch()
                     # Discriminator training.
@@ -176,11 +176,11 @@ class Solver(object):
 
                 # Generator training.
                 sess.run([train_op], 
-                          feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_l_ss: data_l_ss})
+                          feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
                 for _ in xrange(self.g_repeat - 1):
-                    data_l, gt_ab_313, prior_boost_nongray, data_l_ss = self.dataset.batch()
+                    data_l, gt_ab_313, prior_boost_nongray, _ = self.dataset.batch()
                     sess.run([train_op], 
-                              feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_l_ss: data_l_ss})
+                              feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
 
                 if step % _LOG_FREQ == 0:
                     duration = time.time() - start_time
@@ -191,7 +191,7 @@ class Solver(object):
                     if self.gan:
                         loss_value, new_loss_value, real_score_value, fake_score_value = sess.run(
                           [self.total_loss, self.new_loss, self.real_score, self.fake_score], 
-                          feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_l_ss: data_l_ss, self.data_l_ss_real: data_l_ss_real, self.gt_ab_313_real: gt_ab_313_real})
+                          feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_l_ss_real: data_l_ss_real, self.gt_ab_313_real: gt_ab_313_real})
                         format_str = ('%s: step %d, G loss = %.2f, new loss = %.2f, real score = %0.2f, fake score = %0.2f (%.1f examples/sec; %.3f '
                                       'sec/batch)')
                         # assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
@@ -202,7 +202,7 @@ class Solver(object):
                     else:
                         loss_value, new_loss_value = sess.run(
                             [self.total_loss, self.new_loss],
-                            feed_dict={self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray, self.data_l_ss: data_l_ss})
+                            feed_dict={self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray})
                         format_str = ('%s: step %d, G loss = %.2f, new loss = %.2f(%.1f examples/sec; %.3f '
                                       'sec/batch)')
                         # assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
@@ -215,7 +215,7 @@ class Solver(object):
 
                 if step % 100 == 0:
                     if self.gan:
-                        summary_str = sess.run(summary_op, feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_l_ss: data_l_ss, self.data_l_ss_real: data_l_ss_real, self.gt_ab_313_real: gt_ab_313_real})
+                        summary_str = sess.run(summary_op, feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_l_ss_real: data_l_ss_real, self.gt_ab_313_real: gt_ab_313_real})
                     else:
                         summary_str = sess.run(summary_op, feed_dict={
                             self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray})
