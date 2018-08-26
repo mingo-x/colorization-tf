@@ -36,6 +36,11 @@ class Solver(object):
             self.ckpt = common_params['ckpt'] if 'ckpt' in common_params else None
             self.gan = True if common_params['gan'] == '1' else False
             self.prior_boost = True if common_params['prior_boost'] == '1' else False
+            self.corr = True if common_params['correspondence'] == '1' else False
+            if self.corr:
+                print('Discriminator has correspondence.')
+            else:
+                print('Discriminator has no correspondence.')
             if self.gan:
                 print('Using GAN.')
             else:
@@ -167,9 +172,12 @@ class Solver(object):
             start_time = time.time()
 
             for step in xrange(start_step, self.max_steps, self.g_repeat):
-                data_l, gt_ab_313, prior_boost_nongray, _ = self.dataset.batch()
+                data_l, gt_ab_313, prior_boost_nongray, data_l_ss_real = self.dataset.batch()
                 if self.gan:
-                    _, gt_ab_313_real, _, data_l_ss_real = self.dataset.batch()
+                    if self.corr:
+                        gt_ab_313_real = gt_ab_313
+                    else:
+                        _, gt_ab_313_real, _, data_l_ss_real = self.dataset.batch()
                     # Discriminator training.
                     sess.run([D_apply_gradient_op],
                               feed_dict={self.data_l: data_l, self.data_l_ss_real: data_l_ss_real, self.gt_ab_313_real: gt_ab_313_real})
