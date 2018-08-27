@@ -83,9 +83,9 @@ class Solver(object):
             # ab_fake = self.net.conv313_to_ab(conv8_313)
             data_l_ss = self.data_l[:, ::4, ::4, :]
             data_fake = tf.concat([data_l_ss, conv8_313_prob], axis=-1)
-            data_fake = tf.image.resize_images(data_fake, (self.height, self.width))
+            # data_fake = tf.image.resize_images(data_fake, (self.height, self.width))
             D_fake_pred = self.net.discriminator(data_fake)
-            self.data_real = tf.placeholder(tf.float32, (self.batch_size, self.height, self.width, 314))
+            self.data_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 314))
             # self.data_l_ss_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 1))
             # self.gt_ab_313_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 313))
             # self.data_lab_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 3))

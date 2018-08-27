@@ -181,13 +181,13 @@ class Net(object):
 
                 discriminator = conv_3
             else:
-                # 176x176
+                # 44x44
                 conv_num = 1
-                conv_1 = conv2d('d_conv_{}'.format(conv_num), data_313, [4, 4, 314, 128], stride=2, wd=None)
+                conv_1 = conv2d('d_conv_{}'.format(conv_num), data_313, [4, 4, 314, 128], stride=1, wd=None)
 
-                # 88x88
+                # 44x44
                 conv_num += 1
-                conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [4, 4, 128, 64], stride=2, wd=None)
+                conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [4, 4, 128, 64], stride=1, wd=None)
 
                 # 44x44
                 conv_num += 1
