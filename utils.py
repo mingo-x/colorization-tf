@@ -250,6 +250,9 @@ def preprocess(data, training=True):
   #ab: [-110, 110]
   data_ab = img_lab[:, :, :, 1:]
 
+  ab_313 = _nnencode(data_ab)
+  data_real = np.concatenate((img_l, ab_313), axis=-1)
+
   #scale img_l to [-50, 50]
   data_l = img_l - 50
 
@@ -274,7 +277,7 @@ def preprocess(data, training=True):
 
   if training:
     # Upscale.
-    return data_l, gt_ab_313, prior_boost_nongray, data_l[:, ::4, ::4, :]
+    return data_l, gt_ab_313, prior_boost_nongray, data_real
     # return data_l, gt_ab_313, prior_boost_nongray, img_lab
   else:
     return data_l, data_ab
