@@ -152,7 +152,7 @@ class Net(object):
 
         # Adversarial loss.
         if is_gan:
-            downscale = 16. if self.easy else 1.
+            downscale = 16.
             adv_loss = -tf.reduce_sum(tf.log(D_pred + self.eps)) * downscale / self.batch_size
             new_loss += self.alpha * adv_loss
             return new_loss, g_loss, adv_loss
@@ -181,17 +181,17 @@ class Net(object):
 
                 discriminator = conv_3
             else:
-                # 44x44
+                # 176x176
                 conv_num = 1
-                conv_1 = conv2d('d_conv_{}'.format(conv_num), data_313, [4, 4, 3, 64], stride=1, wd=None)
+                conv_1 = conv2d('d_conv_{}'.format(conv_num), data_313, [4, 4, 314, 128], stride=2, wd=None)
 
-                # 22x22
+                # 88x88
                 conv_num += 1
-                conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [4, 4, 64, 128], stride=1, wd=None)
+                conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [4, 4, 128, 64], stride=2, wd=None)
 
-                # 11x11
+                # 44x44
                 conv_num += 1
-                conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [4, 4, 128, 1], stride=1, relu=False, wd=None, sigmoid=True)
+                conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [4, 4, 64, 1], stride=1, relu=False, wd=None, sigmoid=True)
 
                 discriminator = conv_3
 
@@ -199,8 +199,8 @@ class Net(object):
 
 
     def discriminator_loss(self, original, colorized):
-        downscale = 16. if self.easy else 1.
-        original_loss = -tf.log(original + self.eps)
+        downscale = 16.
+        original_loss = -0.9 * tf.log(original + self.eps) - 0.1 * tf.log(1. - original + self.eps)  # Label smoothing.
         colorized_loss = -tf.log(1 - colorized + self.eps)
         total_loss = tf.reduce_sum(original_loss + colorized_loss) * downscale / (self.batch_size * 2)
         fake_score = tf.reduce_sum(colorized) * downscale / self.batch_size

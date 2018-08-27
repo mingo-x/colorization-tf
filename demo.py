@@ -1,3 +1,5 @@
+import subprocess
+
 import pickle
 import tensorflow as tf
 from utils import *
@@ -11,11 +13,12 @@ _RESIZE_SIZE = 0
 _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
-_CKPT_PATH = '/srv/glusterfs/xieya/colorization-gan-2/models/model.ckpt-42000'
+_CKPT_PATH = '/srv/glusterfs/xieya/colorization-test/models/model.ckpt-10000'
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
 OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/colorization_test'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
-T = 2.63
+#T = 2.63
+T = 3.0
 
 
 def _resize(img, resize_size=0):
@@ -169,6 +172,7 @@ def main():
 
 
 if __name__ == "__main__":
+    subprocess.check_call(['mkdir', '-p', OUTPUT_DIR])
     main()
     # _colorize_high_res_img(_IMG_NAME)
     # cifar()

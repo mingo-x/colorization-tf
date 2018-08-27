@@ -34,6 +34,7 @@ class Solver(object):
             self.num_gpus = 1
             self.g_repeat = int(common_params['g_repeat'])
             self.ckpt = common_params['ckpt'] if 'ckpt' in common_params else None
+            self.init_ckpt = common_params['init_ckpt'] if 'init_ckpt' in common_params else None
             self.gan = True if common_params['gan'] == '1' else False
             self.prior_boost = True if common_params['prior_boost'] == '1' else False
             self.corr = True if common_params['correspondence'] == '1' else False
@@ -78,16 +79,16 @@ class Solver(object):
             )
 
             conv8_313 = self.net.inference(self.data_l)
-            # conv8_313_prob = tf.nn.softmax(conv8_313)
-            ab_fake = self.net.conv313_to_ab(conv8_313)
-            data_l_ss = self.data_l[:, ::4, ::4, :] + 50
-            data_fake = tf.concat([data_l_ss, ab_fake], axis=-1)
+            conv8_313_prob = tf.nn.softmax(conv8_313)
+            # ab_fake = self.net.conv313_to_ab(conv8_313)
+            data_l_ss = self.data_l[:, ::4, ::4, :]
+            data_fake = tf.concat([data_l_ss, conv8_313_prob], axis=-1)
             D_fake_pred = self.net.discriminator(data_fake)
-            # self.data_l_ss_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 1))
-            # self.gt_ab_313_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 313))
-            self.data_lab_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 3))
-            # data_real = tf.concat([self.data_l_ss_real, self.gt_ab_313_real], axis=-1)
-            D_real_pred = self.net.discriminator(self.data_lab_real, True)  # Reuse the variables.
+            self.data_l_ss_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 1))
+            self.gt_ab_313_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 313))
+            # self.data_lab_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 3))
+            data_real = tf.concat([self.data_l_ss_real, self.gt_ab_313_real], axis=-1)
+            D_real_pred = self.net.discriminator(data_real, True)  # Reuse the variables.
 
             new_loss, g_loss, adv_loss = self.net.loss(
                 scope, conv8_313, self.prior_boost_nongray,
@@ -95,7 +96,7 @@ class Solver(object):
                 self.prior_boost)
             tf.summary.scalar('new_loss', new_loss)
             tf.summary.scalar('total_loss', g_loss)
-            
+
             if self.gan:
                 D_loss, real_score, fake_score = self.net.discriminator_loss(D_real_pred, D_fake_pred)
                 tf.summary.scalar('D loss', D_loss)
@@ -112,6 +113,8 @@ class Solver(object):
             self.global_step = tf.get_variable('global_step', [], initializer=tf.constant_initializer(0), trainable=False)
             learning_rate = tf.train.exponential_decay(self.learning_rate, self.global_step,
                                                  self.decay_steps, self.lr_decay, staircase=True)
+            D_learning_rate = tf.train.exponential_decay(1e-4, self.global_step,
+                                                 self.decay_steps, 0.1, staircase=True)
 
             with tf.name_scope('gpu') as scope:
                 self.new_loss, self.total_loss, self.adv_loss, self.D_loss, self.real_score, self.fake_score = self.construct_graph(scope)
@@ -130,8 +133,8 @@ class Solver(object):
                 if grad is not None:
                     self.summaries.append(tf.summary.histogram(var.op.name + '/gradients', grad))
 
-            for var in G_vars:
-                self.summaries.append(tf.summary.histogram(var.op.name, var))
+            # for var in G_vars:
+            #     self.summaries.append(tf.summary.histogram(var.op.name, var))
 
             apply_gradient_op = opt.apply_gradients(
                 grads, global_step=self.global_step)
@@ -142,7 +145,7 @@ class Solver(object):
 
             if self.gan:
                 D_opt = tf.train.AdamOptimizer(
-                    learning_rate=1e-4, beta1=0.5, beta2=0.99)
+                    learning_rate=D_learning_rate, beta1=0.9, beta2=0.99)
                 D_vars = tf.trainable_variables(scope='D')
                 D_grads = D_opt.compute_gradients(self.D_loss, var_list=D_vars)
                 D_apply_gradient_op = D_opt.apply_gradients(D_grads)
@@ -162,25 +165,29 @@ class Solver(object):
                 # start_step = 230000
                 # sess.run(self.global_step.assign(start_step))
                 print("Global step: {}".format(start_step))
-
             else:
                 sess.run(init)
                 print("Initialized.")
                 start_step = 0
 
+                if self.init_ckpt is not None:
+                    init_saver = tf.train.Saver(G_vars)
+                    init_saver.restore(sess, self.init_ckpt)
+                    print('Init generator with {}.'.format(self.init_ckpt))
+
             summary_writer = tf.summary.FileWriter(self.train_dir, sess.graph)
             start_time = time.time()
 
             for step in xrange(start_step, self.max_steps, self.g_repeat):
-                data_l, gt_ab_313, prior_boost_nongray, data_lab_real = self.dataset.batch()
+                data_l, gt_ab_313, prior_boost_nongray, data_l_ss_real = self.dataset.batch()
                 if self.gan:
                     if self.corr:
-                        # gt_ab_313_real = gt_ab_313
-                    # else:
-                        _, _, _, data_lab_real = self.dataset.batch()
+                        gt_ab_313_real = gt_ab_313
+                    else:
+                        _, gt_ab_313_real, _, data_l_ss_real = self.dataset.batch()
                     # Discriminator training.
                     sess.run([D_apply_gradient_op],
-                              feed_dict={self.data_l: data_l, self.data_lab_real: data_lab_real})
+                              feed_dict={self.data_l: data_l, self.data_l_ss_real: data_l_ss_real, self.gt_ab_313_real: gt_ab_313_real})
 
                 # Generator training.
                 sess.run([train_op], 
@@ -199,7 +206,7 @@ class Solver(object):
                     if self.gan:
                         loss_value, new_loss_value, real_score_value, fake_score_value = sess.run(
                           [self.total_loss, self.new_loss, self.real_score, self.fake_score], 
-                          feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_lab_real: data_lab_real})
+                          feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_l_ss_real: data_l_ss_real, self.gt_ab_313_real: gt_ab_313_real})
                         format_str = ('%s: step %d, G loss = %.2f, new loss = %.2f, real score = %0.2f, fake score = %0.2f (%.1f examples/sec; %.3f '
                                       'sec/batch)')
                         # assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
@@ -223,7 +230,7 @@ class Solver(object):
 
                 if step % 100 == 0:
                     if self.gan:
-                        summary_str = sess.run(summary_op, feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_lab_real: data_lab_real})
+                        summary_str = sess.run(summary_op, feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_l_ss_real: data_l_ss_real, self.gt_ab_313_real: gt_ab_313_real})
                     else:
                         summary_str = sess.run(summary_op, feed_dict={
                             self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray})
