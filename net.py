@@ -152,7 +152,7 @@ class Net(object):
 
         # Adversarial loss.
         if is_gan:
-            downscale = 16.
+            downscale = 16. if self.easy else 1.
             adv_loss = -tf.reduce_sum(tf.log(D_pred + self.eps)) * downscale / self.batch_size
             new_loss += self.alpha * adv_loss
             return new_loss, g_loss, adv_loss
@@ -199,7 +199,7 @@ class Net(object):
 
 
     def discriminator_loss(self, original, colorized):
-        downscale = 16.
+        downscale = 16. if self.easy else 1.
         original_loss = -0.9 * tf.log(original + self.eps) - 0.1 * tf.log(1. - original + self.eps)  # Label smoothing.
         colorized_loss = -tf.log(1 - colorized + self.eps)
         total_loss = tf.reduce_sum(original_loss + colorized_loss) * downscale / (self.batch_size * 2)
