@@ -154,7 +154,7 @@ class Net(object):
         if is_gan:
             downscale = 16. if self.easy else 1.
             adv_loss = -tf.reduce_sum(tf.log(D_pred + self.eps)) * downscale / self.batch_size
-            new_loss += self.alpha * adv_loss
+            # new_loss += self.alpha * adv_loss
             return new_loss, g_loss, adv_loss
         else:
             return new_loss, g_loss, None

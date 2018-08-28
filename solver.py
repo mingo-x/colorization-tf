@@ -130,20 +130,27 @@ class Solver(object):
                 learning_rate=learning_rate, beta1=0.9, beta2=0.99)
             G_vars = tf.trainable_variables(scope='G')
             grads = opt.compute_gradients(self.new_loss, var_list=G_vars)
+            grads_adv = opt.compute_gradients(self.adv_loss * 0.01, var_list=G_vars)
 
             for grad, var in grads:
                 if grad is not None:
                     self.summaries.append(tf.summary.histogram(var.op.name + '/gradients', grad))
+
+            for grad, var in grads_adv:
+                if grad is not None:
+                    self.summaries.append(tf.summary.histogram(var.op.name + '/gradients_adv', grad))
 
             # for var in G_vars:
             #     self.summaries.append(tf.summary.histogram(var.op.name, var))
 
             apply_gradient_op = opt.apply_gradients(
                 grads, global_step=self.global_step)
+            apply_gradient_adv_op = opt.apply_gradients(
+                grads_adv, global_step=self.global_step)
             variable_averages = tf.train.ExponentialMovingAverage(
                 0.999, self.global_step)
             variables_averages_op = variable_averages.apply(G_vars)
-            train_op = tf.group(apply_gradient_op, variables_averages_op)
+            train_op = tf.group(apply_gradient_op, apply_gradient_adv_op,variables_averages_op)
 
             if self.gan:
                 D_opt = tf.train.AdamOptimizer(
