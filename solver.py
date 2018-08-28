@@ -169,12 +169,12 @@ class Solver(object):
             print("Session configured.")
 
             if self.ckpt is not None:
-                if restore_opt:
+                if self.restore_opt:
                     saver.restore(sess, self.ckpt)
                 else:
                     init_saver = tf.train.Saver([G_vars, D_vars])
                     init_saver.restore(sess, self.ckpt)
-                    
+
                 print(self.ckpt + " restored.")
                 start_step = sess.run(self.global_step)
                 # start_step = 230000
