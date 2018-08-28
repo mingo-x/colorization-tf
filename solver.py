@@ -35,6 +35,7 @@ class Solver(object):
             self.g_repeat = int(common_params['g_repeat'])
             self.ckpt = common_params['ckpt'] if 'ckpt' in common_params else None
             self.init_ckpt = common_params['init_ckpt'] if 'init_ckpt' in common_params else None
+            self.restore_opt = True if common_params['restore_opt'] == '1' else False
             self.gan = True if common_params['gan'] == '1' else False
             self.prior_boost = True if common_params['prior_boost'] == '1' else False
             self.corr = True if common_params['correspondence'] == '1' else False
@@ -150,7 +151,7 @@ class Solver(object):
             variable_averages = tf.train.ExponentialMovingAverage(
                 0.999, self.global_step)
             variables_averages_op = variable_averages.apply(G_vars)
-            train_op = tf.group(apply_gradient_op, apply_gradient_adv_op,variables_averages_op)
+            train_op = tf.group(apply_gradient_op, apply_gradient_adv_op, variables_averages_op)
 
             if self.gan:
                 D_opt = tf.train.AdamOptimizer(
@@ -168,7 +169,12 @@ class Solver(object):
             print("Session configured.")
 
             if self.ckpt is not None:
-                saver.restore(sess, self.ckpt)
+                if restore_opt:
+                    saver.restore(sess, self.ckpt)
+                else:
+                    init_saver = tf.train.Saver([G_vars, D_vars])
+                    init_saver.restore(sess, self.ckpt)
+                    
                 print(self.ckpt + " restored.")
                 start_step = sess.run(self.global_step)
                 # start_step = 230000
