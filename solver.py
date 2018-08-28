@@ -130,7 +130,7 @@ class Solver(object):
                 learning_rate=learning_rate, beta1=0.9, beta2=0.99)
             G_vars = tf.trainable_variables(scope='G')
             grads = opt.compute_gradients(self.new_loss, var_list=G_vars)
-            grads_adv = opt.compute_gradients(self.adv_loss * 0.01, var_list=G_vars)
+            grads_adv = opt.compute_gradients(self.adv_loss * self.net.alpha, var_list=G_vars)
 
             for grad, var in grads:
                 if grad is not None:
