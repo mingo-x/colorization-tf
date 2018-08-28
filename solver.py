@@ -172,7 +172,8 @@ class Solver(object):
                 if self.restore_opt:
                     saver.restore(sess, self.ckpt)
                 else:
-                    init_saver = tf.train.Saver([G_vars, D_vars])
+                    sess.run(init)
+                    init_saver = tf.train.Saver(G_vars + D_vars)
                     init_saver.restore(sess, self.ckpt)
 
                 print(self.ckpt + " restored.")
