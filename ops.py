@@ -20,7 +20,7 @@ def _variable(name, shape, initializer):
   var = tf.get_variable(name, shape, initializer=initializer, dtype=tf.float32)
   return var
 
-def _variable_with_weight_decay(name, shape, stddev, wd):
+def variable_with_weight_decay(name, shape, stddev, wd):
   """Helper to create an initialized Variable with weight decay.
 
   Note that the Variable is initialized with truncated normal distribution
@@ -49,7 +49,7 @@ def _variable_with_weight_decay(name, shape, stddev, wd):
 def conv2d(scope, input, kernel_size, stride=1, dilation=1, relu=True, wd=nilboy_weight_decay, sigmoid=False, leaky=False):
   # name = scope
   with tf.variable_scope(scope) as scope:
-    kernel = _variable_with_weight_decay('weights', 
+    kernel = variable_with_weight_decay('weights', 
                                     shape=kernel_size,
                                     stddev=5e-2,
                                     wd=wd)
@@ -87,7 +87,7 @@ def deconv2d(scope, input, kernel_size, stride=1, wd=nilboy_weight_decay):
   kernel_size = [kernel_size[0], kernel_size[1], kernel_size[3], kernel_size[2]]
   output_shape = [batch_size, height * stride, width * stride, out_channel]
   with tf.variable_scope(scope) as scope:
-    kernel = _variable_with_weight_decay('weights', 
+    kernel = variable_with_weight_decay('weights', 
                                     shape=kernel_size,
                                     stddev=5e-2,
                                     wd=wd)
