@@ -245,8 +245,8 @@ class Net(object):
         conv 313 to ab.
         Return: []
         '''
-        with tf.variable_scope('G'):
-            temp = variable_with_weight_decay("T", (1, ), 0, None)
+        with tf.variable_scope('T'):
+            temp = variable("T", (1, ), tf.constant_initializer(rebalance))
         enc_dir = './resources'
         cc = np.load(os.path.join(enc_dir, 'pts_in_hull.npy'))
         cc = tf.constant(cc, dtype=tf.float32)  # [313, 2]

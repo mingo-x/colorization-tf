@@ -6,7 +6,7 @@ import tensorflow as tf
 # import numpy as np
 # import re
 nilboy_weight_decay = 0.001
-def _variable(name, shape, initializer):
+def variable(name, shape, initializer):
   """Helper to create a Variable stored on CPU memory.
 
   Args:
@@ -38,7 +38,7 @@ def variable_with_weight_decay(name, shape, stddev, wd):
   """
   # var = _variable(name, shape,
   #   tf.truncated_normal_initializer(stddev=stddev, dtype=tf.float32))
-  var = _variable(name, shape,
+  var = variable(name, shape,
     tf.contrib.layers.variance_scaling_initializer(factor=2.0, mode='FAN_IN', uniform=False, dtype=tf.float32))
   
   if wd is not None:
@@ -57,7 +57,7 @@ def conv2d(scope, input, kernel_size, stride=1, dilation=1, relu=True, wd=nilboy
       conv = tf.nn.conv2d(input, kernel, [1, stride, stride, 1], padding='SAME')
     else:
       conv = tf.nn.atrous_conv2d(input, kernel, dilation, padding='SAME')
-    biases = _variable('biases', kernel_size[3:], tf.constant_initializer(0.0))
+    biases = variable('biases', kernel_size[3:], tf.constant_initializer(0.0))
     bias = tf.nn.bias_add(conv, biases)
     if relu:
       conv1 = tf.nn.relu(bias)
@@ -93,7 +93,7 @@ def deconv2d(scope, input, kernel_size, stride=1, wd=nilboy_weight_decay):
                                     wd=wd)
     deconv = tf.nn.conv2d_transpose(input, kernel, output_shape, [1, stride, stride, 1], padding='SAME')
 
-    biases = _variable('biases', (out_channel), tf.constant_initializer(0.0))
+    biases = variable('biases', (out_channel), tf.constant_initializer(0.0))
     bias = tf.nn.bias_add(deconv, biases)
     deconv1 = tf.nn.relu(bias)
 

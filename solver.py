@@ -131,8 +131,9 @@ class Solver(object):
             opt = tf.train.AdamOptimizer(
                 learning_rate=learning_rate, beta1=0.5, beta2=0.99)
             G_vars = tf.trainable_variables(scope='G')
+            T_var = tf.trainable_variables(scope='T')
             grads = opt.compute_gradients(self.new_loss, var_list=G_vars)
-            grads_adv = opt.compute_gradients(self.adv_loss * self.net.alpha, var_list=G_vars)
+            grads_adv = opt.compute_gradients(self.adv_loss * self.net.alpha, var_list=G_vars + T_var)
 
             for grad, var in grads:
                 if grad is not None:
@@ -151,7 +152,7 @@ class Solver(object):
                 grads_adv)
             variable_averages = tf.train.ExponentialMovingAverage(
                 0.999, self.global_step)
-            variables_averages_op = variable_averages.apply(G_vars)
+            variables_averages_op = variable_averages.apply(G_vars + T_var)
             train_op = tf.group(apply_gradient_op, apply_gradient_adv_op, variables_averages_op)
 
             if self.gan:
@@ -174,7 +175,7 @@ class Solver(object):
                     saver.restore(sess, self.ckpt)
                 else:
                     sess.run(init)
-                    init_saver = tf.train.Saver(G_vars + D_vars + [self.global_step])
+                    init_saver = tf.train.Saver(G_vars + T_var + D_vars + [self.global_step])
                     init_saver.restore(sess, self.ckpt)
 
                 print(self.ckpt + " restored.")
