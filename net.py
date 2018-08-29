@@ -203,7 +203,7 @@ class Net(object):
                 # 16x16x256
                 conv_num += 1
                 conv_5 = conv2d('d_conv_{}'.format(conv_num), conv_4, [4, 4, 256, 512], stride=2, relu=False, wd=None);
-                bn_4 = batch_norm('bn_3', conv_5, train=self.train)
+                bn_4 = batch_norm('bn_4', conv_5, train=self.train)
                 conv_5 = tf.nn.leaky_relu(bn_4)
                 # 16x16x1
                 conv_num += 1
