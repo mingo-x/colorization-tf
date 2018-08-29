@@ -115,8 +115,9 @@ class Solver(object):
     def train_model(self):
         with tf.device('/gpu:' + str(self.device_id)):
             self.global_step = tf.get_variable('global_step', [], initializer=tf.constant_initializer(0), trainable=False)
-            learning_rate = tf.train.exponential_decay(self.learning_rate, self.global_step,
-                                                 self.decay_steps, self.lr_decay, staircase=True)
+            # learning_rate = tf.train.exponential_decay(self.learning_rate, self.global_step,
+            #                                      self.decay_steps, self.lr_decay, staircase=True)
+            learning_rate = self.learning_rate
             D_learning_rate = 2e-4
 
             with tf.name_scope('gpu') as scope:
@@ -131,8 +132,8 @@ class Solver(object):
                 learning_rate=learning_rate, beta1=0.5, beta2=0.99)
             G_vars = tf.trainable_variables(scope='G')
             T_var = tf.trainable_variables(scope='T')
-            grads = opt.compute_gradients(self.new_loss, var_list=G_vars)
-            grads_adv = opt.compute_gradients(self.adv_loss * self.net.alpha, var_list=G_vars + T_var)
+            grads = opt.compute_gradients(self.new_loss * self.net.alpha, var_list=G_vars)
+            grads_adv = opt.compute_gradients(self.adv_loss, var_list=G_vars + T_var)
 
             for grad, var in grads:
                 if grad is not None:
