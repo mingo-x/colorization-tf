@@ -207,7 +207,7 @@ class Net(object):
                 conv_1 = conv2d('d_conv_{}'.format(conv_num), data_313, [4, 4, 3, 64], stride=1, relu=False, wd=None, leaky=True)
                 # 32x32x64
                 conv_num += 1
-                conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [4, 4, 32, 64], stride=2, relu=False, wd=None)
+                conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [4, 4, 64, 64], stride=2, relu=False, wd=None)
                 bn_1 = batch_norm('bn_1', conv_2, train=self.train)
                 conv_2 = tf.nn.leaky_relu(bn_1)
                 # 16x16x128
