@@ -266,7 +266,8 @@ class Net(object):
         Return: []
         '''
         with tf.variable_scope('T'):
-            temp = variable("T", (1, ), tf.constant_initializer(rebalance))
+            # temp = variable("T", (1, ), tf.constant_initializer(rebalance))
+            temp = tf.constant(rebalance, name='T')
         enc_dir = './resources'
         cc = np.load(os.path.join(enc_dir, 'pts_in_hull.npy'))
         cc = tf.constant(cc, dtype=tf.float32)  # [313, 2]
