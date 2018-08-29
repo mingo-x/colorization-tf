@@ -80,13 +80,14 @@ class Solver(object):
             )
 
             conv8_313 = self.net.inference(self.data_l)
-            conv8_313_prob = tf.nn.softmax(conv8_313)
-            # ab_fake = self.net.conv313_to_ab(conv8_313)
-            data_l_ss = self.data_l[:, ::4, ::4, :]
-            data_fake = tf.concat([data_l_ss, conv8_313_prob], axis=-1)
+            # conv8_313_prob = tf.nn.softmax(conv8_313)
+            ab_fake_ss = self.net.conv313_to_ab(conv8_313)
+            ab_fake = tf.image.resize_images(ab_fake_ss, (self.height, self.width))
+            # data_l_ss = self.data_l[:, ::4, ::4, :]
+            data_fake = tf.concat([data_l, ab_fake], axis=-1)
             # data_fake = tf.image.resize_images(data_fake, (self.height, self.width))
             D_fake_pred = self.net.discriminator(data_fake)
-            self.data_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 314))
+            self.data_real = tf.placeholder(tf.float32, (self.batch_size, self.height, self.width, 314))
             # self.data_l_ss_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 1))
             # self.gt_ab_313_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 313))
             # self.data_lab_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 3))
@@ -116,8 +117,8 @@ class Solver(object):
             self.global_step = tf.get_variable('global_step', [], initializer=tf.constant_initializer(0), trainable=False)
             learning_rate = tf.train.exponential_decay(self.learning_rate, self.global_step,
                                                  self.decay_steps, self.lr_decay, staircase=True)
-            D_learning_rate = tf.train.exponential_decay(1e-4, self.global_step,
-                                                 self.decay_steps, 0.1, staircase=True)
+            # D_learning_rate = tf.train.exponential_decay(1e-4, self.global_step,
+            #                                      self.decay_steps, 0.1, staircase=True)
 
             with tf.name_scope('gpu') as scope:
                 self.new_loss, self.total_loss, self.adv_loss, self.D_loss, self.real_score, self.fake_score = self.construct_graph(scope)
@@ -128,7 +129,7 @@ class Solver(object):
                 tf.summary.scalar('learning_rate', learning_rate))
 
             opt = tf.train.AdamOptimizer(
-                learning_rate=learning_rate, beta1=0.9, beta2=0.99)
+                learning_rate=learning_rate, beta1=0.5, beta2=0.99)
             G_vars = tf.trainable_variables(scope='G')
             grads = opt.compute_gradients(self.new_loss, var_list=G_vars)
             grads_adv = opt.compute_gradients(self.adv_loss * self.net.alpha, var_list=G_vars)
@@ -155,7 +156,7 @@ class Solver(object):
 
             if self.gan:
                 D_opt = tf.train.AdamOptimizer(
-                    learning_rate=D_learning_rate, beta1=0.9, beta2=0.99)
+                    learning_rate=learning_rate, beta1=0.5, beta2=0.99)
                 D_vars = tf.trainable_variables(scope='D')
                 D_grads = D_opt.compute_gradients(self.D_loss, var_list=D_vars)
                 D_apply_gradient_op = D_opt.apply_gradients(D_grads)
