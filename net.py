@@ -181,35 +181,25 @@ class Net(object):
 
                 discriminator = conv_3
             elif self.version == 2:
-                self.downscale = 256
-                # 256x256
+                self.downscale = 16
+                # 44x44x64
                 conv_num = 1
                 conv_1 = conv2d('d_conv_{}'.format(conv_num), data_313, [4, 4, 3, 64], stride=1, relu=False, wd=None, leaky=True)
-                # 128x128
+                # 22x22x128
                 conv_num += 1
-                conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [4, 4, 64, 64], stride=2, relu=False, wd=None)
+                conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [4, 4, 64, 128], stride=2, relu=False, wd=None)
                 bn_1 = batch_norm('bn_1', conv_2, train=self.train)
                 conv_2 = tf.nn.leaky_relu(bn_1)
-                # 64x64x128
+                # 11x11x256
                 conv_num += 1
-                conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [4, 4, 64, 128], stride=2, relu=False, wd=None);
+                conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [4, 4, 128, 256], stride=2, relu=False, wd=None);
                 bn_2 = batch_norm('bn_2', conv_3, train=self.train)
                 conv_3 = tf.nn.leaky_relu(bn_2)
-                # 32x32x256
+                # 11x11x1
                 conv_num += 1
-                conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [4, 4, 128, 256], stride=2, relu=False, wd=None);
-                bn_3 = batch_norm('bn_3', conv_4, train=self.train)
-                conv_4 = tf.nn.leaky_relu(bn_3)
-                # 16x16x256
-                conv_num += 1
-                conv_5 = conv2d('d_conv_{}'.format(conv_num), conv_4, [4, 4, 256, 512], stride=2, relu=False, wd=None);
-                bn_4 = batch_norm('bn_4', conv_5, train=self.train)
-                conv_5 = tf.nn.leaky_relu(bn_4)
-                # 16x16x1
-                conv_num += 1
-                conv_6 = conv2d('d_conv_{}'.format(conv_num), conv_5, [4, 4, 512, 1], stride=1, relu=False, wd=None, sigmoid=True);
+                conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [4, 4, 256, 1], stride=1, relu=False, wd=None, sigmoid=True);
                 
-                discriminator = conv_6
+                discriminator = conv_4
             else:
                 self.downscale = 1
                 # 44x44
