@@ -145,7 +145,7 @@ class Solver(object):
 
             with tf.variable_scope('T', reuse=True):
                 T = tf.get_variable('T')
-            self.summaries.append(tf.summary.histogram(T.op.name, T))
+            self.summaries.append(tf.summary.scalar(T.op.name, T))
 
             # for var in G_vars:
             #     self.summaries.append(tf.summary.histogram(var.op.name, var))
