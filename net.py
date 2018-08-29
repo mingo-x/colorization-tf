@@ -27,7 +27,7 @@ class Net(object):
           self.alpha = float(net_params['alpha'])
           print('Adversarial weight {}'.format(self.alpha))
           self.version = int(net_params['version'])
-          print('Discriminator easy {}'.format(self.easy))
+          print('Discriminator version {}'.format(self.version))
 
     def inference(self, data_l):
         with tf.variable_scope('G'):
