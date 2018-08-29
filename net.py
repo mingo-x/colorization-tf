@@ -252,7 +252,7 @@ class Net(object):
     def discriminator_loss(self, original, colorized):
         original_loss = -0.9 * tf.log(original + self.eps) - 0.1 * tf.log(1. - original + self.eps)  # Label smoothing.
         colorized_loss = -tf.log(1 - colorized + self.eps)
-        total_loss = tf.reduce_sum(original_loss + colorized_loss) * self.downscale / (self.batch_size * 2)
+        total_loss = tf.reduce_sum(original_loss + colorized_loss) * self.downscale / (self.batch_size)
         fake_score = tf.reduce_sum(colorized) * self.downscale / self.batch_size
         real_score = tf.reduce_sum(original) * self.downscale / self.batch_size
         # tf.summary.scalar('D_weight_loss', tf.add_n(tf.get_collection('losses', scope=scope)))
