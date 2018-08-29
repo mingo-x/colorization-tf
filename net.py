@@ -152,8 +152,7 @@ class Net(object):
 
         # Adversarial loss.
         if is_gan:
-            downscale = 16. if self.easy else 1.
-            adv_loss = -tf.reduce_sum(tf.log(D_pred + self.eps)) * downscale / self.batch_size
+            adv_loss = -tf.reduce_sum(tf.log(D_pred + self.eps)) * self.downscale / self.batch_size
             # new_loss += self.alpha * adv_loss
             return new_loss, g_loss, adv_loss
         else:
@@ -167,6 +166,7 @@ class Net(object):
         '''
         with tf.variable_scope('D', reuse=reuse):
             if self.version == 0:
+                self.downscale = 16
                 # 44x44
                 conv_num = 1
                 conv_1 = conv2d('d_conv_{}'.format(conv_num), data_313, [4, 4, 314, 128], stride=2, wd=None)
@@ -181,6 +181,7 @@ class Net(object):
 
                 discriminator = conv_3
             elif self.version == 2:
+                self.downscale = 256
                 # 256x256
                 conv_num = 1
                 conv_1 = conv2d('d_conv_{}'.format(conv_num), data_313, [4, 4, 3, 64], stride=1, relu=False, wd=None, leaky=True)
@@ -210,6 +211,7 @@ class Net(object):
                 
                 discriminator = conv_6
             else:
+                self.downscale = 1
                 # 44x44
                 conv_num = 1
                 conv_1 = conv2d('d_conv_{}'.format(conv_num), data_313, [4, 4, 314, 128], stride=1, wd=None)
@@ -228,12 +230,11 @@ class Net(object):
 
 
     def discriminator_loss(self, original, colorized):
-        downscale = 16. if self.easy else 1.
         original_loss = -0.9 * tf.log(original + self.eps) - 0.1 * tf.log(1. - original + self.eps)  # Label smoothing.
         colorized_loss = -tf.log(1 - colorized + self.eps)
-        total_loss = tf.reduce_sum(original_loss + colorized_loss) * downscale / (self.batch_size * 2)
-        fake_score = tf.reduce_sum(colorized) * downscale / self.batch_size
-        real_score = tf.reduce_sum(original) * downscale / self.batch_size
+        total_loss = tf.reduce_sum(original_loss + colorized_loss) * self.downscale / (self.batch_size * 2)
+        fake_score = tf.reduce_sum(colorized) * self.downscale / self.batch_size
+        real_score = tf.reduce_sum(original) * self.downscale / self.batch_size
         # tf.summary.scalar('D_weight_loss', tf.add_n(tf.get_collection('losses', scope=scope)))
         # total_loss += tf.add_n(tf.get_collection('losses', scope=scope))
 
