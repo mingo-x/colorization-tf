@@ -211,6 +211,10 @@ class Solver(object):
                     sess.run([D_apply_gradient_op],
                               feed_dict={self.data_l: data_l, self.data_real: data_real})
 
+                    if step % _LOG_FREQ == 0:
+                        d_loss_value = sess.run(self.D_loss, 
+                          feed_dict={self.data_l:data_l, self.data_real: data_real})
+
                 # Generator training.
                 sess.run([train_op], 
                           feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
@@ -226,9 +230,9 @@ class Solver(object):
                     sec_per_batch = duration / (self.num_gpus * _LOG_FREQ)
 
                     if self.gan:
-                        loss_value, new_loss_value, d_loss_value = sess.run(
-                          [self.total_loss, self.new_loss, self.D_loss], 
-                          feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_real: data_real})
+                        loss_value, new_loss_value = sess.run(
+                          [self.total_loss, self.new_loss], 
+                          feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
                         format_str = ('%s: step %d, G loss = %.2f, new loss = %.2f, D loss = %0.2f (%.1f examples/sec; %.3f '
                                       'sec/batch)')
                         # assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
