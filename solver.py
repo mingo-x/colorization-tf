@@ -32,6 +32,7 @@ class Solver(object):
             self.width = self.image_size
             self.batch_size = int(common_params['batch_size'])
             self.num_gpus = 1
+            self.d_repeat = int(common_params['d_repeat'])
             self.g_repeat = int(common_params['g_repeat'])
             self.ckpt = common_params['ckpt'] if 'ckpt' in common_params else None
             self.init_ckpt = common_params['init_ckpt'] if 'init_ckpt' in common_params else None
@@ -204,22 +205,23 @@ class Solver(object):
             start_time = time.time()
 
             for step in xrange(start_step, self.max_steps, self.g_repeat):
-                data_l, gt_ab_313, prior_boost_nongray, data_real = self.dataset.batch()
                 if self.gan:
-                    if not self.corr:
-                        _, _, _, data_real = self.dataset.batch()
-                    # Discriminator training.
-                    sess.run([D_apply_gradient_op],
-                              feed_dict={self.data_l: data_l, self.data_real: data_real})
+                    for _ in xrange(self.d_repeat):
+                        data_l, _, _, data_real = self.dataset.batch()
+                        if not self.corr:
+                            _, _, _, data_real = self.dataset.batch()
+                        # Discriminator training.
+                        sess.run([D_apply_gradient_op],
+                                  feed_dict={self.data_l: data_l, self.data_real: data_real})
 
                     if step % _LOG_FREQ == 0:
                         d_loss_value = sess.run(self.D_loss, 
                           feed_dict={self.data_l:data_l, self.data_real: data_real})
 
                 # Generator training.
-                sess.run([train_op], 
-                          feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
-                for _ in xrange(self.g_repeat - 1):
+                # sess.run([train_op], 
+                          # feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
+                for _ in xrange(self.g_repeat):
                     data_l, gt_ab_313, prior_boost_nongray, _ = self.dataset.batch()
                     sess.run([train_op], 
                               feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
