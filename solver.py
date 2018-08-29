@@ -143,6 +143,9 @@ class Solver(object):
                 if grad is not None:
                     self.summaries.append(tf.summary.histogram(var.op.name + '/gradients_adv', grad))
 
+            T = tf.get_variable('T/T')
+            self.summaries.append(tf.summary.histogram(T.op.name, T))
+
             # for var in G_vars:
             #     self.summaries.append(tf.summary.histogram(var.op.name, var))
 
@@ -192,6 +195,9 @@ class Solver(object):
                     init_saver = tf.train.Saver(G_vars)
                     init_saver.restore(sess, self.init_ckpt)
                     print('Init generator with {}.'.format(self.init_ckpt))
+
+            start_temp = sess.run(T)
+            print("Temp {}.".format(start_temp))
 
             summary_writer = tf.summary.FileWriter(self.train_dir, sess.graph)
             start_time = time.time()
