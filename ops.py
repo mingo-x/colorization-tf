@@ -6,7 +6,7 @@ import tensorflow as tf
 # import numpy as np
 # import re
 nilboy_weight_decay = 0.001
-def variable(name, shape, initializer):
+def variable(name, shape, initializer, trainable=True):
   """Helper to create a Variable stored on CPU memory.
 
   Args:
@@ -17,7 +17,7 @@ def variable(name, shape, initializer):
   Returns:
     Variable Tensor
   """
-  var = tf.get_variable(name, shape, initializer=initializer, dtype=tf.float32)
+  var = tf.get_variable(name, shape, initializer=initializer, dtype=tf.float32, trainable=trainable)
   return var
 
 def variable_with_weight_decay(name, shape, stddev, wd):
