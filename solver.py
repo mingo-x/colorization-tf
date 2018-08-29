@@ -117,8 +117,8 @@ class Solver(object):
             self.global_step = tf.get_variable('global_step', [], initializer=tf.constant_initializer(0), trainable=False)
             learning_rate = tf.train.exponential_decay(self.learning_rate, self.global_step,
                                                  self.decay_steps, self.lr_decay, staircase=True)
-            # D_learning_rate = tf.train.exponential_decay(1e-4, self.global_step,
-            #                                      self.decay_steps, 0.1, staircase=True)
+            D_learning_rate = tf.train.exponential_decay(1e-4, self.global_step,
+                                                 self.decay_steps, 0.1, staircase=True)
 
             with tf.name_scope('gpu') as scope:
                 self.new_loss, self.total_loss, self.adv_loss, self.D_loss, self.real_score, self.fake_score = self.construct_graph(scope)
