@@ -148,7 +148,7 @@ class Net(object):
 
         # Adversarial loss.
         if is_gan:
-            adv_loss = -tf.reduce_sum(tf.log(D_pred + self.eps)) * self.downscale / self.batch_size
+            adv_loss = -tf.reduce_mean(tf.log(D_pred + self.eps))
             # new_loss += self.alpha * adv_loss
             return new_loss, g_loss, adv_loss
         else:
@@ -226,6 +226,36 @@ class Net(object):
                 conv_6 = conv2d('d_conv_{}'.format(conv_num), conv_5, [3, 3, 256, 1], stride=1, relu=False, wd=None, sigmoid=True);
                 
                 discriminator = conv_6
+            elif self.version == 4:
+                self.downscale = (44. * 44.) /(3. * 3.)
+                # 44x44x128
+                conv_num = 1
+                conv_1 = conv2d('d_conv_{}'.format(conv_num), data_313, [4, 4, 313, 128], stride=1, relu=False, wd=None, leaky=True)
+                # 22x22x128
+                conv_num += 1
+                conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [4, 4, 128, 128], stride=2, relu=False, wd=None)
+                bn_1 = batch_norm('bn_1', conv_2, train=self.train)
+                conv_2 = tf.nn.leaky_relu(bn_1)
+                # 22x22x64
+                conv_num += 1
+                conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [4, 4, 128, 64], stride=1, relu=False, wd=None);
+                bn_2 = batch_norm('bn_2', conv_3, train=self.train)
+                conv_3 = tf.nn.leaky_relu(bn_2)
+                # 11x11x64
+                conv_num += 1
+                conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [4, 4, 64, 64], stride=2, relu=False, wd=None);
+                bn_3 = batch_norm('bn_3', conv_4, train=self.train)
+                conv_4 = tf.nn.leaky_relu(bn_3)
+                # 11x11x32
+                conv_num += 1
+                conv_5 = conv2d('d_conv_{}'.format(conv_num), conv_4, [4, 4, 64, 32], stride=2, relu=False, wd=None);
+                bn_4 = batch_norm('bn_4', conv_5, train=self.train)
+                conv_5 = tf.nn.leaky_relu(bn_4)
+                # 3x3x1
+                conv_num += 1
+                conv_6 = conv2d('d_conv_{}'.format(conv_num), conv_5, [3, 3, 256, 1], stride=1, relu=False, wd=None, sigmoid=True);
+                
+                discriminator = conv_6
             else:
                 self.downscale = 1
                 # 44x44
@@ -248,7 +278,7 @@ class Net(object):
     def discriminator_loss(self, original, colorized):
         original_loss = -0.9 * tf.log(original + self.eps) - 0.1 * tf.log(1. - original + self.eps)  # Label smoothing.
         colorized_loss = -tf.log(1 - colorized + self.eps)
-        total_loss = tf.reduce_sum(original_loss + colorized_loss) * self.downscale / (self.batch_size)
+        total_loss = tf.reduce_mean(original_loss + colorized_loss)
         fake_score = tf.reduce_sum(colorized) * self.downscale / self.batch_size
         real_score = tf.reduce_sum(original) * self.downscale / self.batch_size
         # tf.summary.scalar('D_weight_loss', tf.add_n(tf.get_collection('losses', scope=scope)))
