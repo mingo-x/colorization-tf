@@ -265,9 +265,7 @@ def preprocess(data, training=True):
   gt_ab_313 = _nnencode(data_ab_ss)
 
   # data_313_ss = np.concatenate((img_l[:, ::4, ::4, :], gt_ab_313), axis=-1)
-  data_ab_ss /= 110.
-  data_l_ss = data_l[:, ::4, ::4, :] / 50.
-  data_real_ss = np.concatenate((data_l_ss, data_ab_ss), axis=-1)
+  data_real = np.concatenate((data_l / 50., data_ab / 110.), axis=-1)
 
   #Prior_Boost 
   #prior_boost: [N, 1, H/4, W/4]
@@ -279,7 +277,7 @@ def preprocess(data, training=True):
 
   if training:
     # Upscale.
-    return data_l, gt_ab_313, prior_boost_nongray, data_real_ss
+    return data_l, gt_ab_313, prior_boost_nongray, data_real
     # return data_l, gt_ab_313, prior_boost_nongray, img_lab
   else:
     return data_l, data_ab
@@ -312,7 +310,6 @@ def decode(data_l, conv8_313, rebalance=1):
   data_ab = np.dot(class8_313_rh, cc)
   data_ab = resize(data_ab, (height, width))
   img_lab = np.concatenate((data_l, data_ab), axis=-1)
-  print(img_lab.dtype, np.min(img_lab[:, :, 0]), np.max(img_lab[:, :, 0]), np.min(img_lab[:, :, 1]), np.max(img_lab[:, :, 2]))
   img_rgb = color.lab2rgb(img_lab)
 
   return img_rgb, data_ab
