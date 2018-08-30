@@ -198,32 +198,32 @@ class Net(object):
                 discriminator = conv_4
             elif self.version == 3:
                 self.downscale = (44. * 44.) /(3. * 3.)
-                # 42x42x64
+                # 44x44x64
                 conv_num = 1
-                conv_1 = conv2d('d_conv_{}'.format(conv_num), data_313, [4, 4, 3, 64], stride=1, relu=False, wd=None, leaky=True, same=False)
+                conv_1 = conv2d('d_conv_{}'.format(conv_num), data_313, [4, 4, 3, 64], stride=1, relu=False, wd=None, leaky=True)
                 # 22x22x64
                 conv_num += 1
-                conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [4, 4, 64, 64], stride=2, relu=False, wd=None, same=False)
+                conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [4, 4, 64, 64], stride=2, relu=False, wd=None)
                 bn_1 = batch_norm('bn_1', conv_2, train=self.train)
                 conv_2 = tf.nn.leaky_relu(bn_1)
                 # 11x11x128
                 conv_num += 1
-                conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [4, 4, 64, 128], stride=2, relu=False, wd=None, same=False);
+                conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [4, 4, 64, 128], stride=2, relu=False, wd=None);
                 bn_2 = batch_norm('bn_2', conv_3, train=self.train)
                 conv_3 = tf.nn.leaky_relu(bn_2)
                 # 5x5x128
                 conv_num += 1
-                conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [3, 3, 128, 128], stride=2, relu=False, wd=None, same=False);
+                conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [3, 3, 128, 128], stride=2, relu=False, wd=None);
                 bn_3 = batch_norm('bn_3', conv_4, train=self.train)
                 conv_4 = tf.nn.leaky_relu(bn_3)
                 # 3x3x256
                 conv_num += 1
-                conv_5 = conv2d('d_conv_{}'.format(conv_num), conv_4, [3, 3, 128, 256], stride=2, relu=False, wd=None, same=False);
+                conv_5 = conv2d('d_conv_{}'.format(conv_num), conv_4, [3, 3, 128, 256], stride=2, relu=False, wd=None);
                 bn_4 = batch_norm('bn_4', conv_5, train=self.train)
                 conv_5 = tf.nn.leaky_relu(bn_4)
                 # 3x3x1
                 conv_num += 1
-                conv_6 = conv2d('d_conv_{}'.format(conv_num), conv_5, [3, 3, 256, 1], stride=1, relu=False, wd=None, sigmoid=True, same=False);
+                conv_6 = conv2d('d_conv_{}'.format(conv_num), conv_5, [3, 3, 256, 1], stride=1, relu=False, wd=None, sigmoid=True);
                 
                 discriminator = conv_6
             elif self.version == 4:
