@@ -278,13 +278,13 @@ class Net(object):
     def discriminator_loss(self, original, colorized):
         original_loss = -0.9 * tf.log(original + self.eps) - 0.1 * tf.log(1. - original + self.eps)  # Label smoothing.
         colorized_loss = -tf.log(1 - colorized + self.eps)
-        total_loss = tf.reduce_mean(original_loss + colorized_loss)
-        fake_score = tf.reduce_sum(colorized) * self.downscale / self.batch_size
-        real_score = tf.reduce_sum(original) * self.downscale / self.batch_size
+        fake_loss = tf.reduce_mean(colorized_loss)
+        real_loss = tf.reduce_mean(original_loss)
+        total_loss = (fake_loss + real_loss) / 2.
         # tf.summary.scalar('D_weight_loss', tf.add_n(tf.get_collection('losses', scope=scope)))
         # total_loss += tf.add_n(tf.get_collection('losses', scope=scope))
 
-        return total_loss, real_score, fake_score
+        return total_loss, real_loss, fake_loss
 
     def conv313_to_ab(self, conv8_313, rebalance=2.63):
         '''
