@@ -165,7 +165,7 @@ class Solver(object):
 
             if self.gan:
                 D_opt = tf.train.AdamOptimizer(
-                    learning_rate=D_learning_rate, beta1=0.5, beta2=0.99)
+                    learning_rate=learning_rate, beta1=0.5, beta2=0.99)
                 D_vars = tf.trainable_variables(scope='D')
                 D_grads = D_opt.compute_gradients(self.D_loss, var_list=D_vars)
                 D_apply_gradient_op = D_opt.apply_gradients(D_grads)
