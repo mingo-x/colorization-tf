@@ -23,7 +23,7 @@ class Net(object):
           print('Adversarial weight {}'.format(self.alpha))
           self.version = int(net_params['version'])
           print('Discriminator version {}'.format(self.version))
-          self.temp_trainable = True if common_params['temp_trainable'] == '1' else False
+          self.temp_trainable = True if net_params['temp_trainable'] == '1' else False
 
     def inference(self, data_l):
         with tf.variable_scope('G'):
