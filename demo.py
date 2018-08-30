@@ -47,7 +47,7 @@ def _get_model(input_tensor):
 
 def _colorize_single_img(img_name, model, input_tensor, sess):
     img = cv2.imread(os.path.join(IMG_DIR, img_name))
-    img = _resize(img, _RESIZE_SIZE)
+    img = _resize(img)
     img_rs = cv2.resize(img, (INPUT_SIZE, INPUT_SIZE))
     if len(img.shape) == 3:
         img_l = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
