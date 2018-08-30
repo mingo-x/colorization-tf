@@ -88,7 +88,7 @@ class Solver(object):
             ab_fake = tf.image.resize_images(ab_fake_ss, (self.height, self.width))
             # data_l_ss = self.data_l[:, ::4, ::4, :]
             self.data_fake = tf.concat([self.data_l + 50, ab_fake], axis=-1)
-            data_fake = tf.concat([self.data_l_ss / 50., ab_fake / 110.], axis=-1)
+            data_fake = tf.concat([self.data_l / 50., ab_fake / 110.], axis=-1)
             # data_fake = tf.image.resize_images(data_fake, (self.height, self.width))
             D_fake_pred = self.net.discriminator(data_fake)
             self.data_real = tf.placeholder(tf.float32, (self.batch_size, self.height, self.width, 3))
