@@ -247,7 +247,7 @@ class Solver(object):
                         # assert not np.isnan(D_loss_value), 'Discriminator diverged with loss = NaN'
                         print (format_str % (datetime.now(), step, loss_value, new_loss_value, adv_loss_prev_value, adv_loss_value, d_loss_value,
                                              examples_per_sec, sec_per_batch))
-                        data_rgb = color.lab2rgb(data_fake)
+                        data_rgb = color.lab2rgb(data_fake[0, :, :, :])
                         io.imsave(os.path.join(self.train_dir, "{}.jpg".format(step)), data_rgb)
 
                     else:
