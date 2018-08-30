@@ -214,9 +214,9 @@ class Solver(object):
                         sess.run([D_apply_gradient_op],
                                   feed_dict={self.data_l: data_l, self.data_real: data_real})
 
-                    if step % _LOG_FREQ == 0:
-                        d_loss_value, adv_loss_prev_value = sess.run([self.D_loss, self.adv_loss], 
-                          feed_dict={self.data_l:data_l, self.data_real: data_real})
+                if step % _LOG_FREQ == 0:
+                    d_loss_value, adv_loss_prev_value = sess.run([self.D_loss, self.adv_loss], 
+                        feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_real: data_real})
 
                 # Generator training.
                 # sess.run([train_op], 
