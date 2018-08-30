@@ -4,14 +4,9 @@ from __future__ import print_function
 
 import tensorflow as tf
 import numpy as np
-import re
 
 from ops import *
-from data import DataSet
-import time
-from datetime import datetime
 import os
-import sys
 
 class Net(object):
 
@@ -28,6 +23,7 @@ class Net(object):
           print('Adversarial weight {}'.format(self.alpha))
           self.version = int(net_params['version'])
           print('Discriminator version {}'.format(self.version))
+          self.temp_trainable = True if common_params['temp_trainable'] == '1' else False
 
     def inference(self, data_l):
         with tf.variable_scope('G'):
@@ -266,7 +262,7 @@ class Net(object):
         Return: []
         '''
         with tf.variable_scope('T'):
-            temp = variable("T", (1, ), tf.constant_initializer(rebalance), False)
+            temp = variable("T", (1, ), tf.constant_initializer(rebalance), self.temp_trainable)
         enc_dir = './resources'
         cc = np.load(os.path.join(enc_dir, 'pts_in_hull.npy'))
         cc = tf.constant(cc, dtype=tf.float32)  # [313, 2]
