@@ -21,17 +21,22 @@ _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
 T = 2.63
 
 
-def _resize(img, resize_size=0):
-    if resize_size > 0:
-        h = img.shape[0]
-        w = img.shape[1]
+def _resize(image):
+    h = image.shape[0]
+    w = image.shape[1]
+    resize_size = min(h, w)
 
-        if w > h:
-            img = cv2.resize(img, (int(resize_size * w / h), resize_size))
-        else:
-            img = cv2.resize(img, (resize_size, int(resize_size * h / w)))
+    if w > h:
+      image = cv2.resize(image, (int(resize_size * w / h), resize_size))
 
-    return img
+      crop_start = np.random.randint(0, int(resize_size * w / h) - resize_size + 1)
+      image = image[:, crop_start:crop_start + resize_size, :]
+    else:
+      image = cv2.resize(image, (resize_size, int(resize_size * h / w)))
+
+      crop_start = np.random.randint(0, int(resize_size * h / w) - resize_size + 1)
+      image = image[crop_start:crop_start + resize_size, :, :]
+    return image
 
 
 def _get_model(input_tensor):
