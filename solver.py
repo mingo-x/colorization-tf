@@ -87,7 +87,7 @@ class Solver(object):
             ab_fake_ss = self.net.conv313_to_ab(conv8_313)
             ab_fake = tf.image.resize_images(ab_fake_ss, (self.height, self.width))
             # data_l_ss = self.data_l[:, ::4, ::4, :]
-            self.data_fake = tf.concat([self.data_l + 50, ab_fake], axis=-1)
+            self.data_test = tf.concat([self.data_l[0, :, :, :] + 50, ab_fake[0, :, :, :]], axis=-1)
             data_fake = tf.concat([self.data_l / 50., ab_fake / 110.], axis=-1)
             # data_fake = tf.image.resize_images(data_fake, (self.height, self.width))
             D_fake_pred = self.net.discriminator(data_fake)
@@ -236,8 +236,8 @@ class Solver(object):
                     sec_per_batch = duration / (self.num_gpus * _LOG_FREQ)
 
                     if self.gan:
-                        loss_value, new_loss_value, adv_loss_value, data_fake = sess.run(
-                          [self.total_loss, self.new_loss, self.adv_loss, self.data_fake], 
+                        loss_value, new_loss_value, adv_loss_value = sess.run(
+                          [self.total_loss, self.new_loss, self.adv_loss], 
                           feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_real: data_real})
                         format_str = ('%s: step %d, G loss = %.2f, new loss = %.2f, adv prev = %0.5f, adv = %0.5f, D = %0.5f (%.1f examples/sec; %.3f '
                                       'sec/batch)')
@@ -246,9 +246,10 @@ class Solver(object):
                         # assert not np.isnan(D_loss_value), 'Discriminator diverged with loss = NaN'
                         print (format_str % (datetime.now(), step, loss_value, new_loss_value, adv_loss_prev_value, adv_loss_value, d_loss_value,
                                              examples_per_sec, sec_per_batch))
-                        img_lab = np.array(data_fake[0, :, :, :], dtype=np.float64)
-                        data_rgb = color.lab2rgb(img_lab)
-                        io.imsave(os.path.join(self.train_dir, "{}.jpg".format(step)), data_rgb)
+                        # if step % 100 == 0:
+                        #     img_lab = np.array(data_test, dtype=np.float64)
+                        #     data_rgb = color.lab2rgb(img_lab)
+                        #     io.imsave(os.path.join(self.train_dir, "{}.jpg".format(step)), data_rgb)
 
                     else:
                         loss_value, new_loss_value = sess.run(
