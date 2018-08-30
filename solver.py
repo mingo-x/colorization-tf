@@ -249,7 +249,6 @@ class Solver(object):
                         print (format_str % (datetime.now(), step, loss_value, new_loss_value, adv_loss_prev_value, adv_loss_value, d_loss_value,
                                              examples_per_sec, sec_per_batch))
                         img_lab = np.array(data_fake[0, :, :, :], dtype=np.float64)
-                        print(img_lab.dtype, np.min(img_lab[:, :, 0]), np.max(img_lab[:, :, 0]), np.min(img_lab[:, :, 1]), np.max(img_lab[:, :, 2]))
                         data_rgb = color.lab2rgb(img_lab)
                         io.imsave(os.path.join(self.train_dir, "{}.jpg".format(step)), data_rgb)
 
