@@ -236,7 +236,7 @@ class Solver(object):
                         loss_value, new_loss_value, adv_loss_value = sess.run(
                           [self.total_loss, self.new_loss, self.adv_loss], 
                           feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_real: data_real})
-                        format_str = ('%s: step %d, G loss = %.2f, new loss = %.2f, adv prev loss = %0.5f, adv loss = %0.5f, D loss = %0.5f (%.1f examples/sec; %.3f '
+                        format_str = ('%s: step %d, G loss = %.2f, new loss = %.2f, adv prev = %0.5f, adv = %0.5f, D = %0.5f (%.1f examples/sec; %.3f '
                                       'sec/batch)')
                         # assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
                         # assert not np.isnan(adv_loss_value), 'Adversarial diverged with loss = NaN'
