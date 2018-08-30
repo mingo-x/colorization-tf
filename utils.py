@@ -265,7 +265,8 @@ def preprocess(data, training=True):
   gt_ab_313 = _nnencode(data_ab_ss)
 
   # data_313_ss = np.concatenate((img_l[:, ::4, ::4, :], gt_ab_313), axis=-1)
-  data_l_ss = data_l[:, ::4, ::4, :]
+  data_ab_ss /= 110.
+  data_l_ss = data_l[:, ::4, ::4, :] / 50.
   data_real_ss = np.concatenate((data_l_ss, data_ab_ss), axis=-1)
 
   #Prior_Boost 

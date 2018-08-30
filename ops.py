@@ -46,7 +46,7 @@ def variable_with_weight_decay(name, shape, stddev, wd):
     tf.add_to_collection('losses', weight_decay)
   return var
 
-def conv2d(scope, input, kernel_size, stride=1, dilation=1, relu=True, wd=nilboy_weight_decay, sigmoid=False, leaky=False):
+def conv2d(scope, input, kernel_size, stride=1, dilation=1, relu=True, wd=nilboy_weight_decay, sigmoid=False, leaky=False, same=True):
   # name = scope
   with tf.variable_scope(scope) as scope:
     kernel = variable_with_weight_decay('weights', 
@@ -54,7 +54,7 @@ def conv2d(scope, input, kernel_size, stride=1, dilation=1, relu=True, wd=nilboy
                                     stddev=5e-2,
                                     wd=wd)
     if dilation == 1:
-      conv = tf.nn.conv2d(input, kernel, [1, stride, stride, 1], padding='SAME')
+      conv = tf.nn.conv2d(input, kernel, [1, stride, stride, 1], padding='SAME' if same else 'VALID')
     else:
       conv = tf.nn.atrous_conv2d(input, kernel, dilation, padding='SAME')
     biases = variable('biases', kernel_size[3:], tf.constant_initializer(0.0))
