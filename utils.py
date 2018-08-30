@@ -312,7 +312,7 @@ def decode(data_l, conv8_313, rebalance=1):
   data_ab = np.dot(class8_313_rh, cc)
   data_ab = resize(data_ab, (height, width))
   img_lab = np.concatenate((data_l, data_ab), axis=-1)
-  print(img_lab.dtype, np.min(img_lab[:, :, 0]), np.max(img_lab[:, :, 0]), , np.min(img_lab[:, :, 1]), np.max(img_lab[:, :, 2]))
+  print(img_lab.dtype, np.min(img_lab[:, :, 0]), np.max(img_lab[:, :, 0]), np.min(img_lab[:, :, 1]), np.max(img_lab[:, :, 2]))
   img_rgb = color.lab2rgb(img_lab)
 
   return img_rgb, data_ab
