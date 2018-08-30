@@ -86,7 +86,7 @@ class Solver(object):
             ab_fake_ss = self.net.conv313_to_ab(conv8_313)
             # ab_fake = tf.image.resize_images(ab_fake_ss, (self.height, self.width))
             data_l_ss = self.data_l[:, ::4, ::4, :]
-            self.data_fake = tf.concat([data_l_ss + 50., ab_fake_ss], axis=-1)
+            self.data_fake = tf.concat([data_l_ss + 50, ab_fake_ss], axis=-1)
             ab_fake_ss /= 110.
             data_l_ss /= 50.
             data_fake = tf.concat([data_l_ss, ab_fake_ss], axis=-1)
