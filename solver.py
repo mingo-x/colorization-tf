@@ -188,7 +188,7 @@ class Solver(object):
 
                 print(self.ckpt + " restored.")
                 start_step = sess.run(self.global_step)
-                start_step -= start_step % 10
+                start_step -= int(start_step % 10)
                 # start_step = 230000
                 # sess.run(self.global_step.assign(start_step))
                 print("Global step: {}".format(start_step))
