@@ -248,8 +248,8 @@ class Solver(object):
                         # assert not np.isnan(D_loss_value), 'Discriminator diverged with loss = NaN'
                         print (format_str % (datetime.now(), step, loss_value, new_loss_value, adv_loss_prev_value, adv_loss_value, d_loss_value,
                                              examples_per_sec, sec_per_batch))
-                        print(np.min(data_test[:, :, 0], np.max(data_test[:, :, 0]), np.min(data_test[:, :, 1]), np.max(data_test[:, :, 2])))
-                        print(np.min(data_real[:, :, :, 0], np.max(data_real[:, :, :, 0]), np.min(data_real[:, :, :, 1]), np.max(data_real[:, :, :, 2])))
+                        print(np.min(data_test[:, :, 0]), np.max(data_test[:, :, 0]), np.min(data_test[:, :, 1]), np.max(data_test[:, :, 2]))
+                        print(np.min(data_real[:, :, :, 0]), np.max(data_real[:, :, :, 0]), np.min(data_real[:, :, :, 1]), np.max(data_real[:, :, :, 2]))
                         # if step % 100 == 0:
                         #     img_lab = np.array(data_test, dtype=np.float64)
                         #     data_rgb = color.lab2rgb(img_lab)
