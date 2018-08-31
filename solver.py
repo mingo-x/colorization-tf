@@ -122,7 +122,7 @@ class Solver(object):
             # learning_rate = tf.train.exponential_decay(self.learning_rate, self.global_step,
             #                                      self.decay_steps, self.lr_decay, staircase=True)
             learning_rate = self.learning_rate
-            D_learning_rate = 2e-4
+            D_learning_rate = 2e-5
 
             with tf.name_scope('gpu') as scope:
                 self.new_loss, self.total_loss, self.adv_loss, self.D_loss, self.real_score, self.fake_score = self.construct_graph(scope)
@@ -165,7 +165,7 @@ class Solver(object):
 
             if self.gan:
                 D_opt = tf.train.AdamOptimizer(
-                    learning_rate=learning_rate, beta1=0.5, beta2=0.99)
+                    learning_rate=D_learning_rate, beta1=0.5, beta2=0.99)
                 D_vars = tf.trainable_variables(scope='D')
                 D_grads = D_opt.compute_gradients(self.D_loss, var_list=D_vars)
                 D_apply_gradient_op = D_opt.apply_gradients(D_grads)
