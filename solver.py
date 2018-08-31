@@ -208,6 +208,7 @@ class Solver(object):
             summary_writer = tf.summary.FileWriter(self.train_dir, sess.graph)
             start_time = time.time()
 
+            start_step = int(start_step)
             for step in xrange(start_step, self.max_steps, self.g_repeat):
                 if self.gan:
                     for _ in xrange(self.d_repeat):
