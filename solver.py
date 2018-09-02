@@ -58,6 +58,7 @@ class Solver(object):
         if solver_params:
             self.learning_rate = float(solver_params['learning_rate'])
             self.D_learning_rate = float(solver_params['d_learning_rate'])
+            print("Learning rate G: {0} D: {1}".format(self.learning_rate, self.D_learning_rate))
             # self.moment = float(solver_params['moment'])
             self.max_steps = int(solver_params['max_iterators'])
             self.train_dir = str(solver_params['train_dir'])
