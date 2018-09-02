@@ -271,9 +271,9 @@ class Net(object):
                 conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [4, 4, 64, 32], stride=2, relu=False, wd=None);
                 bn_2 = batch_norm('bn_2', conv_3, train=self.train)
                 conv_3 = tf.nn.leaky_relu(bn_2)
-                # 5x5x1
+                # 11x11x1
                 conv_num += 1
-                conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [3, 3, 32, 1], stride=2, relu=False, wd=None, sigmoid=True);
+                conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [4, 4, 32, 1], stride=1, relu=False, wd=None, sigmoid=True);
                 
                 discriminator = conv_4
             else:

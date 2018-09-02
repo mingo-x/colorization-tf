@@ -57,6 +57,7 @@ class Solver(object):
 
         if solver_params:
             self.learning_rate = float(solver_params['learning_rate'])
+            self.D_learning_rate = float(solver_params['d_learning_rate'])
             # self.moment = float(solver_params['moment'])
             self.max_steps = int(solver_params['max_iterators'])
             self.train_dir = str(solver_params['train_dir'])
@@ -83,15 +84,15 @@ class Solver(object):
             )
 
             conv8_313 = self.net.inference(self.data_l)
-            # conv8_313_prob = tf.nn.softmax(conv8_313)
-            ab_fake_ss = self.net.conv313_to_ab(conv8_313)
-            ab_fake = tf.image.resize_images(ab_fake_ss, (self.height, self.width))
+            conv8_313_prob = tf.nn.softmax(conv8_313)
+            # ab_fake_ss = self.net.conv313_to_ab(conv8_313)
+            # ab_fake = tf.image.resize_images(ab_fake_ss, (self.height, self.width))
             # data_l_ss = self.data_l[:, ::4, ::4, :]
-            self.data_test = tf.concat([self.data_l[0, :, :, :] + 50, ab_fake[0, :, :, :]], axis=-1)
-            self.data_fake = tf.concat([self.data_l / 50., ab_fake / 110.], axis=-1)
+            # self.data_test = tf.concat([self.data_l[0, :, :, :] + 50, ab_fake[0, :, :, :]], axis=-1)
+            self.data_fake = tf.concat([self.data_l / 50., conv8_313_prob], axis=-1)
             # data_fake = tf.image.resize_images(data_fake, (self.height, self.width))
             D_fake_pred = self.net.discriminator(self.data_fake)
-            self.data_real = tf.placeholder(tf.float32, (self.batch_size, self.height, self.width, 3))
+            self.data_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 314))
             # self.data_l_ss_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 1))
             # self.gt_ab_313_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 313))
             # self.data_lab_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 3))
@@ -122,7 +123,7 @@ class Solver(object):
             # learning_rate = tf.train.exponential_decay(self.learning_rate, self.global_step,
             #                                      self.decay_steps, self.lr_decay, staircase=True)
             learning_rate = self.learning_rate
-            D_learning_rate = 2e-5
+            D_learning_rate = self.D_learning_rate
 
             with tf.name_scope('gpu') as scope:
                 self.new_loss, self.total_loss, self.adv_loss, self.D_loss, self.real_score, self.fake_score = self.construct_graph(scope)
@@ -238,8 +239,8 @@ class Solver(object):
                     sec_per_batch = duration / (self.num_gpus * _LOG_FREQ)
 
                     if self.gan:
-                        loss_value, new_loss_value, adv_loss_value = sess.run(
-                          [self.total_loss, self.new_loss, self.adv_loss], 
+                        loss_value, new_loss_value, adv_loss_value, data_fake = sess.run(
+                          [self.total_loss, self.new_loss, self.adv_loss, self.data_fake], 
                           feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_real: data_real})
                         format_str = ('%s: step %d, G loss = %.2f, new loss = %.2f, adv prev = %0.5f, adv = %0.5f, D = %0.5f (%.1f examples/sec; %.3f '
                                       'sec/batch)')
@@ -248,8 +249,8 @@ class Solver(object):
                         # assert not np.isnan(D_loss_value), 'Discriminator diverged with loss = NaN'
                         print (format_str % (datetime.now(), step, loss_value, new_loss_value, adv_loss_prev_value, adv_loss_value, d_loss_value,
                                              examples_per_sec, sec_per_batch))
-                        # print(np.min(data_fake[:, :, :, 0]), np.max(data_fake[:, :, :, 0]), np.min(data_fake[:, :, :, 1]), np.max(data_fake[:, :, :, 2]))
-                        # print(np.min(data_real[:, :, :, 0]), np.max(data_real[:, :, :, 0]), np.min(data_real[:, :, :, 1]), np.max(data_real[:, :, :, 2]))
+                        print(np.min(data_fake[:, :, :, 0]), np.max(data_fake[:, :, :, 0]), np.min(data_fake[:, :, :, 1]), np.max(data_fake[:, :, :, 2]))
+                        print(np.min(data_real[:, :, :, 0]), np.max(data_real[:, :, :, 0]), np.min(data_real[:, :, :, 1]), np.max(data_real[:, :, :, 2]))
                         # if step % 100 == 0:
                         #     img_lab = np.array(data_test, dtype=np.float64)
                         #     data_rgb = color.lab2rgb(img_lab)
