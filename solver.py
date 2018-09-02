@@ -229,7 +229,7 @@ class Solver(object):
                         sess.run([D_apply_gradient_op],
                                   feed_dict={self.data_l: data_l, self.data_real: data_real})
 
-                if step % _LOG_FREQ == 0:
+                if step % _LOG_FREQ < self.g_repeat:
                     d_loss_value, adv_loss_prev_value = sess.run([self.D_loss, self.adv_loss], 
                         feed_dict={self.data_l:data_l, self.data_real: data_real})
 
@@ -241,7 +241,7 @@ class Solver(object):
                     sess.run([train_op], 
                               feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
 
-                if step % _LOG_FREQ == 0:
+                if step % _LOG_FREQ < self.g_repeat:
                     duration = time.time() - start_time
                     num_examples_per_step = self.batch_size * self.num_gpus * _LOG_FREQ
                     examples_per_sec = num_examples_per_step / duration
@@ -280,7 +280,7 @@ class Solver(object):
                                              examples_per_sec, sec_per_batch))
                     start_time = time.time()
 
-                if step % 100 == 0:
+                if step % 100 < self.g_repeat:
                     if self.gan:
                         summary_str = sess.run(summary_op, feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_real: data_real})
                     else:
@@ -289,7 +289,7 @@ class Solver(object):
                     summary_writer.add_summary(summary_str, step)
 
                 # Save the model checkpoint periodically.
-                if step % 1000 == 0:
+                if step % 1000 < self.g_repeat:
                     checkpoint_path = os.path.join(
                         self.train_dir, 'model.ckpt')
                     saver.save(sess, checkpoint_path, global_step=step)
