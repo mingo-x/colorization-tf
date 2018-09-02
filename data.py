@@ -38,6 +38,7 @@ class DataSet(object):
       self.data_path = str(dataset_params['path'])
       self.thread_num = int(int(dataset_params['thread_num']) / 2)
       self.thread_num2 = int(int(dataset_params['thread_num']) / 2)
+      self.c313 = True if dataset_params['c313'] == '1' else False
     #record and image_label queue
     self.record_queue = Queue(maxsize=30000)
     self.image_queue = Queue(maxsize=15000)
@@ -126,7 +127,7 @@ class DataSet(object):
         images.append(image)
       images = np.asarray(images, dtype=np.uint8)
 
-      self.batch_queue.put(preprocess(images))
+      self.batch_queue.put(preprocess(images, c313=self.c313))
 
   def batch(self):
     """get batch
