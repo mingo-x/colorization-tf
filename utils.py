@@ -264,8 +264,8 @@ def preprocess(data, training=True):
   #gt_ab_313: [N, H/4, W/4, 313]
   gt_ab_313 = _nnencode(data_ab_ss)
 
-  # data_313_ss = np.concatenate((img_l[:, ::4, ::4, :], gt_ab_313), axis=-1)
-  data_real = np.concatenate((data_l / 50., data_ab / 110.), axis=-1)
+  data_313_ss = np.concatenate((img_l[:, ::4, ::4, :], gt_ab_313), axis=-1)
+  # data_real = np.concatenate((data_l / 50., data_ab / 110.), axis=-1)
 
   #Prior_Boost 
   #prior_boost: [N, 1, H/4, W/4]
@@ -277,7 +277,7 @@ def preprocess(data, training=True):
 
   if training:
     # Upscale.
-    return data_l, gt_ab_313, prior_boost_nongray, data_real
+    return data_l, gt_ab_313, prior_boost_nongray, data_313_ss
     # return data_l, gt_ab_313, prior_boost_nongray, img_lab
   else:
     return data_l, data_ab
