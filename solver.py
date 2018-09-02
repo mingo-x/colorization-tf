@@ -95,7 +95,7 @@ class Solver(object):
                 
                 # self.data_test = tf.concat([self.data_l[0, :, :, :] + 50, ab_fake[0, :, :, :]], axis=-1)
                 self.data_fake = tf.concat([self.data_l / 50., ab_fake / 100.], axis=-1)
-                self.data_real = tf.placeholder(tf.float32, (self.batch_size, self.height, self.width, 314))
+                self.data_real = tf.placeholder(tf.float32, (self.batch_size, self.height, self.width, 3))
             # data_fake = tf.image.resize_images(data_fake, (self.height, self.width))
             D_fake_pred = self.net.discriminator(self.data_fake)
             
