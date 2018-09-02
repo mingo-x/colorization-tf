@@ -154,9 +154,10 @@ class Solver(object):
                 if grad is not None:
                     self.summaries.append(tf.summary.histogram(var.op.name + '/gradients_adv', grad))
 
-            with tf.variable_scope('T', reuse=True):
-                T = tf.get_variable('T')
-            self.summaries.append(tf.summary.scalar(T.op.name, T[0]))
+            if not self.dataset.c313:
+                with tf.variable_scope('T', reuse=True):
+                    T = tf.get_variable('T')
+                self.summaries.append(tf.summary.scalar(T.op.name, T[0]))
 
             # for var in G_vars:
             #     self.summaries.append(tf.summary.histogram(var.op.name, var))
@@ -209,8 +210,9 @@ class Solver(object):
                     init_saver.restore(sess, self.init_ckpt)
                     print('Init generator with {}.'.format(self.init_ckpt))
 
-            start_temp = sess.run(T)
-            print("Temp {}.".format(start_temp))
+            if not self.dataset.c313:
+                start_temp = sess.run(T)
+                print("Temp {}.".format(start_temp))
 
             summary_writer = tf.summary.FileWriter(self.train_dir, sess.graph)
             start_time = time.time()
