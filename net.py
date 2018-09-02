@@ -257,10 +257,9 @@ class Net(object):
                 
                 discriminator = conv_6
             elif self.version == 4:
-                self.downscale = (44. * 44.) /(5. * 5.)
                 # 44x44x128
                 conv_num = 1
-                conv_1 = conv2d('d_conv_{}'.format(conv_num), data_313, [4, 4, 313, 128], stride=1, relu=False, wd=None, leaky=True)
+                conv_1 = conv2d('d_conv_{}'.format(conv_num), data_313, [4, 4, 314, 128], stride=1, relu=False, wd=None, leaky=True)
                 # 22x22x64
                 conv_num += 1
                 conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [4, 4, 128, 64], stride=2, relu=False, wd=None)
