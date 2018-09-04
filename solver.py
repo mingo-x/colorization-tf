@@ -133,7 +133,7 @@ class Solver(object):
             D_learning_rate = self.D_learning_rate
 
             with tf.name_scope('gpu') as scope:
-                self.new_loss, self.total_loss, self.adv_loss, self.D_loss, self.real_score, self.fake_score = self.construct_graph(scope)
+                self.new_loss, self.total_loss, self.adv_loss, self.D_loss, self.real_score, self.fake_score, self.mixed_norm = self.construct_graph(scope)
                 self.summaries = tf.get_collection(
                     tf.GraphKeys.SUMMARIES, scope)
 
