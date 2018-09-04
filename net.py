@@ -280,36 +280,45 @@ class Net(object):
             elif self.version == 6:
                 # 44x44x314
                 conv_num = 1
-                conv_1 = conv2d('d_conv_{}'.format(conv_num), data_313, [3, 3, 314, 128], stride=1, relu=False, wd=None, leaky=True)
-                # 22x22x64
+                conv_1 = conv2d('d_conv_{}'.format(conv_num), data_313, [3, 3, 314, 128], stride=1, wd=None)
+                # 22x22x256
                 conv_num += 1
-                conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [3, 3, 128, 64], stride=2, relu=False, wd=None, leaky=True)
-                # 11x11x32
+                conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [3, 3, 128, 256], stride=2, wd=None)
+                # 11x11x512
                 conv_num += 1
-                conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [3, 3, 64, 32], stride=2, relu=False, wd=None, leaky=True)
-                # 11x11x1
+                conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [3, 3, 256, 512], stride=2, wd=None)
+                # 5x5x512
                 conv_num += 1
-                conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [3, 3, 32, 1], stride=1, relu=False, wd=None)
-                
-                discriminator = tf.reduce_mean(conv_4, axis=[1, 2, 3])
+                conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [3, 3, 512, 512], stride=2, wd=None, same=False)
+                # 2x2x512
+                conv_num += 1
+                conv_5 = conv2d('d_conv_{}'.format(conv_num), conv_4, [3, 3, 512, 512], stride=2, wd=None, same=False)
+
+                flatten = tf.layers.flatten(conv_5)
+                discriminator = tf.layers.dense(flatten, 1)
             elif self.version == 7:
                 # 88x88x64
                 conv_num = 1
-                conv_1 = conv2d('d_conv_{}'.format(conv_num), data_313, [3, 3, 3, 64], stride=2, relu=False, wd=None, leaky=True)
+                conv_1 = conv2d('d_conv_{}'.format(conv_num), data_313, [3, 3, 3, 64], stride=2, wd=None)
                 # 44x44x128
                 conv_num += 1
-                conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [3, 3, 64, 128], stride=2, relu=False, wd=None, leaky=True)
+                conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [3, 3, 64, 128], stride=2, wd=None)
                 # 22x22x256
                 conv_num += 1
-                conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [3, 3, 128, 256], stride=2, relu=False, wd=None, leaky=True);
+                conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [3, 3, 128, 256], stride=2, wd=None);
                 # 11x11x512
                 conv_num += 1
-                conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [3, 3, 256, 512], stride=2, relu=False, wd=None, leaky=True);
-                # 11x11x1
+                conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [3, 3, 256, 512], stride=2, wd=None);
+                # 5x5x512
                 conv_num += 1
-                conv_5 = conv2d('d_conv_{}'.format(conv_num), conv_4, [1, 1, 512, 1], stride=1, relu=False, wd=None);
-                
-                discriminator = tf.reduce_mean(conv_5, axis=[1, 2, 3])
+                conv_5 = conv2d('d_conv_{}'.format(conv_num), conv_4, [3, 3, 512, 512], stride=2, wd=None, same=False);
+                # 2x2x512
+                conv_num += 1
+                conv_6 = conv2d('d_conv_{}'.format(conv_num), conv_5, [3, 3, 512, 512], stride=2, wd=None, same=False);
+
+                flatten = tf.layers.flatten(conv_6)
+                discriminator = tf.layers.dense(flatten, 1)
+
             else:
                 self.downscale = 1
                 # 44x44

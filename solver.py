@@ -117,7 +117,7 @@ class Solver(object):
                 tf.summary.scalar('D loss', D_loss)
                 tf.summary.scalar('real_score', real_score)
                 tf.summary.scalar('fake_score', fake_score)
-                tf.summary.scalar('adv_loss', adv_loss)
+                # tf.summary.scalar('adv_loss', adv_loss)
                 tf.summary.scalar('mixed_norm', mixed_norm)
                 return (new_loss, g_loss, adv_loss, D_loss, real_score, fake_score, mixed_norm)
             else:
@@ -143,9 +143,18 @@ class Solver(object):
             opt = tf.train.AdamOptimizer(
                 learning_rate=learning_rate, beta1=0.5, beta2=0.9)
             G_vars = tf.trainable_variables(scope='G')
-            T_var = tf.trainable_variables(scope='T')
+            T_vars = tf.trainable_variables(scope='T')
+            
+            with tf.variable_scope('T', reuse=True):
+                if not self.dataset.c313:
+                    T = tf.get_variable('T')
+                    T_loss = tf.multiply(tf.nn.l2_loss(T - 2.63), 1e-3, name='weight_loss')
+                    self.summaries.append(tf.summary.scalar(T.op.name, T[0]))
+                else:
+                    T_loss = 0.
+    
             grads = opt.compute_gradients(self.new_loss * self.net.alpha, var_list=G_vars)
-            grads_adv = opt.compute_gradients(self.adv_loss, var_list=G_vars + T_var)
+            grads_adv = opt.compute_gradients(self.adv_loss + T_loss, var_list=G_vars + T_vars)
 
             for grad, var in grads:
                 if grad is not None:
@@ -154,11 +163,6 @@ class Solver(object):
             for grad, var in grads_adv:
                 if grad is not None:
                     self.summaries.append(tf.summary.histogram(var.op.name + '/gradients_adv', grad))
-
-            if not self.dataset.c313:
-                with tf.variable_scope('T', reuse=True):
-                    T = tf.get_variable('T')
-                self.summaries.append(tf.summary.scalar(T.op.name, T[0]))
 
             # for var in G_vars:
             #     self.summaries.append(tf.summary.histogram(var.op.name, var))
