@@ -24,6 +24,8 @@ class Net(object):
           self.version = int(net_params['version'])
           print('Discriminator version {}'.format(self.version))
           self.temp_trainable = True if net_params['temp_trainable'] == '1' else False
+          self.gp_lambda = float(net_params['gp_lambda'])
+          print('Gradient penalty {}.'.format(self.gp_lambda))
 
     def inference(self, data_l):
         with tf.variable_scope('G'):
@@ -122,7 +124,7 @@ class Net(object):
         return conv8_313
 
     def loss(self, scope, conv8_313, prior_boost_nongray,
-             gt_ab_313, D_pred, is_gan, is_boost):
+             gt_ab_313, fake_data, is_gan, is_boost):
         flat_conv8_313 = tf.reshape(conv8_313, [-1, 313])
         flat_gt_ab_313 = tf.reshape(gt_ab_313, [-1, 313])
         flat_gt_ab_313 = tf.stop_gradient(flat_gt_ab_313)
@@ -148,7 +150,7 @@ class Net(object):
 
         # Adversarial loss.
         if is_gan:
-            adv_loss = -tf.reduce_mean(tf.log(D_pred + self.eps))
+            adv_loss = -tf.reduce_mean(self.discriminator(fake_data, reuse=tf.AUTO_REUSE))
             # new_loss += self.alpha * adv_loss
             return new_loss, g_loss, adv_loss
         else:
@@ -275,6 +277,21 @@ class Net(object):
                 conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [4, 4, 32, 1], stride=1, relu=False, wd=None, sigmoid=True);
                 
                 discriminator = conv_4
+            elif self.version == 6:
+                # 44x44x314
+                conv_num = 1
+                conv_1 = conv2d('d_conv_{}'.format(conv_num), data_313, [4, 4, 314, 128], stride=1, relu=False, wd=None, leaky=True)
+                # 22x22x64
+                conv_num += 1
+                conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [4, 4, 128, 64], stride=2, relu=False, wd=None, leaky=True)
+                # 11x11x32
+                conv_num += 1
+                conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [4, 4, 64, 32], stride=2, relu=False, wd=None, leaky=True)
+                # 11x11x1
+                conv_num += 1
+                conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [4, 4, 32, 1], stride=1, relu=False, wd=None, sigmoid=True)
+                
+                discriminator = tf.reduce_mean(conv_4, axis=[1, 2, 3])
             else:
                 self.downscale = 1
                 # 44x44
@@ -294,16 +311,34 @@ class Net(object):
         return discriminator
 
 
-    def discriminator_loss(self, original, colorized):
-        original_loss = -0.9 * tf.log(original + self.eps) - 0.1 * tf.log(1. - original + self.eps)  # Label smoothing.
-        colorized_loss = -tf.log(1 - colorized + self.eps)
-        fake_loss = tf.reduce_mean(colorized_loss)
-        real_loss = tf.reduce_mean(original_loss)
-        total_loss = (fake_loss + real_loss) / 2.
+    def discriminator_loss(self, real_data, fake_data):
+        # original_loss = -0.9 * tf.log(original + self.eps) - 0.1 * tf.log(1. - original + self.eps)  # Label smoothing.
+        # colorized_loss = -tf.log(1 - colorized + self.eps)
+        # fake_loss = tf.reduce_mean(colorized_loss)
+        # real_loss = tf.reduce_mean(original_loss)
+        # total_loss = (fake_loss + real_loss) / 2.
         # tf.summary.scalar('D_weight_loss', tf.add_n(tf.get_collection('losses', scope=scope)))
         # total_loss += tf.add_n(tf.get_collection('losses', scope=scope))
 
-        return total_loss, real_loss, fake_loss
+        # WGAN-GP
+        fake_score = tf.reduce_mean(self.discriminator(fake_data, reuse=tf.AUTO_REUSE))
+        real_score = tf.reduce_mean(self.discriminator(real_data, reuse=tf.AUTO_REUSE))
+        total_loss = fake_score - real_score
+
+        alpha = tf.random_uniform(
+            shape=[self.batch_size, 1, 1, 1], 
+            minval=0.,
+            maxval=1.,
+            dtype=fake_data.dtype
+        )
+        differences = fake_data - real_data
+        interpolates = real_data + (alpha*differences) 
+        gradients = tf.gradients(self.discriminator(interpolates, reuse=tf.AUTO_REUSE), [interpolates])[0]
+        slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), axis=[1, 2, 3]))
+        gradient_penalty = tf.reduce_mean((slopes-1.)**2)
+        total_loss += self.gp_lambda*gradient_penalty
+
+        return total_loss, real_loss, fake_loss, tf.reduce_mean(slopes)
 
     def conv313_to_ab(self, conv8_313, rebalance=2.63):
         '''

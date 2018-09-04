@@ -98,28 +98,28 @@ class Solver(object):
                 self.data_fake = tf.concat([self.data_l / 50., ab_fake / 100.], axis=-1)
                 self.data_real = tf.placeholder(tf.float32, (self.batch_size, self.height, self.width, 3))
             # data_fake = tf.image.resize_images(data_fake, (self.height, self.width))
-            D_fake_pred = self.net.discriminator(self.data_fake)
+            
             
             # self.data_l_ss_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 1))
             # self.gt_ab_313_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 313))
             # self.data_lab_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 3))
             # data_real = tf.concat([self.data_l_ss_real, self.gt_ab_313_real], axis=-1)
-            D_real_pred = self.net.discriminator(self.data_real, True)  # Reuse the variables.
 
             new_loss, g_loss, adv_loss = self.net.loss(
                 scope, conv8_313, self.prior_boost_nongray,
-                self.gt_ab_313, D_fake_pred, self.gan,
+                self.gt_ab_313, self.data_fake, self.gan,
                 self.prior_boost)
             tf.summary.scalar('new_loss', new_loss)
             tf.summary.scalar('total_loss', g_loss)
 
             if self.gan:
-                D_loss, real_score, fake_score = self.net.discriminator_loss(D_real_pred, D_fake_pred)
+                D_loss, real_score, fake_score, mixed_norm = self.net.discriminator_loss(self.data_real, self.data_fake)
                 tf.summary.scalar('D loss', D_loss)
                 tf.summary.scalar('real_score', real_score)
                 tf.summary.scalar('fake_score', fake_score)
                 tf.summary.scalar('adv_loss', adv_loss)
-                return (new_loss, g_loss, adv_loss, D_loss, real_score, fake_score)
+                tf.summary.scalar('adv_loss', mixed_norm)
+                return (new_loss, g_loss, adv_loss, D_loss, real_score, fake_score, mixed_norm)
             else:
                 return (new_loss, g_loss, adv_loss, None, None, None)
 
@@ -141,7 +141,7 @@ class Solver(object):
                 tf.summary.scalar('learning_rate', learning_rate))
 
             opt = tf.train.AdamOptimizer(
-                learning_rate=learning_rate, beta1=0.5, beta2=0.99)
+                learning_rate=learning_rate, beta1=0.5, beta2=0.9)
             G_vars = tf.trainable_variables(scope='G')
             T_var = tf.trainable_variables(scope='T')
             grads = opt.compute_gradients(self.new_loss * self.net.alpha, var_list=G_vars)
@@ -174,7 +174,7 @@ class Solver(object):
 
             if self.gan:
                 D_opt = tf.train.AdamOptimizer(
-                    learning_rate=D_learning_rate, beta1=0.5, beta2=0.99)
+                    learning_rate=D_learning_rate, beta1=0.5, beta2=0.9)
                 D_vars = tf.trainable_variables(scope='D')
                 D_grads = D_opt.compute_gradients(self.D_loss, var_list=D_vars)
                 D_apply_gradient_op = D_opt.apply_gradients(D_grads)
