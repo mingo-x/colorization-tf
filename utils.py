@@ -250,8 +250,8 @@ def preprocess(data, training=True, c313=False):
   #ab: [-110, 110]
   data_ab = img_lab[:, :, :, 1:]
 
-  #scale img_l to [-50, 50]
-  data_l = img_l - 50
+  #scale img_l to [-1, 1]
+  data_l = (img_l - 50.) / 50.
 
   #subsample 1/4  (N * H/4 * W/4 * 2)
   data_ab_ss = data_ab[:, ::4, ::4, :]
@@ -265,9 +265,9 @@ def preprocess(data, training=True, c313=False):
   gt_ab_313 = _nnencode(data_ab_ss)
 
   if c313:
-    data_313_ss = np.concatenate((data_l[:, ::4, ::4, :] / 50., gt_ab_313), axis=-1)
+    data_313_ss = np.concatenate((data_l[:, ::4, ::4, :], gt_ab_313), axis=-1)
   else:
-    data_real = np.concatenate((data_l / 50., data_ab / 110.), axis=-1)
+    data_real = np.concatenate((data_l, data_ab / 110.), axis=-1)
 
   #Prior_Boost 
   #prior_boost: [N, 1, H/4, W/4]
