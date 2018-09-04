@@ -118,7 +118,7 @@ class Solver(object):
                 tf.summary.scalar('real_score', real_score)
                 tf.summary.scalar('fake_score', fake_score)
                 tf.summary.scalar('adv_loss', adv_loss)
-                tf.summary.scalar('adv_loss', mixed_norm)
+                tf.summary.scalar('mixed_norm', mixed_norm)
                 return (new_loss, g_loss, adv_loss, D_loss, real_score, fake_score, mixed_norm)
             else:
                 return (new_loss, g_loss, adv_loss, None, None, None)

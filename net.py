@@ -292,6 +292,24 @@ class Net(object):
                 conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [4, 4, 32, 1], stride=1, relu=False, wd=None, sigmoid=True)
                 
                 discriminator = tf.reduce_mean(conv_4, axis=[1, 2, 3])
+            elif self.version == 7:
+                # 88x88x64
+                conv_num = 1
+                conv_1 = conv2d('d_conv_{}'.format(conv_num), data_313, [3, 3, 3, 64], stride=2, relu=False, wd=None, leaky=True)
+                # 44x44x128
+                conv_num += 1
+                conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [3, 3, 64, 128], stride=2, relu=False, wd=None, leaky=True)
+                # 22x22x256
+                conv_num += 1
+                conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [3, 3, 128, 256], stride=2, relu=False, wd=None, leaky=True);
+                # 11x11x512
+                conv_num += 1
+                conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [3, 3, 256, 512], stride=2, relu=False, wd=None, leaky=True);
+                # 11x11x1
+                conv_num += 1
+                conv_5 = conv2d('d_conv_{}'.format(conv_num), conv_4, [1, 1, 512, 1], stride=1, relu=False, wd=None);
+                
+                discriminator = tf.reduce_mean(conv_5, axis=[1, 2, 3])
             else:
                 self.downscale = 1
                 # 44x44
