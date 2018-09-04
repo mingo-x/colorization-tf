@@ -180,6 +180,8 @@ class Solver(object):
                 D_opt = tf.train.AdamOptimizer(
                     learning_rate=D_learning_rate, beta1=0.5, beta2=0.9)
                 D_vars = tf.trainable_variables(scope='D')
+                for var in D_vars:
+                    self.summaries.append(tf.summary.histogram(var.op.name, var))
                 D_grads = D_opt.compute_gradients(self.D_loss, var_list=D_vars)
                 D_apply_gradient_op = D_opt.apply_gradients(D_grads)
 
