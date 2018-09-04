@@ -173,7 +173,7 @@ class Solver(object):
                 grads_adv)
             variable_averages = tf.train.ExponentialMovingAverage(
                 0.999, self.global_step)
-            variables_averages_op = variable_averages.apply(G_vars + T_var)
+            variables_averages_op = variable_averages.apply(G_vars + T_vars)
             train_op = tf.group(apply_gradient_op, apply_gradient_adv_op, variables_averages_op)
 
             if self.gan:
@@ -196,7 +196,7 @@ class Solver(object):
                     saver.restore(sess, self.ckpt)
                 else:
                     sess.run(init)
-                    init_saver = tf.train.Saver(G_vars + T_var + D_vars + [self.global_step])
+                    init_saver = tf.train.Saver(G_vars + T_vars + D_vars + [self.global_step])
                     init_saver.restore(sess, self.ckpt)
 
                 print(self.ckpt + " restored.")
