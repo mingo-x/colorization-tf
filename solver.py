@@ -156,13 +156,13 @@ class Solver(object):
             grads = opt.compute_gradients(self.new_loss * self.net.alpha, var_list=G_vars)
             grads_adv = opt.compute_gradients(self.adv_loss + T_loss, var_list=G_vars + T_vars)
 
-            for grad, var in grads:
-                if grad is not None:
-                    self.summaries.append(tf.summary.histogram(var.op.name + '/gradients', grad))
+            # for grad, var in grads:
+            #     if grad is not None:
+            #         self.summaries.append(tf.summary.histogram(var.op.name + '/gradients', grad))
 
-            for grad, var in grads_adv:
-                if grad is not None:
-                    self.summaries.append(tf.summary.histogram(var.op.name + '/gradients_adv', grad))
+            # for grad, var in grads_adv:
+            #     if grad is not None:
+            #         self.summaries.append(tf.summary.histogram(var.op.name + '/gradients_adv', grad))
 
             # for var in G_vars:
             #     self.summaries.append(tf.summary.histogram(var.op.name, var))
@@ -180,8 +180,8 @@ class Solver(object):
                 D_opt = tf.train.AdamOptimizer(
                     learning_rate=D_learning_rate, beta1=0.5, beta2=0.9)
                 D_vars = tf.trainable_variables(scope='D')
-                for var in D_vars:
-                    self.summaries.append(tf.summary.histogram(var.op.name, var))
+                # for var in D_vars:
+                #     self.summaries.append(tf.summary.histogram(var.op.name, var))
                 D_grads = D_opt.compute_gradients(self.D_loss, var_list=D_vars)
                 D_apply_gradient_op = D_opt.apply_gradients(D_grads)
 
