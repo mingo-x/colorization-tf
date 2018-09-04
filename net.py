@@ -336,7 +336,7 @@ class Net(object):
         gradients = tf.gradients(self.discriminator(interpolates, reuse=tf.AUTO_REUSE), [interpolates])[0]
         slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), axis=[1, 2, 3]))
         gradient_penalty = tf.reduce_mean((slopes-1.)**2)
-        total_loss += self.gp_lambda*gradient_penalty
+        total_loss += self.gp_lambda * gradient_penalty
 
         return total_loss, real_score, fake_score, tf.reduce_mean(slopes)
 
