@@ -338,7 +338,7 @@ class Net(object):
         gradient_penalty = tf.reduce_mean((slopes-1.)**2)
         total_loss += self.gp_lambda*gradient_penalty
 
-        return total_loss, real_loss, fake_loss, tf.reduce_mean(slopes)
+        return total_loss, real_score, fake_score, tf.reduce_mean(slopes)
 
     def conv313_to_ab(self, conv8_313, rebalance=2.63):
         '''
