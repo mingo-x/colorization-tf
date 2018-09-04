@@ -280,16 +280,16 @@ class Net(object):
             elif self.version == 6:
                 # 44x44x314
                 conv_num = 1
-                conv_1 = conv2d('d_conv_{}'.format(conv_num), data_313, [4, 4, 314, 128], stride=1, relu=False, wd=None, leaky=True)
+                conv_1 = conv2d('d_conv_{}'.format(conv_num), data_313, [3, 3, 314, 128], stride=1, relu=False, wd=None, leaky=True)
                 # 22x22x64
                 conv_num += 1
-                conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [4, 4, 128, 64], stride=2, relu=False, wd=None, leaky=True)
+                conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [3, 3, 128, 64], stride=2, relu=False, wd=None, leaky=True)
                 # 11x11x32
                 conv_num += 1
-                conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [4, 4, 64, 32], stride=2, relu=False, wd=None, leaky=True)
+                conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [3, 3, 64, 32], stride=2, relu=False, wd=None, leaky=True)
                 # 11x11x1
                 conv_num += 1
-                conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [4, 4, 32, 1], stride=1, relu=False, wd=None)
+                conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [3, 3, 32, 1], stride=1, relu=False, wd=None)
                 
                 discriminator = tf.reduce_mean(conv_4, axis=[1, 2, 3])
             elif self.version == 7:
