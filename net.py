@@ -350,10 +350,10 @@ class Net(object):
         # WGAN-GP
         real_score = self.discriminator(real_data, reuse=tf.AUTO_REUSE)
         fake_score = self.discriminator(fake_data, reuse=tf.AUTO_REUSE)
-        drift_loss = tf.reduce_mean(tf.square(real_score))
+        # drift_loss = tf.reduce_mean(tf.square(real_score))
         fake_score = tf.reduce_mean(fake_score)
         real_score = tf.reduce_mean(real_score)
-        total_loss = fake_score - real_score + 0.001 * drift_loss
+        total_loss = fake_score - real_score
 
         alpha = tf.random_uniform(
             shape=[self.batch_size, 1, 1, 1], 
