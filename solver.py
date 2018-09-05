@@ -236,7 +236,7 @@ class Solver(object):
                                   feed_dict={self.data_l: data_l, self.data_real: data_real})
 
                 if step % _LOG_FREQ < self.g_repeat:
-                    d_loss_value, adv_loss_prev_value = sess.run([self.D_loss, self.adv_loss], 
+                    d_loss_value, real_score_value, fake_score_value = sess.run([self.D_loss, self.real_score, self.fake_score], 
                         feed_dict={self.data_l:data_l, self.data_real: data_real})
 
                 # Generator training.
@@ -254,18 +254,18 @@ class Solver(object):
                     sec_per_batch = duration / (self.num_gpus * _LOG_FREQ)
 
                     if self.gan:
-                        loss_value, new_loss_value, adv_loss_value, data_fake = sess.run(
-                          [self.total_loss, self.new_loss, self.adv_loss, self.data_fake], 
-                          feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_real: data_real})
-                        format_str = ('%s: step %d, G loss = %.2f, new loss = %.2f, adv prev = %0.5f, adv = %0.5f, D = %0.5f (%.1f examples/sec; %.3f '
+                        loss_value, new_loss_value, adv_loss_value = sess.run(
+                          [self.total_loss, self.new_loss, self.adv_loss], 
+                          feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
+                        format_str = ('%s: step %d, G loss = %.2f, new loss = %.2f, adv = %0.5f, D = %0.5f, real = %0.3f, fake = %0.3f(%.1f examples/sec; %.3f '
                                       'sec/batch)')
                         # assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
                         # assert not np.isnan(adv_loss_value), 'Adversarial diverged with loss = NaN'
                         # assert not np.isnan(D_loss_value), 'Discriminator diverged with loss = NaN'
-                        print (format_str % (datetime.now(), step, loss_value, new_loss_value, adv_loss_prev_value, adv_loss_value, d_loss_value,
+                        print (format_str % (datetime.now(), step, loss_value, new_loss_value, adv_loss_value, d_loss_value, real_score_value, fake_score_value,
                                              examples_per_sec, sec_per_batch))
-                        print(np.min(data_fake[:, :, :, 0]), np.max(data_fake[:, :, :, 0]), np.min(data_fake[:, :, :, 1]), np.max(data_fake[:, :, :, 2]))
-                        print(np.min(data_real[:, :, :, 0]), np.max(data_real[:, :, :, 0]), np.min(data_real[:, :, :, 1]), np.max(data_real[:, :, :, 2]))
+                        # print(np.min(data_fake[:, :, :, 0]), np.max(data_fake[:, :, :, 0]), np.min(data_fake[:, :, :, 1]), np.max(data_fake[:, :, :, 2]))
+                        # print(np.min(data_real[:, :, :, 0]), np.max(data_real[:, :, :, 0]), np.min(data_real[:, :, :, 1]), np.max(data_real[:, :, :, 2]))
                         # if step % 100 == 0:
                         #     img_lab = np.array(data_test, dtype=np.float64)
                         #     data_rgb = color.lab2rgb(img_lab)

@@ -348,9 +348,12 @@ class Net(object):
         # total_loss += tf.add_n(tf.get_collection('losses', scope=scope))
 
         # WGAN-GP
-        fake_score = tf.reduce_mean(self.discriminator(fake_data, reuse=tf.AUTO_REUSE))
-        real_score = tf.reduce_mean(self.discriminator(real_data, reuse=tf.AUTO_REUSE))
-        total_loss = fake_score - real_score
+        real_score = self.discriminator(real_data, reuse=tf.AUTO_REUSE)
+        fake_score = self.discriminator(fake_data, reuse=tf.AUTO_REUSE)
+        drift_loss = tf.reduce_mean(tf.square(real_score))
+        fake_score = tf.reduce_mean(fake_score)
+        real_score = tf.reduce_mean(real_score)
+        total_loss = fake_score - real_score + 0.001 * drift_loss
 
         alpha = tf.random_uniform(
             shape=[self.batch_size, 1, 1, 1], 
@@ -364,9 +367,6 @@ class Net(object):
         slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), axis=[1, 2, 3]))
         gradient_penalty = tf.reduce_mean((slopes-1.)**2)
         total_loss += self.gp_lambda * gradient_penalty
-
-        # Drift loss.
-        total_loss += 0.001 * tf.reduce_mean(tf.square(real_score))
 
         return total_loss, real_score, fake_score, tf.reduce_mean(slopes)
 
