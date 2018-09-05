@@ -141,7 +141,7 @@ class Solver(object):
                 tf.summary.scalar('learning_rate', learning_rate))
 
             opt = tf.train.AdamOptimizer(
-                learning_rate=learning_rate, beta1=0.5, beta2=0.9)
+                learning_rate=learning_rate, beta1=0., beta2=0.99)
             G_vars = tf.trainable_variables(scope='G')
             T_vars = tf.trainable_variables(scope='T')
             
@@ -178,7 +178,7 @@ class Solver(object):
 
             if self.gan:
                 D_opt = tf.train.AdamOptimizer(
-                    learning_rate=D_learning_rate, beta1=0.5, beta2=0.9)
+                    learning_rate=D_learning_rate, beta1=0., beta2=0.99)
                 D_vars = tf.trainable_variables(scope='D')
                 # for var in D_vars:
                 #     self.summaries.append(tf.summary.histogram(var.op.name, var))
