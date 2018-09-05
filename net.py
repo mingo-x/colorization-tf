@@ -365,6 +365,7 @@ class Net(object):
         gradient_penalty = tf.reduce_mean((slopes-1.)**2)
         total_loss += self.gp_lambda * gradient_penalty
 
+        # Drift loss.
         total_loss += 0.001 * tf.reduce_mean(tf.square(real_score))
 
         return total_loss, real_score, fake_score, tf.reduce_mean(slopes)

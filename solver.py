@@ -153,8 +153,8 @@ class Solver(object):
                 else:
                     T_loss = 0.
     
-            grads = opt.compute_gradients(self.new_loss * self.net.alpha, var_list=G_vars)
-            grads_adv = opt.compute_gradients(self.adv_loss + T_loss, var_list=G_vars + T_vars)
+            grads = opt.compute_gradients(self.new_loss * self.net.alpha + self.adv_loss + T_loss, var_list=G_vars + T_vars)
+            # grads_adv = opt.compute_gradients(self.adv_loss + T_loss, var_list=G_vars + T_vars)
 
             # for grad, var in grads:
             #     if grad is not None:
@@ -169,12 +169,12 @@ class Solver(object):
 
             apply_gradient_op = opt.apply_gradients(
                 grads, global_step=self.global_step)
-            apply_gradient_adv_op = opt.apply_gradients(
-                grads_adv)
+            # apply_gradient_adv_op = opt.apply_gradients(
+            #     grads_adv)
             variable_averages = tf.train.ExponentialMovingAverage(
                 0.999, self.global_step)
             variables_averages_op = variable_averages.apply(G_vars + T_vars)
-            train_op = tf.group(apply_gradient_op, apply_gradient_adv_op, variables_averages_op)
+            train_op = tf.group(apply_gradient_op, variables_averages_op)
 
             if self.gan:
                 D_opt = tf.train.AdamOptimizer(
