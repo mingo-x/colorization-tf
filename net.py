@@ -317,7 +317,7 @@ class Net(object):
                 conv_6 = conv2d('d_conv_{}'.format(conv_num), conv_5, [3, 3, 512, 512], stride=2, wd=None, same=False);
 
                 flatten = tf.layers.flatten(conv_6)
-                discriminator = tf.layers.dense(flatten, 1, kernel_initializer=tf.contrib.layers.xavier_initializer)
+                discriminator = tf.layers.dense(flatten, 1, kernel_initializer=tf.contrib.layers.variance_scaling_initializer(factor=1.0, mode='FAN_AVG', uniform=True, dtype=tf.float32))
 
             else:
                 self.downscale = 1
