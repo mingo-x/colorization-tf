@@ -141,7 +141,7 @@ class Solver(object):
                 tf.summary.scalar('learning_rate', learning_rate))
 
             opt = tf.train.AdamOptimizer(
-                learning_rate=learning_rate, beta1=0., beta2=0.99)
+                learning_rate=learning_rate, beta1=0., beta2=0.9)
             G_vars = tf.trainable_variables(scope='G')
             T_vars = tf.trainable_variables(scope='T')
             
@@ -178,7 +178,7 @@ class Solver(object):
 
             if self.gan:
                 D_opt = tf.train.AdamOptimizer(
-                    learning_rate=D_learning_rate, beta1=0., beta2=0.99)
+                    learning_rate=D_learning_rate, beta1=0., beta2=0.9)
                 D_vars = tf.trainable_variables(scope='D')
                 # for var in D_vars:
                 #     self.summaries.append(tf.summary.histogram(var.op.name, var))
@@ -257,12 +257,12 @@ class Solver(object):
                         loss_value, new_loss_value, adv_loss_value = sess.run(
                           [self.total_loss, self.new_loss, self.adv_loss], 
                           feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
-                        format_str = ('%s: step %d, G loss = %.2f, new loss = %.2f, adv = %0.5f, D = %0.5f, real = %0.3f, div = %0.3f(%.1f examples/sec; %.3f '
+                        format_str = ('%s: step %d, G loss = %.2f, new loss = %.2f, adv = %0.5f, D = %0.5f, div = %0.3f(%.1f examples/sec; %.3f '
                                       'sec/batch)')
                         # assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
                         # assert not np.isnan(adv_loss_value), 'Adversarial diverged with loss = NaN'
                         # assert not np.isnan(D_loss_value), 'Discriminator diverged with loss = NaN'
-                        print (format_str % (datetime.now(), step, loss_value, new_loss_value, adv_loss_value, d_loss_value, real_score_value, real_score_value - fake_score_value,
+                        print (format_str % (datetime.now(), step, loss_value, new_loss_value, adv_loss_value, d_loss_value, real_score_value - fake_score_value,
                                              examples_per_sec, sec_per_batch))
                         # print(np.min(data_fake[:, :, :, 0]), np.max(data_fake[:, :, :, 0]), np.min(data_fake[:, :, :, 1]), np.max(data_fake[:, :, :, 2]))
                         # print(np.min(data_real[:, :, :, 0]), np.max(data_real[:, :, :, 0]), np.min(data_real[:, :, :, 1]), np.max(data_real[:, :, :, 2]))
