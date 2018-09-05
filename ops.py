@@ -99,4 +99,4 @@ def deconv2d(scope, input, kernel_size, stride=1, wd=nilboy_weight_decay):
 
 def batch_norm(scope, x, train=True, reuse=False):
   return tf.contrib.layers.batch_norm(x, center=True, scale=True, updates_collections=None, is_training=train, trainable=True, scope=scope)
-
+  
