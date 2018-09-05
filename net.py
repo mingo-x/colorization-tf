@@ -295,7 +295,7 @@ class Net(object):
                 conv_5 = conv2d('d_conv_{}'.format(conv_num), conv_4, [3, 3, 512, 512], stride=2, wd=None, same=False)
 
                 flatten = tf.layers.flatten(conv_5)
-                discriminator = tf.layers.dense(flatten, 1)
+                discriminator = tf.layers.dense(flatten, 1, kernel_initializer=tf.glorot_uniform_initializer)
             elif self.version == 7:
                 # 88x88x64
                 conv_num = 1
@@ -317,7 +317,7 @@ class Net(object):
                 conv_6 = conv2d('d_conv_{}'.format(conv_num), conv_5, [3, 3, 512, 512], stride=2, wd=None, same=False);
 
                 flatten = tf.layers.flatten(conv_6)
-                discriminator = tf.layers.dense(flatten, 1)
+                discriminator = tf.layers.dense(flatten, 1, kernel_initializer=tf.glorot_uniform_initializer)
 
             else:
                 self.downscale = 1
