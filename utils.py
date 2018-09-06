@@ -267,7 +267,8 @@ def preprocess(data, training=True, c313=False):
   if c313:
     data_313_ss = np.concatenate((data_l[:, ::4, ::4, :], gt_ab_313), axis=-1)
   else:
-    data_real = np.concatenate((data_l, data_ab / 110.), axis=-1)
+    data_ab_rs = resize(data_ab_ss, (H, W)) / 110.
+    data_real = np.concatenate((data_l, data_ab_rs), axis=-1)
 
   #Prior_Boost 
   #prior_boost: [N, 1, H/4, W/4]
