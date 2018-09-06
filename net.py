@@ -26,6 +26,8 @@ class Net(object):
           self.temp_trainable = True if net_params['temp_trainable'] == '1' else False
           self.gp_lambda = float(net_params['gp_lambda'])
           print('Gradient penalty {}.'.format(self.gp_lambda))
+          self.k = float(net_params['k'])
+          print('Gradient norm {}.'.format(self.k))
 
     def inference(self, data_l):
         with tf.variable_scope('G'):
@@ -401,7 +403,7 @@ class Net(object):
         interpolates = real_data + (alpha*differences) 
         gradients = tf.gradients(self.discriminator(interpolates, reuse=tf.AUTO_REUSE), [interpolates])[0]
         slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), axis=[1, 2, 3]))
-        gradient_penalty = tf.reduce_mean((slopes-1.)**2)
+        gradient_penalty = tf.reduce_mean((slopes - self.k)**2)
         total_loss += self.gp_lambda * gradient_penalty
 
         return total_loss, real_score, fake_score, tf.reduce_mean(slopes)
