@@ -318,6 +318,42 @@ class Net(object):
 
                 flatten = tf.layers.flatten(conv_6)
                 discriminator = tf.layers.dense(flatten, 1, kernel_initializer=tf.contrib.layers.variance_scaling_initializer(factor=1.0, mode='FAN_AVG', uniform=True, dtype=tf.float32))
+            elif self.version == 8:
+                # 176x176
+                conv_num = 1
+                conv_1 = conv2d('d_conv_{}'.format(conv_num), data_313, [1, 1, 3, 32], stride=1, wd=None)
+                conv_num += 1
+                conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [3, 3, 32, 32], stride=1, wd=None)
+                conv_num += 1
+                conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [3, 3, 32, 64], stride=2, wd=None)
+                # 88x88
+                conv_num += 1
+                conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [3, 3, 64, 64], stride=1, wd=None)
+                conv_num += 1
+                conv_5 = conv2d('d_conv_{}'.format(conv_num), conv_4, [3, 3, 64, 128], stride=2, wd=None)
+                # 44x44
+                conv_num += 1
+                conv_6 = conv2d('d_conv_{}'.format(conv_num), conv_5, [3, 3, 128, 128], stride=1, wd=None);
+                conv_num += 1
+                conv_7 = conv2d('d_conv_{}'.format(conv_num), conv_6, [3, 3, 128, 256], stride=2, wd=None);
+                # 22x22
+                conv_num += 1
+                conv_8 = conv2d('d_conv_{}'.format(conv_num), conv_7, [3, 3, 256, 256], stride=1, wd=None);
+                conv_num += 1
+                conv_9 = conv2d('d_conv_{}'.format(conv_num), conv_8, [3, 3, 256, 512], stride=2, wd=None);
+                # 11x11
+                conv_num += 1
+                conv_10 = conv2d('d_conv_{}'.format(conv_num), conv_9, [3, 3, 512, 512], stride=1, wd=None);
+                conv_num += 1
+                conv_11 = conv2d('d_conv_{}'.format(conv_num), conv_10, [3, 3, 512, 512], stride=2, wd=None, same=False);
+                # 5x5
+                conv_num += 1
+                conv_12 = conv2d('d_conv_{}'.format(conv_num), conv_11, [3, 3, 512, 512], stride=1, wd=None);
+                conv_num += 1
+                conv_13 = conv2d('d_conv_{}'.format(conv_num), conv_12, [3, 3, 512, 512], stride=2, wd=None, same=False);
+                # 2x2
+                flatten = tf.layers.flatten(conv_13)
+                discriminator = tf.layers.dense(flatten, 1, kernel_initializer=tf.contrib.layers.variance_scaling_initializer(factor=1.0, mode='FAN_AVG', uniform=True, dtype=tf.float32))
 
             else:
                 self.downscale = 1
