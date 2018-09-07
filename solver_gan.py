@@ -39,23 +39,8 @@ class Solver(object):
             self.ckpt = common_params['ckpt'] if 'ckpt' in common_params else None
             self.init_ckpt = common_params['init_ckpt'] if 'init_ckpt' in common_params else None
             self.restore_opt = True if common_params['restore_opt'] == '1' else False
-            self.gan = True if common_params['gan'] == '1' else False
-            self.prior_boost = True if common_params['prior_boost'] == '1' else False
-            self.corr = True if common_params['correspondence'] == '1' else False
-            self.is_rgb = True if net_params['is_rgb'] == '1' else False
+            self.is_rgb = True if common_params['is_rgb'] == '1' else False
             self.output_dim = 3 if self.is_rgb else 2
-            if self.corr:
-                print('Discriminator has correspondence.')
-            else:
-                print('Discriminator has no correspondence.')
-            if self.gan:
-                print('Using GAN.')
-            else:
-                print('Not using GAN.')
-            if self.prior_boost:
-                print('Using prior boost.')
-            else:
-                print('Not using prior boost.')
 
         if solver_params:
             self.learning_rate = float(solver_params['learning_rate'])
@@ -64,8 +49,7 @@ class Solver(object):
             # self.moment = float(solver_params['moment'])
             self.max_steps = int(solver_params['max_iterators'])
             self.train_dir = str(solver_params['train_dir'])
-            self.lr_decay = float(solver_params['lr_decay'])
-            self.decay_steps = int(solver_params['decay_steps'])
+
         self.train = train
         self.net = Net(
             train=train, common_params=common_params, net_params=net_params)
@@ -90,29 +74,21 @@ class Solver(object):
     def train_model(self):
         with tf.device('/gpu:' + str(self.device_id)):
             self.global_step = tf.get_variable('global_step', [], initializer=tf.constant_initializer(0), trainable=False)
-            # learning_rate = tf.train.exponential_decay(self.learning_rate, self.global_step,
-            #                                      self.decay_steps, self.lr_decay, staircase=True)
-            learning_rate = self.learning_rate
-            D_learning_rate = self.D_learning_rate
 
             with tf.name_scope('gpu') as scope:
                 self.G_loss, self.D_loss, self.W_dist, self.mixed_norm = self.construct_graph(scope)
                 self.summaries = tf.get_collection(
                     tf.GraphKeys.SUMMARIES, scope)
 
-            self.summaries.append(
-                tf.summary.scalar('learning_rate', learning_rate))
-
             opt = tf.train.AdamOptimizer(
-                learning_rate=learning_rate, beta1=0., beta2=0.9)
+                learning_rate=self.learning_rate, beta1=0., beta2=0.9)
             G_vars = tf.trainable_variables(scope='G')
-    
             grads = opt.compute_gradients(self.G_loss, var_list=G_vars)
             apply_gradient_op = opt.apply_gradients(
                 grads, global_step=self.global_step)
 
             D_opt = tf.train.AdamOptimizer(
-                learning_rate=D_learning_rate, beta1=0., beta2=0.9)
+                learning_rate=self.D_learning_rate, beta1=0., beta2=0.9)
             D_vars = tf.trainable_variables(scope='D')
             D_grads = D_opt.compute_gradients(self.D_loss, var_list=D_vars)
             D_apply_gradient_op = D_opt.apply_gradients(D_grads)
@@ -154,12 +130,11 @@ class Solver(object):
 
             start_step = int(start_step)
             for step in xrange(start_step, self.max_steps, self.g_repeat):
-                if self.gan:
-                    for _ in xrange(self.d_repeat):
-                        data_real = self.dataset.batch()
-                        # Discriminator training.
-                        sess.run([D_apply_gradient_op],
-                                  feed_dict={self.data_real: data_real})
+                for _ in xrange(self.d_repeat):
+                    data_real = self.dataset.batch()
+                    # Discriminator training.
+                    sess.run([D_apply_gradient_op],
+                                feed_dict={self.data_real: data_real})
 
                 if step % _LOG_FREQ < self.g_repeat:
                     d_loss_value, w_dist_value = sess.run([self.D_loss, self.W_dist], 
