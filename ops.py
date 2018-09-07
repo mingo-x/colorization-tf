@@ -51,7 +51,7 @@ def variable_with_weight_decay(name, shape, stddev, wd):
 
 def ConvMeanPool(scope, input, filter_size):
     output = conv2d(scope, input, filter_size, relu=False, wd=0.001)
-    output = tf.add_n([output[:,:,::2,::2], output[:,:,1::2,::2], output[:,:,::2,1::2], output[:,:,1::2,1::2]]) / 4.
+    output = tf.add_n([output[:,::2,::2, :], output[:,1::2,::2,:], output[:,::2,1::2, :], output[:,1::2,1::2, :]]) / 4.
     return output
 
 
@@ -62,14 +62,14 @@ def Linear(scope, input, dim):
 
 def MeanPoolConv(scope, input, filter_size):
     output = input
-    output = tf.add_n([output[:,:,::2,::2], output[:,:,1::2,::2], output[:,:,::2,1::2], output[:,:,1::2,1::2]]) / 4.
+    output = tf.add_n([output[:,::2,::2, :], output[:,1::2,::2,:], output[:,::2,1::2, :], output[:,1::2,1::2, :]]) / 4.
     output = conv2d(scope, output, filter_size, relu=False, wd=0.001)
     return output
 
 
 def UpsampleConv(scope, input, filter_size):
     output = input
-    output = tf.concat([output, output, output, output], axis=1)
+    output = tf.concat([output, output, output, output], axis=3)
     # output = tf.transpose(output, [0,2,3,1])
     output = tf.depth_to_space(output, 2)
     # output = tf.transpose(output, [0,3,1,2])
