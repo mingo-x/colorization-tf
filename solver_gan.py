@@ -17,7 +17,7 @@ import os
 _LOG_FREQ = 10
 
 
-class Solver(object):
+class Solver_GAN(object):
 
     def __init__(
         self,
@@ -84,7 +84,7 @@ class Solver(object):
                 learning_rate=self.learning_rate, beta1=0., beta2=0.9)
             G_vars = tf.trainable_variables(scope='G')
             grads = opt.compute_gradients(self.G_loss, var_list=G_vars)
-            apply_gradient_op = opt.apply_gradients(
+            G_apply_gradient_op = opt.apply_gradients(
                 grads, global_step=self.global_step)
 
             D_opt = tf.train.AdamOptimizer(
@@ -112,12 +112,10 @@ class Solver(object):
                 print(self.ckpt + " restored.")
                 start_step = sess.run(self.global_step)
                 start_step -= int(start_step % 10)
-                # start_step = 230000
-                # sess.run(self.global_step.assign(start_step))
                 print("Global step: {}".format(start_step))
             else:
                 sess.run(init)
-                print("Initialized.")
+                print("Variables initialized.")
                 start_step = 0
 
                 if self.init_ckpt is not None:
@@ -127,8 +125,8 @@ class Solver(object):
 
             summary_writer = tf.summary.FileWriter(self.train_dir, sess.graph)
             start_time = time.time()
-
             start_step = int(start_step)
+
             for step in xrange(start_step, self.max_steps, self.g_repeat):
                 for _ in xrange(self.d_repeat):
                     data_real = self.dataset.batch()
@@ -141,7 +139,7 @@ class Solver(object):
                         feed_dict={self.data_real: data_real})
 
                 for _ in xrange(self.g_repeat):
-                    sess.run([apply_gradient_op])
+                    sess.run([G_apply_gradient_op])
 
                 if step % _LOG_FREQ < self.g_repeat:
                     duration = time.time() - start_time
