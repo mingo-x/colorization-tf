@@ -17,7 +17,7 @@ class Net(object):
         if common_params:
           gpu_nums = len(str(common_params['gpus']).split(','))
           self.batch_size = int(int(common_params['batch_size'])/gpu_nums)
-          self.is_rgb = True if net_params['is_rgb'] == '1' else False
+          self.is_rgb = True if common_params['is_rgb'] == '1' else False
           self.output_dim = 3 if self.is_rgb else 2
         if net_params:
           self.weight_decay = float(net_params['weight_decay'])
