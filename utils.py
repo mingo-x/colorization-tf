@@ -252,7 +252,7 @@ def preprocess(data, training=True, c313=False, is_gan=False, is_rgb=True):
 
   if is_gan:
     if is_rgb:
-      data = np.astype(data, np.float32)
+      data = data.astype(data, np.float32)
       data /= 255.
       data -= 0.5
       data *= 2.
