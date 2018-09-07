@@ -250,15 +250,20 @@ def preprocess(data, training=True, c313=False, is_gan=False, is_rgb=True):
   #ab: [-110, 110]
   data_ab = img_lab[:, :, :, 1:]
 
+  if is_gan:
+    if is_rgb:
+      data = np.astype(data, np.float32)
+      data /= 255.
+      data -= 0.5
+      print(np.min(data), np.max(data))
+      return data
+    else:
+      data_ab /= 110.
+      print(np.min(data), np.max(data))
+      return data_ab
+
   #scale img_l to [-1, 1]
   data_l = (img_l - 50.) / 50.
-
-  if is_gan:
-    data_ab /= 110.
-    if is_rgb:
-      return np.concatenate((data_l, data_ab), axis=-1)
-    else:
-      return data_ab
 
   #subsample 1/4  (N * H/4 * W/4 * 2)
   data_ab_ss = data_ab[:, ::4, ::4, :]

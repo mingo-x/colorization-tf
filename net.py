@@ -134,7 +134,7 @@ class Net(object):
         with tf.variable_scope('G'):
             noise = tf.random_normal([self.batch_size, 128])
 
-            output = Linear('dense1', 4*4*8*dim, noise)
+            output = Linear('dense1', noise, 4*4*8*dim)
             output = tf.reshape(output, [-1, 4, 4, 8*dim])
 
             output = ResidualBlock('Generator.Res1', 8*dim, 8*dim, 3, output, resample='up', train=self.train)
