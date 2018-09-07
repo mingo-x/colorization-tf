@@ -184,7 +184,7 @@ class Net(object):
         gradient_penalty = tf.reduce_mean((slopes-1.)**2)
         disc_cost += 10. * gradient_penalty
 
-        return gen_cost, disc_cost, w_dist, slopes
+        return gen_cost, disc_cost, w_dist, tf.reduce_mean(slopes)
 
     def loss(self, scope, conv8_313, prior_boost_nongray,
              gt_ab_313, fake_data, is_gan, is_boost):
