@@ -141,7 +141,6 @@ class Net(object):
             output = ResidualBlock('Generator.Res2', 8*dim, 4*dim, 3, output, resample='up', train=self.train)
             output = ResidualBlock('Generator.Res3', 4*dim, 2*dim, 3, output, resample='up', train=self.train)
             output = ResidualBlock('Generator.Res4', 2*dim, 1*dim, 3, output, resample='up', train=self.train)
-
             output = Normalize('Generator.OutputN', output, train=self.train)
             output = tf.nn.relu(output)
             output = conv2d('Generator.Output', output, [3, 3, 1*dim, self.output_dim], relu=False, wd=self.weight_decay)
