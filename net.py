@@ -17,6 +17,8 @@ class Net(object):
         if common_params:
           gpu_nums = len(str(common_params['gpus']).split(','))
           self.batch_size = int(int(common_params['batch_size'])/gpu_nums)
+          self.is_rgb = True if net_params['is_rgb'] == '1' else False
+          self.output_dim = 3 if self.is_rgb else 2
         if net_params:
           self.weight_decay = float(net_params['weight_decay'])
           self.alpha = float(net_params['alpha'])
@@ -28,6 +30,7 @@ class Net(object):
           print('Gradient penalty {}.'.format(self.gp_lambda))
           self.k = float(net_params['k'])
           print('Gradient norm {}.'.format(self.k))
+
 
     def inference(self, data_l):
         with tf.variable_scope('G'):
@@ -124,6 +127,65 @@ class Net(object):
 
         conv8_313 = temp_conv
         return conv8_313
+
+
+    def GAN_G(self):
+        dim = 64
+        with tf.variable_scope('G'):
+            noise = tf.random_normal([self.batch_size, 128])
+
+            output = Linear('dense1', 4*4*8*dim, noise)
+            output = tf.reshape(output, [-1, 4, 4, 8*dim])
+
+            output = ResidualBlock('Generator.Res1', 8*dim, 8*dim, 3, output, resample='up', train=self.train)
+            output = ResidualBlock('Generator.Res2', 8*dim, 4*dim, 3, output, resample='up', train=self.train)
+            output = ResidualBlock('Generator.Res3', 4*dim, 2*dim, 3, output, resample='up', train=self.train)
+            output = ResidualBlock('Generator.Res4', 2*dim, 1*dim, 3, output, resample='up', train=self.train)
+
+            output = Normalize('Generator.OutputN', output, train=self.train)
+            output = tf.nn.relu(output)
+            output = conv2d('Generator.Output', output, [3, 3, 1*dim, self.output_dim], relu=False, wd=self.weight_decay)
+            output = tf.tanh(output)
+
+        return output
+
+    def GAN_D(self, inputs):
+        dim = 64
+        with tf.variable_scope('D', reuse=tf.AUTO_REUSE):
+            output = inputs
+            output = conv2d('Discriminator.Input', output, [3, 3, self.output_dim, dim], relu=False, wd=self.weight_decay)
+
+            output = ResidualBlock('Discriminator.Res1', dim, 2*dim, 3, output, resample='down', train=self.train)
+            output = ResidualBlock('Discriminator.Res2', 2*dim, 4*dim, 3, output, resample='down', train=self.train)
+            output = ResidualBlock('Discriminator.Res3', 4*dim, 8*dim, 3, output, resample='down', train=self.train)
+            output = ResidualBlock('Discriminator.Res4', 8*dim, 8*dim, 3, output, resample='down', train=self.train)
+
+            output = Linear('Discriminator.Output', output, 1)
+
+        return tf.reshape(output, [-1])
+
+
+    def GAN_loss(self, real_data, fake_data):
+        disc_real = self.GAN_D(real_data)
+        disc_fake = self.GAN_D(fake_data)
+
+        gen_cost = -tf.reduce_mean(disc_fake)
+        disc_cost = tf.reduce_mean(disc_fake) - tf.reduce_mean(disc_real)
+        w_dist = -disc_cost
+
+        alpha = tf.random_uniform(
+            shape=[self.batch_size, 1, 1, 1], 
+                    minval=0.,
+                    maxval=1.
+        )
+        differences = fake_data - real_data
+        interpolates = real_data + (alpha*differences)
+        gradients = tf.gradients(Discriminator(interpolates), [interpolates])[0]
+        slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1, 2, 3]))
+        gradient_penalty = tf.reduce_mean((slopes-1.)**2)
+        disc_cost += 10. * gradient_penalty
+
+        return gen_cost, disc_cost, w_dist, slopes
 
     def loss(self, scope, conv8_313, prior_boost_nongray,
              gt_ab_313, fake_data, is_gan, is_boost):
@@ -297,7 +359,7 @@ class Net(object):
                 conv_5 = conv2d('d_conv_{}'.format(conv_num), conv_4, [3, 3, 512, 512], stride=2, wd=None, same=False)
 
                 flatten = tf.layers.flatten(conv_5)
-                discriminator = tf.layers.dense(flatten, 1, kernel_initializer=tf.contrib.layers.variance_scaling_initializer(factor=1.0, mode='FAN_AVG', uniform=True, dtype=tf.float32))
+                discriminator = Linear('dense', flatten, 1)
             elif self.version == 7:
                 # 88x88x64
                 conv_num = 1
@@ -319,7 +381,7 @@ class Net(object):
                 conv_6 = conv2d('d_conv_{}'.format(conv_num), conv_5, [3, 3, 512, 512], stride=2, wd=None, same=False);
 
                 flatten = tf.layers.flatten(conv_6)
-                discriminator = tf.layers.dense(flatten, 1, kernel_initializer=tf.contrib.layers.variance_scaling_initializer(factor=1.0, mode='FAN_AVG', uniform=True, dtype=tf.float32))
+                discriminator = Linear('dense', flatten, 1)
             elif self.version == 8:
                 # 176x176
                 conv_num = 1

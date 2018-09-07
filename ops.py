@@ -2,6 +2,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import functools
+
 import tensorflow as tf
 # import numpy as np
 # import re
@@ -45,6 +47,68 @@ def variable_with_weight_decay(name, shape, stddev, wd):
     weight_decay = tf.multiply(tf.nn.l2_loss(var), wd, name='weight_loss')
     tf.add_to_collection('losses', weight_decay)
   return var
+
+
+def ConvMeanPool(scope, input, filter_size):
+    output = conv2d(scope, input, filter_size, relu=False, wd=0.001)
+    output = tf.add_n([output[:,:,::2,::2], output[:,:,1::2,::2], output[:,:,::2,1::2], output[:,:,1::2,1::2]]) / 4.
+    return output
+
+
+def Linear(scope, input, dim):
+  kernel_initializer = tf.contrib.layers.variance_scaling_initializer(factor=1.0, mode='FAN_AVG', uniform=True, dtype=tf.float32)
+  return tf.layers.dense(input, dim, kernel_initializer=kernel_initializer)
+
+
+def MeanPoolConv(scope, input, filter_size):
+    output = input
+    output = tf.add_n([output[:,:,::2,::2], output[:,:,1::2,::2], output[:,:,::2,1::2], output[:,:,1::2,1::2]]) / 4.
+    output = conv2d(scope, output, filter_size, relu=False, wd=0.001)
+    return output
+
+
+def UpsampleConv(scope, input, filter_size):
+    output = input
+    output = tf.concat([output, output, output, output], axis=1)
+    # output = tf.transpose(output, [0,2,3,1])
+    output = tf.depth_to_space(output, 2)
+    # output = tf.transpose(output, [0,3,1,2])
+    output = conv2d(scope, output, filter_size, relu=False, wd=0.001)
+    return output
+
+
+def Normalize(name, inputs, train):
+    if ('D' in name):
+        return tf.contrib.layers.layer_norm(inputs)
+    else:
+        return batch_norm(name, inputs, train)
+
+
+def ResidualBlock(name, input_dim, output_dim, filter_size, inputs, resample=None, train=True):
+    """
+    resample: None, 'down', or 'up'
+    """
+    if resample=='down':
+        conv_shortcut = MeanPoolConv
+        conv_1 = functools.partial(conv2d, kernel_size=[filter_size, filter_size, input_dim, input_dim], relu=False, wd=0.001)
+        conv_2 = functools.partial(ConvMeanPool, filter_size=[filter_size, filter_size, input_dim, output_dim])
+    elif resample=='up':
+        conv_shortcut = UpsampleConv
+        conv_1 = functools.partial(UpsampleConv, filter_size=[filter_size, filter_size, input_dim, output_dim])
+        conv_2 = functools.partial(conv2d, kernel_size=[filter_size, filter_size, output_dim, output_dim], relu=False, wd=0.001)
+
+    shortcut = conv_shortcut(name+'.Shortcut', inputs, [1, 1, input_dim, output_dim])
+
+    output = inputs
+    output = Normalize(name+'.BN1', output, train)
+    output = tf.nn.relu(output)
+    output = conv_1(scope=name+'.Conv1', input=output)
+    output = Normalize(name+'.BN2', output, train)
+    output = tf.nn.relu(output)
+    output = conv_2(scope=name+'.Conv2', input=output)
+
+    return shortcut + output
+
 
 def conv2d(scope, input, kernel_size, stride=1, dilation=1, relu=True, wd=nilboy_weight_decay, sigmoid=False, same=True):
   # name = scope
@@ -97,6 +161,5 @@ def deconv2d(scope, input, kernel_size, stride=1, wd=nilboy_weight_decay):
 
   return deconv1
 
-def batch_norm(scope, x, train=True, reuse=False):
+def batch_norm(scope, x, train=True):
   return tf.contrib.layers.batch_norm(x, center=True, scale=True, updates_collections=None, is_training=train, trainable=True, scope=scope)
-  

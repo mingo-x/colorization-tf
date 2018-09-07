@@ -33,6 +33,8 @@ class DataSet(object):
     if common_params:
       self.image_size = int(common_params['image_size'])
       self.batch_size = int(common_params['batch_size'])
+      self.is_gan = True if common_params['is_gan'] == '1' else False
+      self.is_rgb = True if common_params['is_rgb'] == '1' else False
       
     if dataset_params:
       self.data_path = str(dataset_params['path'])
@@ -127,7 +129,7 @@ class DataSet(object):
         images.append(image)
       images = np.asarray(images, dtype=np.uint8)
 
-      self.batch_queue.put(preprocess(images, c313=self.c313))
+      self.batch_queue.put(preprocess(images, c313=self.c313, is_gan=self.is_gan, is_rgb=self.is_rgb))
 
   def batch(self):
     """get batch

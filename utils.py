@@ -227,7 +227,7 @@ def get_prior(data_ab):
   return prior
 
 
-def preprocess(data, training=True, c313=False):
+def preprocess(data, training=True, c313=False, is_gan=False, is_rgb=True):
   '''Preprocess
   Args: 
     data: RGB batch (N * H * W * 3)
@@ -252,6 +252,13 @@ def preprocess(data, training=True, c313=False):
 
   #scale img_l to [-1, 1]
   data_l = (img_l - 50.) / 50.
+
+  if is_gan:
+    data_ab /= 110.
+    if is_rgb:
+      return np.concatenate((data_l, data_ab), axis=-1)
+    else:
+      return data_ab
 
   #subsample 1/4  (N * H/4 * W/4 * 2)
   data_ab_ss = data_ab[:, ::4, ::4, :]
