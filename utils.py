@@ -255,6 +255,7 @@ def preprocess(data, training=True, c313=False, is_gan=False, is_rgb=True):
       data = np.astype(data, np.float32)
       data /= 255.
       data -= 0.5
+      data *= 2.
       print(np.min(data), np.max(data))
       return data
     else:
