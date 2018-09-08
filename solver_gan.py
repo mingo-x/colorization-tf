@@ -161,13 +161,6 @@ class Solver_GAN(object):
                 if step % 100 < self.g_repeat:
                     summary_str = sess.run(summary_op, feed_dict={self.data_real: data_real})
                     summary_writer.add_summary(summary_str, step)
-
-                # Save the model checkpoint periodically.
-                if step % 1000 < self.g_repeat:
-                    checkpoint_path = os.path.join(
-                        self.train_dir, 'model.ckpt')
-                    saver.save(sess, checkpoint_path, global_step=step)
-                    test_images = sess.run(test_samples)
                     if self.is_rgb:
                         test_images = ((test_images+1.)*(255.99/2)).astype('uint8')
                         test_lab = []
@@ -188,3 +181,10 @@ class Solver_GAN(object):
                         test_images = np.array(test_rgb)
 
                     utils.save_images(test_images, os.path.join(self.train_dir, "{}.png".format(step)))
+
+                # Save the model checkpoint periodically.
+                if step % 1000 < self.g_repeat:
+                    checkpoint_path = os.path.join(
+                        self.train_dir, 'model.ckpt')
+                    saver.save(sess, checkpoint_path, global_step=step)
+                    test_images = sess.run(test_samples)
