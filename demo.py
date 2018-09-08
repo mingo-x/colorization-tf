@@ -221,6 +221,7 @@ def demo_wgan_ab():
         ab *= 110.
         l = np.full((64, 64, 64, 1), 50)
         lab = np.concatenate((l, ab), axis=-1)
+	print(lab.shape)
         rgb = color.lab2rgb(lab)
         save_images(rgb, '/srv/glusterfs/xieya/image/color/samples_ab.png')
 
