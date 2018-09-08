@@ -170,6 +170,13 @@ class Solver_GAN(object):
                     test_images = sess.run(test_samples)
                     if self.is_rgb:
                         test_images = ((test_images+1.)*(255.99/2)).astype('uint8')
+                        test_lab = []
+                        for i in xrange(64):
+                            lab = color.rgb2lab(test_images[i, :, :, :])
+                            lab[:, :, 0] = 50.  # Remove l.
+                            test_lab.append(color.lab2rgb(lab))
+                        test_lab = np.array(test_lab)
+                        save_images(test_lab, os.path.join(self.train_dir, "{}_ab.png".format(step)))
                     else:
                         test_ab = 110. * test_images
                         test_l = np.full((64, 64, 64, 1), 50)
