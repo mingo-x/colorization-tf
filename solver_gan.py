@@ -9,6 +9,8 @@ import tensorflow as tf
 from ops import *
 from net import Net
 from data import DataSet
+import utils
+
 import time
 from datetime import datetime
 import os
@@ -94,6 +96,7 @@ class Solver_GAN(object):
             D_apply_gradient_op = D_opt.apply_gradients(D_grads)
 
             fixed_noise = tf.constant(np.random.normal(size=(64, 128)).astype('float32'))
+            test_samples = self.net.GAN_G(fixed_noise)
 
             saver = tf.train.Saver(write_version=tf.train.SaverDef.V2)
             summary_op = tf.summary.merge(self.summaries)
@@ -164,3 +167,7 @@ class Solver_GAN(object):
                     checkpoint_path = os.path.join(
                         self.train_dir, 'model.ckpt')
                     saver.save(sess, checkpoint_path, global_step=step)
+                    test_images = sess.run(test_samples)
+                    if self.is_rgb:
+                        test_images = ((test_images+1.)*(255.99/2)).astype('int32')
+                    utils.save_images(test_images, os.path.join(self.train_dir, "{}.png".format(step)))
