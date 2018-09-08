@@ -193,7 +193,7 @@ def demo_wgan_ab():
         for i in xrange(64):
             rgb = color.lab2rgb(lab[i, :, :, :])
             rgbs.append(rgb)
-        rgbs = np.asarray(rgbs).astype('uint8')
+        rgbs = np.array(rgbs).astype('uint8')
         save_images(rgbs, '/srv/glusterfs/xieya/image/color/samples_ab.png')
 
 
@@ -212,9 +212,9 @@ def demo_wgan_rgb():
         rgb_new = []
         for i in xrange(64):
             lab = color.rgb2lab(rgb[i, :, :, :])
-            lab[:, :, 0] = 50  # Remove l.
+            lab[:, :, 0] = 50.  # Remove l.
             rgb_new.append(color.lab2rgb(lab))
-        rgb_new = np.asarray(rgb_new).astype('uint8')
+        rgb_new = np.array(rgb_new).astype('uint8')
         save_images(rgb_new, '/srv/glusterfs/xieya/image/color/samples_rgb_ab.png')
         
 

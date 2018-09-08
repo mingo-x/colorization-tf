@@ -169,5 +169,15 @@ class Solver_GAN(object):
                     saver.save(sess, checkpoint_path, global_step=step)
                     test_images = sess.run(test_samples)
                     if self.is_rgb:
-                        test_images = ((test_images+1.)*(255.99/2)).astype('int32')
+                        test_images = ((test_images+1.)*(255.99/2)).astype('uint8')
+                    else:
+                        test_ab = 110. * test_images
+                        test_l = np.full((64, 64, 64, 1), 50)
+                        test_lab = np.concatenate((test_l, test_ab), axis=-1)
+                        test_rgb = []
+                        for i in xrange(64):
+                            rgb = color.lab2rgb(test_lab[i, :, :, :])
+                            test_rgb.append(rgb)
+                        test_images = np.array(test_rgb).astype('uint8')
+
                     utils.save_images(test_images, os.path.join(self.train_dir, "{}.png".format(step)))
