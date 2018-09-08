@@ -214,7 +214,7 @@ def demo_wgan_rgb():
             lab = color.rgb2lab(rgb[i, :, :, :])
             lab[:, :, 0] = 50.  # Remove l.
             rgb_new.append(color.lab2rgb(lab))
-        rgb_new = np.array(rgb_new).astype('uint8')
+        rgb_new = np.array(rgb_new)
         save_images(rgb_new, '/srv/glusterfs/xieya/image/color/samples_rgb_ab.png')
         
 
