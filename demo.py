@@ -13,7 +13,7 @@ _RESIZE_SIZE = 0
 _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
-_CKPT_PATH = '/srv/glusterfs/xieya/wgan_rgb/models/model.ckpt-33000'
+_CKPT_PATH = '/srv/glusterfs/xieya/wgan_ab/models/model.ckpt-20000'
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
 OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/colorization_test'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
@@ -193,7 +193,7 @@ def demo_wgan_ab():
         for i in xrange(64):
             rgb = color.lab2rgb(lab[i, :, :, :])
             rgbs.append(rgb)
-        rgbs = np.array(rgbs).astype('uint8')
+        rgbs = np.array(rgbs)
         save_images(rgbs, '/srv/glusterfs/xieya/image/color/samples_ab.png')
 
 
@@ -222,7 +222,7 @@ def demo_wgan_rgb():
 if __name__ == "__main__":
     subprocess.check_call(['mkdir', '-p', OUTPUT_DIR])
     # main()
-    #demo_wgan_ab()
-    demo_wgan_rgb()
+    demo_wgan_ab()
+    # demo_wgan_rgb()
     # _colorize_high_res_img(_IMG_NAME)
     # cifar()

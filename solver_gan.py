@@ -178,6 +178,6 @@ class Solver_GAN(object):
                         for i in xrange(64):
                             rgb = color.lab2rgb(test_lab[i, :, :, :])
                             test_rgb.append(rgb)
-                        test_images = np.array(test_rgb).astype('uint8')
+                        test_images = np.array(test_rgb)
 
                     utils.save_images(test_images, os.path.join(self.train_dir, "{}.png".format(step)))
