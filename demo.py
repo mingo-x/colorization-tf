@@ -243,6 +243,6 @@ if __name__ == "__main__":
     subprocess.check_call(['mkdir', '-p', OUTPUT_DIR])
     # main()
     demo_wgan_ab()
-    demo_wgan_rgb()
+    # demo_wgan_rgb()
     # _colorize_high_res_img(_IMG_NAME)
     # cifar()
