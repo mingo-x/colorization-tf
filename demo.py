@@ -217,16 +217,32 @@ def demo_wgan_ab():
 
     with tf.Session() as sess:
         saver.restore(sess, _CKPT_PATH)
-        ab = session.run(colorized) # [-1, 1]
+        ab = sess.run(colorized) # [-1, 1]
         ab *= 110.
         l = np.full((64, 64, 64, 1), 50)
         lab = np.concatenate((l, ab), axis=-1)
         rgb = color.lab2rgb(lab)
-        save_images(rgb, '/srv/glusterfs/xieya/image/color/samples.png')
+        save_images(rgb, '/srv/glusterfs/xieya/image/color/samples_ab.png')
+
+
+def demo_wgan_rgb():
+    noise = tf.constant(np.random.normal(size=(64, 128)).astype('float32'))
+    model = Net(train=False)
+    model.output_dim = 3
+    colorized = model.GAN_G(noise)
+    saver = tf.train.Saver()
+
+    with tf.Session() as sess:
+        saver.restore(sess, _CKPT_PATH)
+        rgb = sess.run(colorized) # [-1, 1]
+        rgb = ((rgb+1.)*(255.99/2)).astype('int32')
+        save_images(rgb, '/srv/glusterfs/xieya/image/color/samples_rgb.png')
+
 
 if __name__ == "__main__":
     subprocess.check_call(['mkdir', '-p', OUTPUT_DIR])
     # main()
     demo_wgan_ab()
+    demo_wgan_rgb()
     # _colorize_high_res_img(_IMG_NAME)
     # cifar()
