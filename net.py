@@ -129,10 +129,11 @@ class Net(object):
         return conv8_313
 
 
-    def GAN_G(self):
+    def GAN_G(self, noise=None):
         dim = 64
         with tf.variable_scope('G'):
-            noise = tf.random_normal([self.batch_size, 128])
+            if noise is None:
+                noise = tf.random_normal([self.batch_size, 128])
 
             output = Linear('dense1', noise, 4*4*8*dim)
             output = tf.reshape(output, [-1, 4, 4, 8*dim])
