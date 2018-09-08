@@ -225,7 +225,7 @@ def demo_wgan_ab():
         for i in xrange(64):
             rgb = color.lab2rgb(lab[i, :, :, :])
             rgbs.append(rgb)
-        rgbs = np.asarray(rgbs).astype('int32')
+        rgbs = np.asarray(rgbs, dtype=rgb.dtype)
         save_images(rgbs, '/srv/glusterfs/xieya/image/color/samples_ab.png')
 
 
