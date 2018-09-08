@@ -193,7 +193,7 @@ def demo_wgan_ab():
         for i in xrange(64):
             rgb = color.lab2rgb(lab[i, :, :, :])
             rgbs.append(rgb)
-        rgbs = np.asarray(rgbs, dtype=rgb.dtype)
+        rgbs = np.asarray(rgbs).astype('uint8')
         save_images(rgbs, '/srv/glusterfs/xieya/image/color/samples_ab.png')
 
 
@@ -207,8 +207,16 @@ def demo_wgan_rgb():
     with tf.Session() as sess:
         saver.restore(sess, _CKPT_PATH)
         rgb = sess.run(colorized) # [-1, 1]
-        rgb = ((rgb+1.)*(255.99/2)).astype('int32')
+        rgb = ((rgb+1.)*(255.99/2)).astype('uint8')
         save_images(rgb, '/srv/glusterfs/xieya/image/color/samples_rgb.png')
+        rgb_new = []
+        for i in xrange(64):
+            lab = color.rgb2lab(rgb[i, :, :, :])
+            lab[:, :, 0] = 50  # Remove l.
+            rgb_new.append(color.lab2rgb(lab))
+        rgb_new = np.asarray(rgb_new).astype('uint8')
+        save_images(rgb_new, '/srv/glusterfs/xieya/image/color/samples_rgb_ab.png')
+        
 
 
 if __name__ == "__main__":
