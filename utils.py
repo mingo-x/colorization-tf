@@ -1,6 +1,6 @@
 from skimage import color
 from skimage.transform import resize
-from skimage.io import imread
+from skimage.io import imread, imsave
 import numpy as np
 import os
 import sklearn.neighbors as nn
