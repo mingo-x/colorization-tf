@@ -131,7 +131,7 @@ class Net(object):
 
     def GAN_G(self, noise=None):
         dim = 64
-        with tf.variable_scope('G'):
+        with tf.variable_scope('G', reuse=tf.AUTO_REUSE):
             if noise is None:
                 noise = tf.random_normal([self.batch_size, 128])
 

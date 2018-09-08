@@ -93,6 +93,8 @@ class Solver_GAN(object):
             D_grads = D_opt.compute_gradients(self.D_loss, var_list=D_vars)
             D_apply_gradient_op = D_opt.apply_gradients(D_grads)
 
+            fixed_noise = tf.constant(np.random.normal(size=(64, 128)).astype('float32'))
+
             saver = tf.train.Saver(write_version=tf.train.SaverDef.V2)
             summary_op = tf.summary.merge(self.summaries)
             init = tf.global_variables_initializer()
