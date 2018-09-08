@@ -223,7 +223,9 @@ def demo_wgan_ab():
         lab = np.concatenate((l, ab), axis=-1)
         rgbs = []
         for i in xrange(64):
-            rgbs.append(color.lab2rgb(lab[i, :, :, :]))
+            rgb = color.lab2rgb(lab[i, :, :, :])
+            print(rgb.dtype)
+            rgbs.append(rgb)
         rgbs = np.asarray(rgbs)
         save_images(rgbs, '/srv/glusterfs/xieya/image/color/samples_ab.png')
 
