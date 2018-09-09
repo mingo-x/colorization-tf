@@ -170,7 +170,7 @@ class Solver_GAN(object):
                             lab[:, :, 0] = 50.  # Remove l.
                             test_lab.append(color.lab2rgb(lab))
                         test_lab = np.array(test_lab)
-                        utils.save_images(test_lab, os.path.join(self.train_dir, "{}_ab.png".format(step)))
+                        utils.save_images(test_lab, os.path.join(self.train_dir, "sample/ab_{}.png".format(step)))
                     else:
                         test_ab = 110. * test_images
                         test_l = np.full((64, 64, 64, 1), 50)
@@ -181,7 +181,7 @@ class Solver_GAN(object):
                             test_rgb.append(rgb)
                         test_images = np.array(test_rgb)
 
-                    utils.save_images(test_images, os.path.join(self.train_dir, "{}.png".format(step)))
+                    utils.save_images(test_images, os.path.join(self.train_dir, "sample/{}.png".format(step)))
 
                 # Save the model checkpoint periodically.
                 if step % 1000 < self.g_repeat:
