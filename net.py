@@ -23,6 +23,8 @@ class Net(object):
           self.weight_decay = float(net_params['weight_decay'])
           self.alpha = float(net_params['alpha'])
           print('Adversarial weight {}'.format(self.alpha))
+          self.g_version = int(net_params['g_version'])
+          print('Generator version {}'.format(self.g_version))
           self.version = int(net_params['version'])
           print('Discriminator version {}'.format(self.version))
           self.temp_trainable = True if net_params['temp_trainable'] == '1' else False
@@ -33,6 +35,13 @@ class Net(object):
 
 
     def inference(self, data_l):
+        if self.g_version == 0:
+            return self.inference0(data_l)
+        elif self.g_version == 1:
+            return self.inference1(data_l)
+
+
+    def inference0(self, data_l):
         with tf.variable_scope('G'):
             #conv1
             conv_num = 1
@@ -128,7 +137,7 @@ class Net(object):
         conv8_313 = temp_conv
         return conv8_313
 
-    def inference2(self, data_l):
+    def inference1(self, data_l):
         with tf.variable_scope('G'):
             #conv1
             conv_num = 1
