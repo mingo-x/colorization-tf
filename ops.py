@@ -131,7 +131,7 @@ def conv2d(scope, input, kernel_size, stride=1, dilation=1, relu=True, wd=nilboy
       conv1 = bias
   return conv1
 
-def deconv2d(scope, input, kernel_size, stride=1, wd=nilboy_weight_decay):
+def deconv2d(scope, input, kernel_size, stride=1, relu=True, wd=nilboy_weight_decay):
   """convolutional layer
 
   Args:
@@ -157,7 +157,10 @@ def deconv2d(scope, input, kernel_size, stride=1, wd=nilboy_weight_decay):
 
     biases = variable('biases', (out_channel), tf.constant_initializer(0.0))
     bias = tf.nn.bias_add(deconv, biases)
-    deconv1 = tf.nn.relu(bias)
+    if relu:
+      deconv1 = tf.nn.relu(bias)
+    else:
+      deconv1 = bias
 
   return deconv1
 
