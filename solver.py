@@ -127,10 +127,13 @@ class Solver(object):
     def train_model(self):
         with tf.device('/gpu:' + str(self.device_id)):
             self.global_step = tf.get_variable('global_step', [], initializer=tf.constant_initializer(0), trainable=False)
-            # learning_rate = tf.train.exponential_decay(self.learning_rate, self.global_step,
-            #                                      self.decay_steps, self.lr_decay, staircase=True)
-            learning_rate = self.learning_rate
-            D_learning_rate = self.D_learning_rate
+            
+            if self.gan:
+                learning_rate = self.learning_rate
+                D_learning_rate = self.D_learning_rate
+            else:
+                learning_rate = tf.train.exponential_decay(self.learning_rate, self.global_step,
+                                                     self.decay_steps, self.lr_decay, staircase=True)
 
             with tf.name_scope('gpu') as scope:
                 self.new_loss, self.total_loss, self.adv_loss, self.D_loss, self.real_score, self.fake_score, self.mixed_norm = self.construct_graph(scope)
@@ -153,7 +156,10 @@ class Solver(object):
                 else:
                     T_loss = 0.
     
-            grads = opt.compute_gradients(self.new_loss * self.net.alpha + self.adv_loss + T_loss, var_list=G_vars + T_vars)
+            if self.gan:
+                grads = opt.compute_gradients(self.new_loss * self.net.alpha + self.adv_loss + T_loss, var_list=G_vars + T_vars)
+            else:
+                grads = opt.compute_gradients(self.new_loss, var_list=G_vars)
             # grads_adv = opt.compute_gradients(self.adv_loss + T_loss, var_list=G_vars + T_vars)
 
             # for grad, var in grads:
