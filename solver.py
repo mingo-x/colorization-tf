@@ -121,7 +121,7 @@ class Solver(object):
                 tf.summary.scalar('mixed_norm', mixed_norm)
                 return (new_loss, g_loss, adv_loss, D_loss, real_score, fake_score, mixed_norm)
             else:
-                return (new_loss, g_loss, adv_loss, None, None, None)
+                return (new_loss, g_loss, adv_loss, None, None, None, None)
 
 
     def train_model(self):

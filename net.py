@@ -128,6 +128,103 @@ class Net(object):
         conv8_313 = temp_conv
         return conv8_313
 
+    def inference2(self, data_l):
+        with tf.variable_scope('G'):
+            #conv1
+            conv_num = 1
+            batch_num = 1
+            temp_conv = conv2d('conv_{}'.format(conv_num), data_l, [3, 3, 1, 64], stride=1, relu=False, wd=self.weight_decay)
+            temp_conv = batch_norm('bn_{}'.format(batch_num), temp_conv,train=self.train)
+            conv_num += 1
+
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 64, 64], stride=2, wd=self.weight_decay)
+            conv_num += 1
+
+            #self.nilboy = temp_conv
+
+            temp_conv = batch_norm('bn_1'.format(conv_num), temp_conv,train=self.train)
+            #conv2
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 64, 128], stride=1, wd=self.weight_decay)
+            conv_num += 1
+            
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 128, 128], stride=2, wd=self.weight_decay)
+            conv_num += 1
+
+            temp_conv = batch_norm('bn_2'.format(conv_num), temp_conv,train=self.train)
+            #conv3
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 128, 256], stride=1, wd=self.weight_decay)
+            conv_num += 1
+            
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 256], stride=1, wd=self.weight_decay)
+            conv_num += 1    
+
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 256], stride=2, wd=self.weight_decay)
+            conv_num += 1
+
+            temp_conv = batch_norm('bn_3', temp_conv, train=self.train)
+            #conv4
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 512], stride=1, wd=self.weight_decay)
+            conv_num += 1
+            
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, wd=self.weight_decay)
+            conv_num += 1
+
+            
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, wd=self.weight_decay)
+            conv_num += 1
+
+            temp_conv = batch_norm('bn_4', temp_conv,train=self.train)
+
+            #conv5
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
+            conv_num += 1    
+
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
+            conv_num += 1
+
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
+            conv_num += 1
+
+            temp_conv = batch_norm('bn_5', temp_conv,train=self.train)
+            #conv6
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
+            conv_num += 1    
+
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
+            conv_num += 1
+
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
+            conv_num += 1    
+
+            temp_conv = batch_norm('bn_6', temp_conv,train=self.train)    
+            #conv7
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, wd=self.weight_decay)
+            conv_num += 1
+
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, wd=self.weight_decay)
+            conv_num += 1
+
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, wd=self.weight_decay)
+            conv_num += 1
+
+            temp_conv = batch_norm('bn_7', temp_conv,train=self.train)
+            #conv8
+            temp_conv = deconv2d('conv_{}'.format(conv_num), temp_conv, [4, 4, 512, 256], stride=2, wd=self.weight_decay)
+            conv_num += 1    
+
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 256], stride=1, wd=self.weight_decay)
+            conv_num += 1
+
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 256], stride=1, wd=self.weight_decay)
+            conv_num += 1
+
+            #Unary prediction
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [1, 1, 256, 313], stride=1, relu=False, wd=self.weight_decay)
+            conv_num += 1
+
+        conv8_313 = temp_conv
+        return conv8_313
+
 
     def GAN_G(self, noise=None):
         dim = 64
