@@ -10,7 +10,7 @@ import os
 
 class Net(object):
 
-    def __init__(self, train=True, common_params=None, net_params=None):
+    def __init__(self, train=True, g_version=0, common_params=None, net_params=None):
         self.train = train
         self.weight_decay = 0.0
         self.eps = 1e-8
@@ -32,6 +32,8 @@ class Net(object):
           print('Gradient penalty {}.'.format(self.gp_lambda))
           self.k = float(net_params['k'])
           print('Gradient norm {}.'.format(self.k))
+        else:
+          self.g_version = g_version
 
 
     def inference(self, data_l):
