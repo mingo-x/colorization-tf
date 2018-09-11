@@ -241,9 +241,9 @@ class Solver(object):
                         sess.run([D_apply_gradient_op],
                                   feed_dict={self.data_l: data_l, self.data_real: data_real})
 
-                if step % _LOG_FREQ < self.g_repeat:
-                    d_loss_value, real_score_value, fake_score_value = sess.run([self.D_loss, self.real_score, self.fake_score], 
-                        feed_dict={self.data_l:data_l, self.data_real: data_real})
+                    if step % _LOG_FREQ < self.g_repeat:
+                        d_loss_value, real_score_value, fake_score_value = sess.run([self.D_loss, self.real_score, self.fake_score], 
+                            feed_dict={self.data_l:data_l, self.data_real: data_real})
 
                 # Generator training.
                 # sess.run([train_op], 

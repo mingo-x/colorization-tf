@@ -133,64 +133,112 @@ class Net(object):
             #conv1
             conv_num = 1
             batch_num = 1
+
+            # 176x176
             temp_conv = conv2d('conv_{}'.format(conv_num), data_l, [3, 3, 1, 64], stride=1, relu=False, wd=self.weight_decay)
             temp_conv = batch_norm('bn_{}'.format(batch_num), temp_conv,train=self.train)
+            temp_conv = tf.nn.leaky_relu(temp_conv)
             conv_num += 1
+            batch_norm += 1
 
-            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 64, 64], stride=2, wd=self.weight_decay)
+            # 176x176
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 64, 64], stride=2, relu=False, wd=self.weight_decay)
+            temp_conv = batch_norm('bn_{}'.format(batch_num), temp_conv,train=self.train)
+            temp_conv = tf.nn.leaky_relu(temp_conv)
             conv_num += 1
+            batch_norm += 1
 
-            #self.nilboy = temp_conv
-
-            temp_conv = batch_norm('bn_1'.format(conv_num), temp_conv,train=self.train)
-            #conv2
-            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 64, 128], stride=1, wd=self.weight_decay)
+            # conv2
+            # 88x88
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 64, 128], stride=1, relu=False, wd=self.weight_decay)
+            temp_conv = batch_norm('bn_{}'.format(batch_num), temp_conv,train=self.train)
+            temp_conv = tf.nn.leaky_relu(temp_conv)
             conv_num += 1
+            batch_norm += 1
             
-            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 128, 128], stride=2, wd=self.weight_decay)
+            # 88x88
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 128, 128], stride=2, relu=False, wd=self.weight_decay)
+            temp_conv = batch_norm('bn_{}'.format(batch_num), temp_conv, train=self.train)
+            temp_conv = tf.nn.leaky_relu(temp_conv)
             conv_num += 1
+            batch_norm += 1
 
-            temp_conv = batch_norm('bn_2'.format(conv_num), temp_conv,train=self.train)
-            #conv3
-            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 128, 256], stride=1, wd=self.weight_decay)
+            # conv3
+            # 44x44
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 128, 256], stride=1, relu=False, wd=self.weight_decay)
+            temp_conv = batch_norm('bn_{}'.format(batch_num), temp_conv, train=self.train)
+            temp_conv = tf.nn.leaky_relu(temp_conv)
             conv_num += 1
+            batch_norm += 1
             
-            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 256], stride=1, wd=self.weight_decay)
-            conv_num += 1    
-
-            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 256], stride=2, wd=self.weight_decay)
+            # 44x44
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 256], stride=1, relu=False, wd=self.weight_decay)
+            temp_conv = batch_norm('bn_{}'.format(batch_num), temp_conv, train=self.train)
+            temp_conv = tf.nn.leaky_relu(temp_conv)
             conv_num += 1
+            batch_norm += 1    
 
-            temp_conv = batch_norm('bn_3', temp_conv, train=self.train)
-            #conv4
-            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 512], stride=1, wd=self.weight_decay)
+            # 44x44
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 256], stride=2, relu=False, wd=self.weight_decay)
+            temp_conv = batch_norm('bn_{}'.format(batch_num), temp_conv, train=self.train)
+            temp_conv = tf.nn.leaky_relu(temp_conv)
             conv_num += 1
+            batch_norm += 1
+
+            # conv4
+            # 22x22
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 512], stride=1, relu=False, wd=self.weight_decay)
+            temp_conv = batch_norm('bn_{}'.format(batch_num), temp_conv, train=self.train)
+            temp_conv = tf.nn.leaky_relu(temp_conv)
+            conv_num += 1
+            batch_norm += 1
             
-            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, wd=self.weight_decay)
+            # 22x22
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, relu=False, wd=self.weight_decay)
+            temp_conv = batch_norm('bn_{}'.format(batch_num), temp_conv, train=self.train)
+            temp_conv = tf.nn.leaky_relu(temp_conv)
             conv_num += 1
+            batch_norm += 1
 
-            
-            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, wd=self.weight_decay)
+            # 22x22
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, relu=False, wd=self.weight_decay)
+            temp_conv = batch_norm('bn_{}'.format(batch_num), temp_conv, train=self.train)
+            temp_conv = tf.nn.leaky_relu(temp_conv)
             conv_num += 1
+            batch_norm += 1
 
-            temp_conv = batch_norm('bn_4', temp_conv,train=self.train)
-
-            #conv5
-            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
-            conv_num += 1    
-
-            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
+            # conv5
+            # 22x22
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, relu=False, wd=self.weight_decay)
+            temp_conv = batch_norm('bn_{}'.format(batch_num), temp_conv, train=self.train)
+            temp_conv = tf.nn.leaky_relu(temp_conv)
             conv_num += 1
+            batch_norm += 1   
 
-            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
+            # 22x22
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, relu=False, wd=self.weight_decay)
+            temp_conv = batch_norm('bn_{}'.format(batch_num), temp_conv, train=self.train)
+            temp_conv = tf.nn.leaky_relu(temp_conv)
             conv_num += 1
+            batch_norm += 1
 
-            temp_conv = batch_norm('bn_5', temp_conv,train=self.train)
-            #conv6
-            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
-            conv_num += 1    
+            # 22x22
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, relu=False, wd=self.weight_decay)
+            temp_conv = batch_norm('bn_{}'.format(batch_num), temp_conv, train=self.train)
+            temp_conv = tf.nn.leaky_relu(temp_conv)
+            conv_num += 1
+            batch_norm += 1
 
-            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
+            # conv6
+            # 22x22
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, relu=False, wd=self.weight_decay)
+            temp_conv = batch_norm('bn_{}'.format(batch_num), temp_conv, train=self.train)
+            temp_conv = tf.nn.leaky_relu(temp_conv)
+            conv_num += 1
+            batch_norm += 1    
+
+            # 22x22
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, relu=False, wd=self.weight_decay)
             conv_num += 1
 
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
