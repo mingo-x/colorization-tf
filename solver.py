@@ -171,11 +171,8 @@ class Solver(object):
             #     if grad is not None:
             #         self.summaries.append(tf.summary.histogram(var.op.name + '/gradients_adv', grad))
 
-            # for var in G_vars:
-            #     self.summaries.append(tf.summary.histogram(var.op.name, var))
-
-            for var in G_vars:
-                print(var.op.name)
+            for var in tf.global_variables(scope='G'):
+                self.summaries.append(tf.summary.histogram(var.op.name, var))
 
             apply_gradient_op = opt.apply_gradients(
                 grads, global_step=self.global_step)
@@ -185,6 +182,7 @@ class Solver(object):
                 0.999, self.global_step)
             variables_averages_op = variable_averages.apply(G_vars + T_vars)
             train_op = tf.group(apply_gradient_op, variables_averages_op)
+            init_saver = tf.train.Saver()
 
             if self.gan:
                 D_opt = tf.train.AdamOptimizer(
@@ -223,7 +221,6 @@ class Solver(object):
                 start_step = 0
 
                 if self.init_ckpt is not None:
-                    init_saver = tf.train.Saver(G_vars)
                     init_saver.restore(sess, self.init_ckpt)
                     print('Init generator with {}.'.format(self.init_ckpt))
                     checkpoint_path = os.path.join(
