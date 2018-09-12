@@ -13,7 +13,8 @@ _RESIZE_SIZE = 0
 _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
-_CKPT_PATH = '/srv/glusterfs/xieya/colorization_test_1/models/model.ckpt-2000'
+_G_VERSION = 0
+_CKPT_PATH = '/srv/glusterfs/xieya/colorization_tf_1/models/model.ckpt-126000'
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
 OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/colorization_test'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
@@ -40,7 +41,7 @@ def _resize(image):
 
 
 def _get_model(input_tensor):
-    autocolor = Net(train=False)
+    autocolor = Net(train=False, g_version=_G_VERSION)
     conv8_313 = autocolor.inference(input_tensor)
     return conv8_313
 
