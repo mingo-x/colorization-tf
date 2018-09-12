@@ -171,7 +171,7 @@ class Solver(object):
             #     if grad is not None:
             #         self.summaries.append(tf.summary.histogram(var.op.name + '/gradients_adv', grad))
 
-            for var in tf.global_variables(scope='G'):
+            for var in tf.global_variables():
                 self.summaries.append(tf.summary.histogram(var.op.name, var))
 
             apply_gradient_op = opt.apply_gradients(
