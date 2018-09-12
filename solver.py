@@ -171,11 +171,11 @@ class Solver(object):
             #     if grad is not None:
             #         self.summaries.append(tf.summary.histogram(var.op.name + '/gradients_adv', grad))
 
-            # for var in G_vars:
-                # self.summaries.append(tf.summary.histogram(var.op.name, var))
+            # for var in tf.global_variables(scope='G'):
+            #     self.summaries.append(tf.summary.histogram(var.op.name, var))
 
-            for var in tf.global_variables(scope='G'):
-                print(var.op.name)
+            # for var in tf.global_variables(scope='G'):
+                # print(var.op.name)
 
             apply_gradient_op = opt.apply_gradients(
                 grads, global_step=self.global_step)
@@ -226,9 +226,6 @@ class Solver(object):
                     init_saver = tf.train.Saver(tf.global_variables(scope='G'))
                     init_saver.restore(sess, self.init_ckpt)
                     print('Init generator with {}.'.format(self.init_ckpt))
-                    checkpoint_path = os.path.join(
-                        self.train_dir, 'model.ckpt')
-                    init_saver.save(sess, checkpoint_path, global_step=0)
 
             if not self.dataset.c313:
                 start_temp = sess.run(T)
@@ -252,12 +249,6 @@ class Solver(object):
                     if step % _LOG_FREQ < self.g_repeat:
                         d_loss_value, real_score_value, fake_score_value = sess.run([self.D_loss, self.real_score, self.fake_score], 
                             feed_dict={self.data_l:data_l, self.data_real: data_real, self.data_l_ss: data_l_ss})
-
-                # Save the model checkpoint periodically.
-                if step % 1000 < self.g_repeat:
-                    checkpoint_path = os.path.join(
-                        self.train_dir, 'model.ckpt')
-                    saver.save(sess, checkpoint_path, global_step=step + 1)
 
                 # Generator training.
                 # sess.run([train_op], 
@@ -315,4 +306,9 @@ class Solver(object):
                             self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray})
                     summary_writer.add_summary(summary_str, step)
 
+                # Save the model checkpoint periodically.
+                if step % 1000 < self.g_repeat:
+                    checkpoint_path = os.path.join(
+                        self.train_dir, 'model.ckpt')
+                    saver.save(sess, checkpoint_path, global_step=step)
                 
