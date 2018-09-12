@@ -174,6 +174,9 @@ class Solver(object):
             # for var in G_vars:
             #     self.summaries.append(tf.summary.histogram(var.op.name, var))
 
+            for var in G_vars:
+                print(var.op.name)
+
             apply_gradient_op = opt.apply_gradients(
                 grads, global_step=self.global_step)
             # apply_gradient_adv_op = opt.apply_gradients(
