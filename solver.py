@@ -223,6 +223,9 @@ class Solver(object):
                     init_saver = tf.train.Saver(G_vars)
                     init_saver.restore(sess, self.init_ckpt)
                     print('Init generator with {}.'.format(self.init_ckpt))
+                    checkpoint_path = os.path.join(
+                        self.train_dir, 'model.ckpt')
+                    saver.save(sess, checkpoint_path, global_step=0)
 
             if not self.dataset.c313:
                 start_temp = sess.run(T)
@@ -251,8 +254,8 @@ class Solver(object):
                 if step % 1000 < self.g_repeat:
                     checkpoint_path = os.path.join(
                         self.train_dir, 'model.ckpt')
-                    saver.save(sess, checkpoint_path, global_step=step)
-                    
+                    saver.save(sess, checkpoint_path, global_step=step + 1)
+
                 # Generator training.
                 # sess.run([train_op], 
                           # feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
