@@ -247,6 +247,12 @@ class Solver(object):
                         d_loss_value, real_score_value, fake_score_value = sess.run([self.D_loss, self.real_score, self.fake_score], 
                             feed_dict={self.data_l:data_l, self.data_real: data_real, self.data_l_ss: data_l_ss})
 
+                # Save the model checkpoint periodically.
+                if step % 1000 < self.g_repeat:
+                    checkpoint_path = os.path.join(
+                        self.train_dir, 'model.ckpt')
+                    saver.save(sess, checkpoint_path, global_step=step)
+                    
                 # Generator training.
                 # sess.run([train_op], 
                           # feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
@@ -303,8 +309,4 @@ class Solver(object):
                             self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray})
                     summary_writer.add_summary(summary_str, step)
 
-                # Save the model checkpoint periodically.
-                if step % 1000 < self.g_repeat:
-                    checkpoint_path = os.path.join(
-                        self.train_dir, 'model.ckpt')
-                    saver.save(sess, checkpoint_path, global_step=step)
+                
