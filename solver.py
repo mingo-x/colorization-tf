@@ -225,7 +225,7 @@ class Solver(object):
                     print('Init generator with {}.'.format(self.init_ckpt))
                     checkpoint_path = os.path.join(
                         self.train_dir, 'model.ckpt')
-                    saver.save(sess, checkpoint_path, global_step=0)
+                    init_saver.save(sess, checkpoint_path, global_step=0)
 
             if not self.dataset.c313:
                 start_temp = sess.run(T)
