@@ -87,8 +87,8 @@ class Solver(object):
             conv8_313 = self.net.inference(self.data_l)
             if self.dataset.c313:
                 conv8_313_prob = tf.nn.softmax(conv8_313)
-                data_l_ss = self.data_l[:, ::4, ::4, :]
-                self.data_fake = tf.concat([data_l_ss, conv8_313_prob], axis=-1)
+                self.data_l_ss = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 1))
+                self.data_fake = tf.concat([self.data_l_ss, conv8_313_prob], axis=-1)
                 self.data_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 314))
             else:
                 ab_fake_ss = self.net.conv313_to_ab(conv8_313)
@@ -235,15 +235,16 @@ class Solver(object):
                 if self.gan:
                     for _ in xrange(self.d_repeat):
                         data_l, _, _, data_real = self.dataset.batch()
+                        data_l_ss = data_real[:, :, :, 0]
                         if not self.corr:
                             _, _, _, data_real = self.dataset.batch()
                         # Discriminator training.
                         sess.run([D_apply_gradient_op],
-                                  feed_dict={self.data_l: data_l, self.data_real: data_real})
+                                  feed_dict={self.data_l: data_l, self.data_real: data_real, self.data_l_ss: data_l_ss})
 
                     if step % _LOG_FREQ < self.g_repeat:
                         d_loss_value, real_score_value, fake_score_value = sess.run([self.D_loss, self.real_score, self.fake_score], 
-                            feed_dict={self.data_l:data_l, self.data_real: data_real})
+                            feed_dict={self.data_l:data_l, self.data_real: data_real, self.data_l_ss: data_l_ss})
 
                 # Generator training.
                 # sess.run([train_op], 
@@ -293,7 +294,8 @@ class Solver(object):
 
                 if step % 100 < self.g_repeat:
                     if self.gan:
-                        summary_str = sess.run(summary_op, feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_real: data_real})
+                        summary_str = sess.run(summary_op, feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, 
+                            self.data_real: data_real, self.data_l_ss: data_l_ss})
                     else:
                         summary_str = sess.run(summary_op, feed_dict={
                             self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray})

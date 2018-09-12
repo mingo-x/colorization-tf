@@ -1,5 +1,5 @@
 from skimage import color
-from skimage.transform import resize
+from skimage.transform import downscale_local_mean, resize
 from skimage.io import imread, imsave
 import numpy as np
 import os
@@ -267,7 +267,8 @@ def preprocess(data, training=True, c313=False, is_gan=False, is_rgb=True):
   data_l = (img_l - 50.) / 50.
 
   #subsample 1/4  (N * H/4 * W/4 * 2)
-  data_ab_ss = data_ab[:, ::4, ::4, :]
+  # data_ab_ss = data_ab[:, ::4, ::4, :]
+  data_ab_ss = downscale_local_mean(data_ab, (1, 4, 4, 1))
 
   #NonGrayMask {N, 1, 1, 1}
   thresh = 5
@@ -278,7 +279,8 @@ def preprocess(data, training=True, c313=False, is_gan=False, is_rgb=True):
   gt_ab_313 = _nnencode(data_ab_ss)
 
   if c313:
-    data_313_ss = np.concatenate((data_l[:, ::4, ::4, :], gt_ab_313), axis=-1)
+    data_l_ss = downscale_local_mean(data_l, (1, 4, 4, 1))
+    data_313_ss = np.concatenate((, gt_ab_313), axis=-1)
   else:
     data_real = np.concatenate((data_l, data_ab / 110.), axis=-1)
 
