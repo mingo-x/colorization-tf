@@ -235,7 +235,7 @@ class Solver(object):
                 if self.gan:
                     for _ in xrange(self.d_repeat):
                         data_l, _, _, data_real = self.dataset.batch()
-                        data_l_ss = data_real[:, :, :, 0]
+                        data_l_ss = data_real[:, :, :, 0: 1]
                         if not self.corr:
                             _, _, _, data_real = self.dataset.batch()
                         # Discriminator training.
