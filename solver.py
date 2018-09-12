@@ -250,9 +250,10 @@ class Solver(object):
                 # sess.run([train_op], 
                           # feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
                 for _ in xrange(self.g_repeat):
-                    data_l, gt_ab_313, prior_boost_nongray, _ = self.dataset.batch()
+                    data_l, gt_ab_313, prior_boost_nongray, data_real = self.dataset.batch()
+                    data_l_ss = data_real[:, :, :, 0: 1]
                     sess.run([train_op], 
-                              feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
+                              feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_l_ss: data_l_ss})
 
                 if step % _LOG_FREQ < self.g_repeat:
                     duration = time.time() - start_time
@@ -263,7 +264,7 @@ class Solver(object):
                     if self.gan:
                         loss_value, new_loss_value, adv_loss_value = sess.run(
                           [self.total_loss, self.new_loss, self.adv_loss], 
-                          feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
+                          feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_l_ss: data_l_ss})
                         format_str = ('%s: step %d, G loss = %.2f, new loss = %.2f, adv = %0.5f, D = %0.5f, div = %0.3f(%.1f examples/sec; %.3f '
                                       'sec/batch)')
                         # assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
