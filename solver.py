@@ -64,6 +64,7 @@ class Solver(object):
             self.train_dir = str(solver_params['train_dir'])
             self.lr_decay = float(solver_params['lr_decay'])
             self.decay_steps = int(solver_params['decay_steps'])
+            self.moment = float(solver_params['moment'])
         self.train = train
         self.net = Net(
             train=train, common_params=common_params, net_params=net_params)
@@ -144,7 +145,7 @@ class Solver(object):
                 tf.summary.scalar('learning_rate', learning_rate))
 
             opt = tf.train.AdamOptimizer(
-                learning_rate=learning_rate, beta1=0., beta2=0.9)
+                learning_rate=learning_rate, beta1=self.moment, beta2=0.9)
             G_vars = tf.trainable_variables(scope='G')
             T_vars = tf.trainable_variables(scope='T')
             
@@ -184,7 +185,7 @@ class Solver(object):
 
             if self.gan:
                 D_opt = tf.train.AdamOptimizer(
-                    learning_rate=D_learning_rate, beta1=0., beta2=0.9)
+                    learning_rate=D_learning_rate, beta1=self.moment, beta2=0.9)
                 D_vars = tf.trainable_variables(scope='D')
                 # for var in D_vars:
                 #     self.summaries.append(tf.summary.histogram(var.op.name, var))
