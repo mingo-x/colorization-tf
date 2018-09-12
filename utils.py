@@ -280,7 +280,7 @@ def preprocess(data, training=True, c313=False, is_gan=False, is_rgb=True):
 
   if c313:
     data_l_ss = downscale_local_mean(data_l, (1, 4, 4, 1))
-    data_313_ss = np.concatenate((, gt_ab_313), axis=-1)
+    data_313_ss = np.concatenate((data_l_ss, gt_ab_313), axis=-1)
   else:
     data_real = np.concatenate((data_l, data_ab / 110.), axis=-1)
 
