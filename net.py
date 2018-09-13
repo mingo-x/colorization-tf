@@ -760,7 +760,35 @@ class Net(object):
                 # 2x2
                 flatten = tf.layers.flatten(conv_13)
                 discriminator = tf.layers.dense(flatten, 1, kernel_initializer=tf.contrib.layers.variance_scaling_initializer(factor=1.0, mode='FAN_AVG', uniform=True, dtype=tf.float32))
+            elif self.version == 9:
+                # 44x44x314
+                conv_num = 1
+                conv_1 = conv2d('d_conv_{}'.format(conv_num), data_313, [3, 3, 314, 128], stride=1, relu=False, wd=None)
+                conv_1 = tf.nn.leaky_relu(conv_1)
+                # 22x22x256
+                conv_num += 1
+                output = conv2d('d_conv_{}'.format(conv_num), conv_1, [3, 3, 128, 256], stride=1, relu=False, wd=None)
+                output = tf.nn.leaky_relu(output)
+                conv_num += 1
+                conv_2 = conv2d('d_conv_{}'.format(conv_num), output, [3, 3, 256, 256], stride=2, relu=False, wd=None)
+                conv_2 = tf.nn.leaky_relu(conv_2)
+                # 11x11x512
+                conv_num += 1
+                output = conv2d('d_conv_{}'.format(conv_num), conv_2, [3, 3, 256, 512], stride=1, relu=False, wd=None)
+                output = tf.nn.leaky_relu(output)
+                conv_num += 1
+                conv_3 = conv2d('d_conv_{}'.format(conv_num), output, [3, 3, 512, 512], stride=2, relu=False, wd=None)
+                conv_3 = tf.nn.leaky_relu(conv_3)
+                # 5x5x512
+                conv_num += 1
+                conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [3, 3, 512, 512], stride=2, relu=False, wd=None, same=False)
+                conv_4 = tf.nn.leaky_relu(conv_4)
+                # 2x2x512
+                conv_5 = conv2d('d_conv_{}'.format(conv_num), conv_4, [3, 3, 512, 512], stride=2, relu=False, wd=None, same=False)
+                conv_5 = tf.nn.leaky_relu(conv_5)
 
+                flatten = tf.layers.flatten(conv_5)
+                discriminator = Linear('dense', flatten, 1)
             else:
                 self.downscale = 1
                 # 44x44
