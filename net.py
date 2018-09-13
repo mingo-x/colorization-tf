@@ -141,6 +141,7 @@ class Net(object):
         conv8_313 = temp_conv
         return conv8_313
 
+
     def inference1(self, data_l):
         with tf.variable_scope('G'):
             #conv1
@@ -680,19 +681,24 @@ class Net(object):
             elif self.version == 6:
                 # 44x44x314
                 conv_num = 1
-                conv_1 = conv2d('d_conv_{}'.format(conv_num), data_313, [3, 3, 314, 128], stride=1, wd=None)
+                conv_1 = conv2d('d_conv_{}'.format(conv_num), data_313, [3, 3, 314, 128], stride=1, relu=False, wd=None)
+                conv_1 = tf.nn.leaky_relu(conv_1)
                 # 22x22x256
                 conv_num += 1
-                conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [3, 3, 128, 256], stride=2, wd=None)
+                conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [3, 3, 128, 256], stride=2, relu=False, wd=None)
+                conv_2 = tf.nn.leaky_relu(conv_2)
                 # 11x11x512
                 conv_num += 1
-                conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [3, 3, 256, 512], stride=2, wd=None)
+                conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [3, 3, 256, 512], stride=2, relu=False, wd=None)
+                conv_3 = tf.nn.leaky_relu(conv_3)
                 # 5x5x512
                 conv_num += 1
-                conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [3, 3, 512, 512], stride=2, wd=None, same=False)
+                conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [3, 3, 512, 512], stride=2, relu=False, wd=None, same=False)
+                conv_4 = tf.nn.leaky_relu(conv_4)
                 # 2x2x512
                 conv_num += 1
-                conv_5 = conv2d('d_conv_{}'.format(conv_num), conv_4, [3, 3, 512, 512], stride=2, wd=None, same=False)
+                conv_5 = conv2d('d_conv_{}'.format(conv_num), conv_4, [3, 3, 512, 512], stride=2, relu=False, wd=None, same=False)
+                conv_5 = tf.nn.leaky_relu(conv_5)
 
                 flatten = tf.layers.flatten(conv_5)
                 discriminator = Linear('dense', flatten, 1)
