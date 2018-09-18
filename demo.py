@@ -13,13 +13,13 @@ _RESIZE_SIZE = 0
 _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
-_G_VERSION = 0
-_CKPT_PATH = '/srv/glusterfs/xieya/colorization_tf_1/models/model.ckpt-126000'
+_G_VERSION = 3
+_CKPT_PATH = '/srv/glusterfs/xieya/colorization_test_7/models/model.ckpt-256000'
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
-OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/colorization_test'
+OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/ntest7_256k'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
 #T = 2.63
-T = 2.63
+T = 1.
 
 
 def _resize(image):
@@ -48,7 +48,7 @@ def _get_model(input_tensor):
 
 def _colorize_single_img(img_name, model, input_tensor, sess):
     img = cv2.imread(os.path.join(IMG_DIR, img_name))
-    img = _resize(img)
+    # img = _resize(img)
     img_rs = cv2.resize(img, (INPUT_SIZE, INPUT_SIZE))
     if len(img.shape) == 3:
         img_l = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -61,10 +61,10 @@ def _colorize_single_img(img_name, model, input_tensor, sess):
 
     # img = _resize(img)
 
-    img_l = (img_l.astype(dtype=np.float32)) / 255.0 * 100 - 50
-    img_l_rs = (img_l_rs.astype(dtype=np.float32)) / 255.0 * 100 - 50
+    img_l = (img_l.astype(dtype=np.float32)) / 255.0 * 2 - 1
+    img_l_rs = (img_l_rs.astype(dtype=np.float32)) / 255.0 * 2 - 1
     img_313_rs = sess.run(model, feed_dict={input_tensor: img_l_rs})
-    img_rgb, _ = decode(img_l_rs, img_313_rs, T)
+    img_rgb, _ = decode(img_l, img_313_rs, T)
     imsave(os.path.join(OUTPUT_DIR, img_name), img_rgb)
 
 

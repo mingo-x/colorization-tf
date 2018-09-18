@@ -84,27 +84,20 @@ class Solver(object):
                 tf.float32,
                 (self.batch_size, int(self.height / 4), int(self.width / 4), 1)
             )
+            self.data_l_ss = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 1))
 
             conv8_313 = self.net.inference(self.data_l)
             if self.dataset.c313:
                 conv8_313_prob = tf.nn.softmax(conv8_313)
-                self.data_l_ss = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 1))
                 self.data_fake = tf.concat([self.data_l_ss, conv8_313_prob], axis=-1)
                 self.data_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 314))
             else:
                 ab_fake_ss = self.net.conv313_to_ab(conv8_313)
-                ab_fake = tf.image.resize_images(ab_fake_ss, (self.height, self.width))
-                
-                # self.data_test = tf.concat([self.data_l[0, :, :, :] + 50, ab_fake[0, :, :, :]], axis=-1)
-                self.data_fake = tf.concat([self.data_l, ab_fake / 100.], axis=-1)
-                self.data_real = tf.placeholder(tf.float32, (self.batch_size, self.height, self.width, 3))
-            # data_fake = tf.image.resize_images(data_fake, (self.height, self.width))
-            
-            
-            # self.data_l_ss_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 1))
-            # self.gt_ab_313_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 313))
-            # self.data_lab_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 3))
-            # data_real = tf.concat([self.data_l_ss_real, self.gt_ab_313_real], axis=-1)
+                self.data_fake = tf.concat([self.data_l_ss, ab_fake_ss / 110.], axis=-1)
+                self.data_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 3))
+                # self.test_real = tf.concat([(self.data_real[0, :, :, 0:1] + 1) * 50, self.data_real[0, :, :, 1:] * 110.], axis=-1)
+                # self.test_fake = tf.concat([(self.data_l_ss [0, :, :, :]+ 1.) * 50., ab_fake_ss[0, :, :, :]], axis=-1)
+
 
             new_loss, g_loss, adv_loss = self.net.loss(
                 scope, conv8_313, self.prior_boost_nongray,
@@ -148,7 +141,7 @@ class Solver(object):
                 learning_rate=learning_rate, beta1=self.moment, beta2=0.9)
             G_vars = tf.trainable_variables(scope='G')
             T_vars = tf.trainable_variables(scope='T')
-            
+
             with tf.variable_scope('T', reuse=True):
                 if not self.dataset.c313:
                     T = tf.get_variable('T')
@@ -156,7 +149,7 @@ class Solver(object):
                     self.summaries.append(tf.summary.scalar(T.op.name, T[0]))
                 else:
                     T_loss = 0.
-    
+
             if self.gan:
                 grads = opt.compute_gradients(self.new_loss * self.net.alpha + self.adv_loss + T_loss, var_list=G_vars + T_vars)
             else:
@@ -251,8 +244,6 @@ class Solver(object):
                             feed_dict={self.data_l:data_l, self.data_real: data_real, self.data_l_ss: data_l_ss})
 
                 # Generator training.
-                # sess.run([train_op], 
-                          # feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray})
                 for _ in xrange(self.g_repeat):
                     data_l, gt_ab_313, prior_boost_nongray, data_real = self.dataset.batch()
                     data_l_ss = data_real[:, :, :, 0: 1]
@@ -266,7 +257,7 @@ class Solver(object):
                     sec_per_batch = duration / (self.num_gpus * _LOG_FREQ)
 
                     if self.gan:
-                        loss_value, new_loss_value, adv_loss_value = sess.run(
+                        loss_value, new_loss_value, adv_loss_value= sess.run(
                           [self.total_loss, self.new_loss, self.adv_loss], 
                           feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_l_ss: data_l_ss})
                         format_str = ('%s: step %d, G loss = %.2f, new loss = %.2f, adv = %0.5f, D = %0.5f, div = %0.3f(%.1f examples/sec; %.3f '
@@ -279,9 +270,12 @@ class Solver(object):
                         # print(np.min(data_fake[:, :, :, 0]), np.max(data_fake[:, :, :, 0]), np.min(data_fake[:, :, :, 1]), np.max(data_fake[:, :, :, 2]))
                         # print(np.min(data_real[:, :, :, 0]), np.max(data_real[:, :, :, 0]), np.min(data_real[:, :, :, 1]), np.max(data_real[:, :, :, 2]))
                         # if step % 100 == 0:
-                        #     img_lab = np.array(data_test, dtype=np.float64)
+                        #     img_lab = np.array(test_real, dtype=np.float64)
                         #     data_rgb = color.lab2rgb(img_lab)
-                        #     io.imsave(os.path.join(self.train_dir, "{}.jpg".format(step)), data_rgb)
+                        #     io.imsave(os.path.join(self.train_dir, "{}_real.jpg".format(step)), data_rgb)
+                        #     img_lab = np.array(test_fake, dtype=np.float64)
+                        #     data_rgb = color.lab2rgb(img_lab)
+                        #     io.imsave(os.path.join(self.train_dir, "{}_fake.jpg".format(step)), data_rgb)
 
                     else:
                         loss_value, new_loss_value = sess.run(

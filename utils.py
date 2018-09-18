@@ -265,9 +265,10 @@ def preprocess(data, training=True, c313=False, is_gan=False, is_rgb=True):
 
   #scale img_l to [-1, 1]
   data_l = (img_l - 50.) / 50.
-
+  data_l_ss = downscale_local_mean(data_l, (1, 4, 4, 1))
   #subsample 1/4  (N * H/4 * W/4 * 2)
   # data_ab_ss = data_ab[:, ::4, ::4, :]
+
   data_ab_ss = downscale_local_mean(data_ab, (1, 4, 4, 1))
 
   #NonGrayMask {N, 1, 1, 1}
@@ -279,10 +280,9 @@ def preprocess(data, training=True, c313=False, is_gan=False, is_rgb=True):
   gt_ab_313 = _nnencode(data_ab_ss)
 
   if c313:
-    data_l_ss = downscale_local_mean(data_l, (1, 4, 4, 1))
     data_313_ss = np.concatenate((data_l_ss, gt_ab_313), axis=-1)
   else:
-    data_real = np.concatenate((data_l, data_ab / 110.), axis=-1)
+    data_real = np.concatenate((data_l_ss, data_ab_ss / 110.), axis=-1)
 
   #Prior_Boost 
   #prior_boost: [N, 1, H/4, W/4]
@@ -317,7 +317,8 @@ def decode(data_l, conv8_313, rebalance=1):
   Returns:
     img_rgb  : [height, width, 3]
   """
-  data_l = data_l + 50
+  # [-1, 1] to [0, 100]
+  data_l = (data_l + 1) * 50
   _, height, width, _ = data_l.shape
   data_l = data_l[0, :, :, :]
   conv8_313 = conv8_313[0, :, :, :]

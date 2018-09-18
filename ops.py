@@ -124,7 +124,7 @@ def conv2d(scope, input, kernel_size, stride=1, dilation=1, relu=True, wd=nilboy
     biases = variable('biases', kernel_size[3:], tf.constant_initializer(0.0))
     bias = tf.nn.bias_add(conv, biases)
     if relu:
-      conv1 = tf.nn.leaky_relu(bias)
+      conv1 = tf.nn.relu(bias)
     elif sigmoid:
       conv1 = tf.nn.sigmoid(bias)
     else:
