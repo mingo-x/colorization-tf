@@ -339,7 +339,8 @@ class Net(object):
 
             # conv2
             # 88x88
-            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 64, 128], stride=1, relu=True, wd=self.weight_decay)
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 64, 128], stride=1, relu=False, wd=self.weight_decay)
+            temp_conv = tf.nn.leaky_relu(temp_conv)
             conv_num += 1
             
             # 88x88
@@ -352,12 +353,14 @@ class Net(object):
 
             # conv3
             # 44x44
-            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 128, 256], stride=1, relu=True, wd=self.weight_decay)
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 128, 256], stride=1, relu=False, wd=self.weight_decay)
+            temp_conv = tf.nn.leaky_relu(temp_conv)
             conv_num += 1
             
             # 44x44
-            # temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 256], stride=1, relu=True, wd=self.weight_decay)
-            # conv_num += 1 
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 256], stride=1, relu=False, wd=self.weight_decay)
+            temp_conv = tf.nn.leaky_relu(temp_conv)
+            conv_num += 1 
 
             # 44x44
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 256], stride=2, relu=False, wd=self.weight_decay)
@@ -369,12 +372,14 @@ class Net(object):
 
             # conv4
             # 22x22
-            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 512], stride=1, relu=True, wd=self.weight_decay)
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 512], stride=1, relu=False, wd=self.weight_decay)
+            temp_conv = tf.nn.leaky_relu(temp_conv)
             conv_num += 1
             
             # 22x22
-            # temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, relu=True, wd=self.weight_decay)
-            # conv_num += 1
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, relu=False, wd=self.weight_decay)
+            temp_conv = tf.nn.leaky_relu(temp_conv)
+            conv_num += 1
 
             # 22x22
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, relu=False, wd=self.weight_decay)
@@ -386,11 +391,13 @@ class Net(object):
 
             # conv5
             # 22x22
-            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, relu=True, wd=self.weight_decay)
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, relu=False, wd=self.weight_decay)
+            temp_conv = tf.nn.leaky_relu(temp_conv)
             conv_num += 1 
 
             # 22x22
-            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, relu=True, wd=self.weight_decay)
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, relu=False, wd=self.weight_decay)
+            temp_conv = tf.nn.leaky_relu(temp_conv)
             conv_num += 1
 
             # 22x22
@@ -402,11 +409,13 @@ class Net(object):
 
             # conv6
             # 22x22
-            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, relu=True, wd=self.weight_decay)
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, relu=False, wd=self.weight_decay)
+            temp_conv = tf.nn.leaky_relu(temp_conv)
             conv_num += 1  
 
             # 22x22
-            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, relu=True, wd=self.weight_decay)
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, relu=False, wd=self.weight_decay)
+            temp_conv = tf.nn.leaky_relu(temp_conv)
             conv_num += 1
 
             # 22x22
@@ -418,16 +427,18 @@ class Net(object):
             batch_num += 1    
 
             # 22x22x1024
-            temp_conv = tf.concat((conv6, conv4), axis=-1)
+            # temp_conv = tf.concat((conv6, conv4), axis=-1)
  
             # conv7
             # 22x22
-            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 1024, 512], stride=1, relu=True, wd=self.weight_decay)
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, relu=False, wd=self.weight_decay)
+            temp_conv = tf.nn.leaky_relu(temp_conv)
             conv_num += 1
 
             # 22x22
-            # temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, relu=True, wd=self.weight_decay)
-            # conv_num += 1   
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, relu=False, wd=self.weight_decay)
+            temp_conv = tf.nn.leaky_relu(temp_conv)
+            conv_num += 1   
 
             # 22x22
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 256], stride=1, relu=False, wd=self.weight_decay)
@@ -442,12 +453,14 @@ class Net(object):
 
             # conv8
             # 22x22
-            temp_conv = deconv2d('conv_{}'.format(conv_num), temp_conv, [4, 4, 512, 256], stride=2, relu=True, wd=self.weight_decay)
+            temp_conv = deconv2d('conv_{}'.format(conv_num), temp_conv, [4, 4, 512, 256], stride=2, relu=False, wd=self.weight_decay)
+            temp_conv = tf.nn.leaky_relu(temp_conv)
             conv_num += 1     
 
             # 44x44
-            # temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 256], stride=1, relu=True, wd=self.weight_decay)
-            # conv_num += 1
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 256], stride=1, relu=False, wd=self.weight_decay)
+            temp_conv = tf.nn.leaky_relu(temp_conv)
+            conv_num += 1
 
             # 44x44
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 128], stride=1, relu=False, wd=self.weight_decay)

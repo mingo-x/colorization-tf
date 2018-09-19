@@ -19,7 +19,7 @@ IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
 OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/colorization_test'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
 #T = 2.63
-T = 1.
+T = 2.63
 
 
 def _resize(image):
