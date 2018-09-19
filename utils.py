@@ -363,7 +363,7 @@ def decode(data_l, conv8_313, rebalance=1, propagate=False):
         #     if norm[ni, nj] > prob:
         #       prob = norm[ni, nj]
         #       data_ab[i, j] = data_ab[ni, nj]
-    data_ab = new_ab
+    data_ab = np.ascontiguousarray(new_ab)
   data_ab = resize(data_ab, (height, width))
 
   img_lab = np.concatenate((data_l, data_ab), axis=-1)
