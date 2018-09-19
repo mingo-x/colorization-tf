@@ -14,6 +14,7 @@ _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
 _G_VERSION = 3
+_PROP = False
 _CKPT_PATH = '/srv/glusterfs/xieya/colorization_test_7/models/model.ckpt-296000'
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
 OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/colorization_test'
@@ -64,7 +65,7 @@ def _colorize_single_img(img_name, model, input_tensor, sess):
     img_l = (img_l.astype(dtype=np.float32)) / 255.0 * 2 - 1
     img_l_rs = (img_l_rs.astype(dtype=np.float32)) / 255.0 * 2 - 1
     img_313_rs = sess.run(model, feed_dict={input_tensor: img_l_rs})
-    img_rgb, _ = decode(img_l, img_313_rs, T)
+    img_rgb, _ = decode(img_l, img_313_rs, T, _PROP)
     imsave(os.path.join(OUTPUT_DIR, img_name), img_rgb)
 
 
