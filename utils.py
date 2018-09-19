@@ -354,7 +354,7 @@ def decode(data_l, conv8_313, rebalance=1, propagate=False):
         ab = np.array(ab)
         wt = np.array(wt)
         ave_ab = np.average(ab, axis=0, weights=wt)
-        # print(ave_ab.shape)
+        print(ave_ab[0], ave_ab[1])
         new_ab[i, j, 0] = ave_ab[0]
         new_ab[i, j, 1] = ave_ab[1]
         # for nb in nbs:
