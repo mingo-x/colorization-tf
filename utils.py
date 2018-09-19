@@ -349,12 +349,12 @@ def decode(data_l, conv8_313, rebalance=1, propagate=False):
           nj = j + nb[1]
           if ni >=0 and ni < height_ss and nj >= 0 and nj < width_ss:
             if norm[ni, nj] > prob:
-              ab += data_ab[ni, nj]
-              wt += 1. / abs(data_l[i, j, 0] - data_l[ni, nj, 0])
+              ab.append(data_ab[ni, nj])
+              wt.append(1. / abs(data_l[i, j, 0] - data_l[ni, nj, 0]))
         ab = np.array(ab)
         wt = np.array(wt)
         ave_ab = np.average(ab, axis=0, weights=wt)
-        print(ave_ab.shape)
+        # print(ave_ab.shape)
         new_ab[i, j, 0] = ave_ab[0]
         new_ab[i, j, 1] = ave_ab[1]
         # for nb in nbs:
