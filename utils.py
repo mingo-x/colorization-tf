@@ -329,7 +329,26 @@ def decode(data_l, conv8_313, rebalance=1):
   cc = np.load(os.path.join(enc_dir, 'pts_in_hull.npy'))
   
   data_ab = np.dot(class8_313_rh, cc)
+  norm = class8_313_rh ** 2
+  norm = np.sqrt(np.sum(norm, axis=-1))
+  mean_norm = np.mean(norm)
+  nbs = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]]
+  height_ss = norm.shape[0]
+  width_ss = norm.shape[1]
+  for i in range(height_ss):
+    for j in range(width_ss):
+      prob = norm[i, j]
+      if prob < mean_norm:
+        data_ab[i, j, :] = 0
+      # for nb in nbs:
+      #   ni = i + nb[0]
+      #   nj = j + nb[1]
+      #   if ni >=0 and ni < height_ss and nj >= 0 and nj < width_ss:
+      #     if norm[ni, nj] > prob:
+      #       prob = norm[ni, nj]
+      #       data_ab[i, j] = data_ab[ni, nj]
   data_ab = resize(data_ab, (height, width))
+
   img_lab = np.concatenate((data_l, data_ab), axis=-1)
   img_rgb = color.lab2rgb(img_lab)
 
