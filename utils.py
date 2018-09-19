@@ -309,7 +309,7 @@ def softmax(x):
     return e_x / np.expand_dims(e_x.sum(axis=-1), axis=-1) # only difference
 
 
-def decode(data_l, conv8_313, rebalance=1):
+def decode(data_l, conv8_313, rebalance=1, propagate=False):
   """
   Args:
     data_l   : [1, height, width, 1]
@@ -329,37 +329,38 @@ def decode(data_l, conv8_313, rebalance=1):
   cc = np.load(os.path.join(enc_dir, 'pts_in_hull.npy'))
   
   data_ab = np.dot(class8_313_rh, cc)
-  norm = class8_313_rh ** 2
-  norm = np.sqrt(np.sum(norm, axis=-1))
-  mean_norm = np.mean(norm)
-  nbs = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]]
-  height_ss = norm.shape[0]
-  width_ss = norm.shape[1]
-  new_ab = np.zeros_like(data_ab)
-  for i in range(height_ss):
-    for j in range(width_ss):
-      prob = norm[i, j]
-      # if prob < mean_norm:
-        # data_ab[i, j, :] = 0
-      ab = [data_ab[i, j]]
-      wt = [prob]
-      for nb in nbs:
-        ni = i + nb[0]
-        nj = j + nb[1]
-        if ni >=0 and ni < height_ss and nj >= 0 and nj < width_ss:
-          if norm[ni, nj] > prob:
-            ab += data_ab[ni, nj]
-            wt += norm[ni, nj] * 1. / abs(data_l[i, j, 0] - data_l[ni, nj, 0])
-      ave_ab = np.average(ab, axis=0, weights=wt)
-      new_ab[i, j] = ave_ab
-      # for nb in nbs:
-      #   ni = i + nb[0]
-      #   nj = j + nb[1]
-      #   if ni >=0 and ni < height_ss and nj >= 0 and nj < width_ss:
-      #     if norm[ni, nj] > prob:
-      #       prob = norm[ni, nj]
-      #       data_ab[i, j] = data_ab[ni, nj]
-  data_ab = new_ab
+  if propagate:
+    norm = class8_313_rh ** 2
+    norm = np.sqrt(np.sum(norm, axis=-1))
+    mean_norm = np.mean(norm)
+    nbs = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]]
+    height_ss = norm.shape[0]
+    width_ss = norm.shape[1]
+    new_ab = np.zeros_like(data_ab)
+    for i in range(height_ss):
+      for j in range(width_ss):
+        prob = norm[i, j]
+        # if prob < mean_norm:
+          # data_ab[i, j, :] = 0
+        ab = [data_ab[i, j]]
+        wt = [prob]
+        for nb in nbs:
+          ni = i + nb[0]
+          nj = j + nb[1]
+          if ni >=0 and ni < height_ss and nj >= 0 and nj < width_ss:
+            if norm[ni, nj] > prob:
+              ab += data_ab[ni, nj]
+              wt += norm[ni, nj] * 1. / abs(data_l[i, j, 0] - data_l[ni, nj, 0])
+        ave_ab = np.average(ab, axis=0, weights=wt)
+        new_ab[i, j] = ave_ab
+        # for nb in nbs:
+        #   ni = i + nb[0]
+        #   nj = j + nb[1]
+        #   if ni >=0 and ni < height_ss and nj >= 0 and nj < width_ss:
+        #     if norm[ni, nj] > prob:
+        #       prob = norm[ni, nj]
+        #       data_ab[i, j] = data_ab[ni, nj]
+    data_ab = new_ab
   data_ab = resize(data_ab, (height, width))
 
   img_lab = np.concatenate((data_l, data_ab), axis=-1)
