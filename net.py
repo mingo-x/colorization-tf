@@ -150,9 +150,9 @@ class Net(object):
             batch_num = 1
 
             # 176x176
-            temp_conv = conv2d('conv_{}'.format(conv_num), data_l, [3, 3, 1, 64], stride=1, relu=False, wd=self.weight_decay)
+            temp_conv = conv2d('conv_{}'.format(conv_num), data_l, [3, 3, 1, 64], stride=1, relu=True, wd=self.weight_decay)
             # temp_conv = batch_norm('bn_{}'.format(batch_num), temp_conv, train=self.train)
-            temp_conv = tf.nn.leaky_relu(temp_conv)
+            # temp_conv = tf.nn.leaky_relu(temp_conv)
             conv_num += 1
             # batch_num += 1
 
@@ -332,7 +332,7 @@ class Net(object):
 
             # 176x176
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 64, 64], stride=2, relu=False, wd=self.weight_decay)
-            temp_conv = batch_norm('bn_{}'.format(batch_num), temp_conv,train=self.train)
+            temp_conv = batch_norm('bn_{}'.format(batch_num), temp_conv, train=self.train)
             temp_conv = tf.nn.leaky_relu(temp_conv)
             conv_num += 1
             batch_num += 1
@@ -473,7 +473,7 @@ class Net(object):
             # 44x44x256
             temp_conv = tf.concat((conv8, conv2), axis=-1)
 
-            #Unary prediction
+            # Unary prediction
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [1, 1, 256, 313], stride=1, relu=False, wd=self.weight_decay)
             conv_num += 1
 
@@ -951,7 +951,42 @@ class Net(object):
 
                 flatten = tf.layers.flatten(conv_5)
                 discriminator = Linear('dense', flatten, 1)
-            else:
+
+            elif self.version == 11:
+                # 44x44x314
+                conv_num = 1
+                output = conv2d('d_conv_{}'.format(conv_num), data_313, [3, 3, 314, 128], stride=1, relu=False, wd=None)
+                output = tf.nn.leaky_relu(output)
+
+                conv_num += 1
+                output = conv2d('d_conv_{}'.format(conv_num), output, [3, 3, 128, 128], stride=2, relu=False, wd=None)
+                output = tf.nn.leaky_relu(output)
+
+                # 22x22x128
+                conv_num += 1
+                output = conv2d('d_conv_{}'.format(conv_num), output, [3, 3, 128, 256], stride=1, relu=False, wd=None)
+                output = tf.nn.leaky_relu(output)
+
+                conv_num += 1
+                conv_2 = conv2d('d_conv_{}'.format(conv_num), output, [3, 3, 256, 256], stride=2, relu=False, wd=None)
+                conv_2 = tf.nn.leaky_relu(conv_2)
+
+                # 11x11x256
+                conv_num += 1
+                output = conv2d('d_conv_{}'.format(conv_num), conv_2, [3, 3, 256, 512], stride=1, relu=False, wd=None)
+                output = tf.nn.leaky_relu(output)
+
+                conv_num += 1
+                conv_3 = conv2d('d_conv_{}'.format(conv_num), output, [3, 3, 512, 512], stride=2, relu=False, wd=None)
+                conv_3 = tf.nn.leaky_relu(conv_3)
+                
+                # 5x5x512
+                conv_num += 1
+                output = conv2d('d_conv_{}'.format(conv_num), conv_3, [1, 1, 512, 1], stride=1, relu=False, wd=None)
+
+                discriminator = tf.reduce_mean(output, [1, 2, 3])
+
+            elif self.version == 10:
                 # 44x44x3
                 conv_num = 1
                 conv_1 = conv2d('d_conv_{}'.format(conv_num), data_313, [3, 3, 3, 64], stride=1, relu=False, wd=None)
