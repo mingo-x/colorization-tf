@@ -1029,6 +1029,31 @@ class Net(object):
 
                 flatten = tf.layers.flatten(output)
                 discriminator = Linear('dense', flatten, 1)
+            elif self.version == 12:
+                # 44x44x314
+                conv_num = 1
+                output = conv2d('d_conv_{}'.format(conv_num), data_313, [3, 3, 314, 128], stride=1, relu=False, wd=None)
+                output = tf.nn.leaky_relu(output)
+
+                conv_num += 1
+                output = conv2d('d_conv_{}'.format(conv_num), output, [3, 3, 128, 128], stride=2, relu=False, wd=None)
+                output = tf.nn.leaky_relu(output)
+
+                # 22x22x128
+                conv_num += 1
+                output = conv2d('d_conv_{}'.format(conv_num), output, [3, 3, 128, 256], stride=2, relu=False, wd=None)
+                output = tf.nn.leaky_relu(output)
+
+                # 11x11x256
+                conv_num += 1
+                output = conv2d('d_conv_{}'.format(conv_num), output, [3, 3, 256, 512], stride=2, relu=False, wd=None)
+                output = tf.nn.leaky_relu(output)
+                
+                # 5x5x512
+                conv_num += 1
+                output = conv2d('d_conv_{}'.format(conv_num), output, [1, 1, 512, 1], stride=1, relu=False, wd=None)
+
+                discriminator = tf.reduce_mean(output, [1, 2, 3])
 
         return discriminator
 
