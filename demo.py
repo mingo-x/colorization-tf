@@ -7,7 +7,7 @@ from net import Net
 from skimage import io, color, transform
 import cv2
 
-INPUT_SIZE = 224
+INPUT_SIZE = 256
 _RESIZE_SIZE = 0
 _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
