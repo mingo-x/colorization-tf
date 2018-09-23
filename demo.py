@@ -78,6 +78,47 @@ def _colorize_single_img(img_name, model, input_tensor, sess):
     io.imsave(os.path.join(OUTPUT_DIR, img_name), img_rgb)
 
 
+def _colorize_ab_canvas(model, input_tensor, sess):
+    gt_canvas = np.zeros((8 * 64, 8 * 64, 3))
+    pr_canvas = np.zeros((8 * 64, 8 * 64, 3))
+    cnt = 0
+    for img_name in os.listdir(IMG_DIR):
+        if img_name.endswith('.jpg') or img_name.endswith('.JPEG'):
+            img_rgb_sk = io.imread(os.path.join("/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val", img_name))
+            if len(img_rgb_sk.shape) < 3 or img_rgb_sk.shape[2] != 3:
+                return
+            i = cnt / 8
+            j = cnt % 8
+
+            img_rgb_sk = cv2.resize(img_rgb_sk, (256, 256))
+            img_lab = color.rgb2lab(img_rgb_sk)
+            img_lab_rs = transform.downscale_local_mean(img_lab, (4, 4, 1))
+            img_lab_rs[:, :, 0] = 50
+            img_rgb_rs = color.lab2rgb(img_lab_rs)
+            gt_canvas[i * 64: (i + 1) * 64, j * 64: (j + 1) * 64, :] = img_rgb_rs
+                
+            img = cv2.imread(os.path.join(IMG_DIR, img_name))
+            img_rs = cv2.resize(img, (256, 256))
+            if len(img.shape) == 3:
+                img_l = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                img_l = img_l[None, :, :, None]
+                img_l_rs = cv2.cvtColor(img_rs, cv2.COLOR_BGR2GRAY)
+                img_l_rs = img_l_rs[None, :, :, None]
+            else:
+                img_l = img[None, :, :, None]
+                img_l_rs = img_rs[None, :, :, None]
+
+            img_l = (img_l.astype(dtype=np.float32)) / 255.0 * 2 - 1
+            img_l_rs = (img_l_rs.astype(dtype=np.float32)) / 255.0 * 2 - 1
+            img_313_rs = sess.run(model, feed_dict={input_tensor: img_l_rs})
+            img_l_rs_rs = np.zeros((1, 64, 64, 1))
+            img_rgb, _ = decode(img_l_rs_rs, img_313_rs, T, _PROP)
+            pr_canvas[i * 64: (i + 1) * 64, j * 64: (j + 1) * 64, :] = img_rgb
+
+    io.imsave(os.path.join(OUTPUT_DIR, "gt_ab.jpg"), gt_canvas)
+    io.imsave(os.path.join(OUTPUT_DIR, "pr_ab.jpg"), pr_canvas)
+
+
 def _get_cifar_data(training=True):
     data = []
     if training:
@@ -181,10 +222,11 @@ def main():
 
     with tf.Session() as sess:
         saver.restore(sess, _CKPT_PATH)
-        for img_name in os.listdir(IMG_DIR):
-            if img_name.endswith('.jpg') or img_name.endswith('.JPEG'):
-                print(img_name)
-                _colorize_single_img(img_name, model, input_tensor, sess)
+        # for img_name in os.listdir(IMG_DIR):
+        #     if img_name.endswith('.jpg') or img_name.endswith('.JPEG'):
+        #         print(img_name)
+        #         _colorize_single_img(img_name, model, input_tensor, sess)
+        _colorize_ab_canvas(model, input_tensor, sess)
 
 
 def demo_wgan_ab():
