@@ -60,21 +60,21 @@ def _colorize_single_img(img_name, model, input_tensor, sess):
         img_l_rs = img_rs[None, :, :, None]
 
     # img = _resize(img)
-    img_rgb_sk = io.imread(os.path.join("/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val", img_name))
-    if len(img_rgb_sk.shape) < 3 or img_rgb_sk.shape[2] != 3:
-        return
-    img_rgb_sk = cv2.resize(img_rgb_sk, (INPUT_SIZE, INPUT_SIZE))
-    img_lab = color.rgb2lab(img_rgb_sk)
-    img_lab_rs = transform.downscale_local_mean(img_lab, (4, 4, 1))
-    img_lab_rs[:, :, 0] = 50
-    img_rgb_rs = color.lab2rgb(img_lab_rs)
-    io.imsave(os.path.join(OUTPUT_DIR, "test_" + img_name), img_rgb_rs)
+    # img_rgb_sk = io.imread(os.path.join("/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val", img_name))
+    # if len(img_rgb_sk.shape) < 3 or img_rgb_sk.shape[2] != 3:
+    #     return
+    # img_rgb_sk = cv2.resize(img_rgb_sk, (INPUT_SIZE, INPUT_SIZE))
+    # img_lab = color.rgb2lab(img_rgb_sk)
+    # img_lab_rs = transform.downscale_local_mean(img_lab, (4, 4, 1))
+    # img_lab_rs[:, :, 0] = 50
+    # img_rgb_rs = color.lab2rgb(img_lab_rs)
+    # io.imsave(os.path.join(OUTPUT_DIR, "test_" + img_name), img_rgb_rs)
 
     img_l = (img_l.astype(dtype=np.float32)) / 255.0 * 2 - 1
     img_l_rs = (img_l_rs.astype(dtype=np.float32)) / 255.0 * 2 - 1
     img_313_rs = sess.run(model, feed_dict={input_tensor: img_l_rs})
-    img_l_rs_rs = np.zeros((1, 56, 56, 1))
-    img_rgb, _ = decode(img_l_rs_rs, img_313_rs, T, _PROP)
+    # img_l_rs_rs = np.zeros((1, 56, 56, 1))
+    img_rgb, _ = decode(img_l, img_313_rs, T, _PROP)
     io.imsave(os.path.join(OUTPUT_DIR, img_name), img_rgb)
 
 
