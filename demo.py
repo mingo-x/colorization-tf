@@ -83,12 +83,15 @@ def _colorize_ab_canvas(model, input_tensor, sess):
     pr_canvas = np.zeros((8 * 64, 8 * 64, 3))
     cnt = 0
     for img_name in os.listdir(IMG_DIR):
+        if cnt >= 64:
+            break
         if img_name.endswith('.jpg') or img_name.endswith('.JPEG'):
             img_rgb_sk = io.imread(os.path.join("/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val", img_name))
             if len(img_rgb_sk.shape) < 3 or img_rgb_sk.shape[2] != 3:
                 return
             i = cnt / 8
             j = cnt % 8
+            cnt += 1
 
             img_rgb_sk = cv2.resize(img_rgb_sk, (256, 256))
             img_lab = color.rgb2lab(img_rgb_sk)
