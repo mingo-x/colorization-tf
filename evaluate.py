@@ -15,6 +15,7 @@ IMG_DIR = '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val'
 OUT_DIR = '/srv/glusterfs/xieya/colorization-tf/prediction'
 LABEL_PATH = '/home/xieya/colorization-tf/resources/val.txt'
 # LOG_PATH = '/home/xieya/metrics.txt'
+_G_VERSION = 1
 MODEL_CHECKPOINT = '/srv/glusterfs/xieya/colorization-gan/models/model.ckpt-499000'
 # CLASS_ID_DICT_PATH = '/srv/glusterfs/xieya/colorization-tf/resources/class_index_dict.pkl'
 NUM_IMGS = 10000
@@ -72,7 +73,7 @@ def _predict_image_batch(img_batch, model, input_tensor, sess):
 def _get_model():
     input_tensor = tf.placeholder(
         tf.float32, (_BATCH_SIZE, IMG_SIZE, IMG_SIZE, 1))
-    autocolor = Net(train=False)
+    autocolor = Net(train=False, g_version=_G_VERSION)
     conv8_313 = autocolor.inference(input_tensor)
 
     return conv8_313, input_tensor
