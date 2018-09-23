@@ -88,7 +88,7 @@ def _colorize_ab_canvas(model, input_tensor, sess):
         if img_name.endswith('.jpg') or img_name.endswith('.JPEG'):
             img_rgb_sk = io.imread(os.path.join("/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val", img_name))
             if len(img_rgb_sk.shape) < 3 or img_rgb_sk.shape[2] != 3:
-                return
+                continue
             i = cnt / 8
             j = cnt % 8
             cnt += 1
