@@ -11,12 +11,11 @@
 
 #$ -l h_vmem=8G
 
-#$ -o /srv/glusterfs/xieya/log/tmp
+#$ -o /srv/glusterfs/xieya/log
 
-#$ -e /srv/glusterfs/xieya/log/tmp
+#$ -e /srv/glusterfs/xieya/log
 
 #$ -j y
-
 
 import os
 import functools
@@ -31,7 +30,7 @@ from skimage.transform import resize
 import utils
 
 
-_NUM_TASKS = 1
+_NUM_TASKS = 100
 _IMG_PATHS = '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/train.txt'
 _POINTS_PATH = '/home/xieya/colorization-tf/resources/pts_in_hull.npy'
 _PRINT_FREQ = 100
