@@ -124,14 +124,14 @@ class NNEncode():
         else:
             return pts_dec_nd
 
-def _nnencode(data_ab_ss):
+def _nnencode(data_ab_ss, n=10):
   '''Encode to 313bin
   Args:
     data_ab_ss: [N, H, W, 2]
   Returns:
     gt_ab_313 : [N, H, W, 313]
   '''
-  NN = 10.0
+  NN = n
   sigma = 5.0
   enc_dir = './resources/'
 

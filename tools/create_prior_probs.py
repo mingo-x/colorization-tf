@@ -11,9 +11,9 @@
 
 #$ -l h_vmem=8G
 
-#$ -o /srv/glusterfs/xieya/log
+#$ -o /srv/glusterfs/xieya/log/tmp
 
-#$ -e /srv/glusterfs/xieya/log
+#$ -e /srv/glusterfs/xieya/log/tmp
 
 #$ -j y
 
@@ -32,16 +32,16 @@ import utils
 
 
 _NUM_TASKS = 1
-_IMG_PATHS = '/home/xieya/img_list.txt'
+_IMG_PATHS = '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/train.txt'
 _POINTS_PATH = '/home/xieya/colorization-tf/resources/pts_in_hull.npy'
 _PRINT_FREQ = 100
-_TASK_ID = 0
+# _TASK_ID = 0
 _BATCH_SIZE = 50
-# _TASK_ID = os.environ.get('SGE_TASK_ID')
-# if _TASK_ID is not None:
-#   print("Task id: {}".format(_TASK_ID))
-#   sys.stdout.flush()
-#   _TASK_ID = int(_TASK_ID) - 1
+_TASK_ID = os.environ.get('SGE_TASK_ID')
+if _TASK_ID is not None:
+  print("Task id: {}".format(_TASK_ID))
+  sys.stdout.flush()
+  _TASK_ID = int(_TASK_ID) - 1
 
 
 def _get_img_list():
@@ -87,7 +87,7 @@ def _calculate_prior(img_paths, points, probs):
     # nd_index = _get_index(img_ab, points)
 
     img_ab_batch = img_lab_batch[:, :, :, 1:]
-    img_313_batch = utils._nnencode(img_ab_batch)
+    img_313_batch = utils._nnencode(img_ab_batch, n=1)
     probs += np.sum(img_313_batch, axis=(0, 1, 2))
 
     # for i in nd_index:
@@ -105,8 +105,8 @@ def main():
     start_time = monotonic.monotonic()
 
     while img_count < len(img_list):
-        img_paths = img_list[img_count: img_count + _BATCH_SIZE]
-        img_count += _BATCH_SIZE
+        img_paths = img_list[img_count: min(img_count + _BATCH_SIZE, len(img_list))]
+        img_count += min(_BATCH_SIZE, len(img_list) - img_count)
         _calculate_prior(img_paths, points, probs)
         if img_count % _PRINT_FREQ == 0:
             print(img_count, monotonic.monotonic() - start_time)
@@ -131,7 +131,9 @@ def merge():
     priors.append(prior)
   priors = np.asarray(priors)
   priors = np.average(priors, axis=0, weights=weights)
-  np.save('/srv/glusterfs/xieya/prior/probs', priors)
+  np.save('/srv/glusterfs/xieya/prior/prior_313_onehot', priors)
+  for p in priors:
+    print(p)
 
 
 if __name__ == "__main__":
