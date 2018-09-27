@@ -1,3 +1,4 @@
+import random
 import subprocess
 
 import pickle
@@ -7,15 +8,15 @@ from net import Net
 from skimage import io, color, transform
 import cv2
 
-INPUT_SIZE = 256
+INPUT_SIZE = 224
 _RESIZE_SIZE = 0
 _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
-_G_VERSION = 2
+_G_VERSION = 1
 _PROP = False
 _CKPT_PATH = '/srv/glusterfs/xieya/colorization_test_10/models/model.ckpt-107000'
-IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
+IMG_DIR = '/srv/glusterfs/xieya/data/places365_standard'
 OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/ntest10_107k'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
 #T = 2.63
@@ -274,10 +275,29 @@ def demo_wgan_rgb():
         save_images(rgb_new, '/srv/glusterfs/xieya/image/color/samples_rgb_ab.png')
         
 
+def places365():
+    input_tensor = tf.placeholder(
+        tf.float32, shape=(1, INPUT_SIZE, INPUT_SIZE, 1))
+    model = _get_model(input_tensor)
+    saver = tf.train.Saver()
+
+    with tf.Session() as sess:
+        saver.restore(sess, _CKPT_PATH)
+        with open(os.path.join(IMG_DIR, 'val.txt'), 'r') as fin:
+            img_name_list = []
+            for img_name in fin:
+                img_name_list.append(img_name)
+            random.shuffle(img_name_list)
+
+            for img_name in img_name_list[0: 200]:
+                print(img_name)
+                _colorize_single_img(img_name, model, input_tensor, sess)
+
 
 if __name__ == "__main__":
     subprocess.check_call(['mkdir', '-p', OUTPUT_DIR])
-    main()
+    # main()
+    places365()
     # demo_wgan_ab()
     # demo_wgan_rgb()
     # _colorize_high_res_img(_IMG_NAME)
