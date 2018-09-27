@@ -138,7 +138,7 @@ class Solver(object):
                 tf.summary.scalar('learning_rate', learning_rate))
 
             opt = tf.train.AdamOptimizer(
-                learning_rate=learning_rate, beta1=self.moment, beta2=0.9)
+                learning_rate=learning_rate, beta1=self.moment, beta2=0.99)
             G_vars = tf.trainable_variables(scope='G')
             T_vars = tf.trainable_variables(scope='T')
 
