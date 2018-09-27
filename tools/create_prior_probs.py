@@ -11,9 +11,9 @@
 
 #$ -l h_vmem=8G
 
-#$ -o /srv/glusterfs/xieya/log
+#$ -o /srv/glusterfs/xieya/log/tmp
 
-#$ -e /srv/glusterfs/xieya/log
+#$ -e /srv/glusterfs/xieya/log/tmp
 
 #$ -j y
 
@@ -32,16 +32,16 @@ import utils
 
 
 _NUM_TASKS = 1
-_IMG_PATHS = '/home/xieya/img_list.txt'
+_IMG_PATHS = '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/train.txt'
 _POINTS_PATH = '/home/xieya/colorization-tf/resources/pts_in_hull.npy'
 _PRINT_FREQ = 100
-_TASK_ID = 0
+# _TASK_ID = 0
 _BATCH_SIZE = 50
-# _TASK_ID = os.environ.get('SGE_TASK_ID')
-# if _TASK_ID is not None:
-#   print("Task id: {}".format(_TASK_ID))
-#   sys.stdout.flush()
-#   _TASK_ID = int(_TASK_ID) - 1
+_TASK_ID = os.environ.get('SGE_TASK_ID')
+if _TASK_ID is not None:
+  print("Task id: {}".format(_TASK_ID))
+  sys.stdout.flush()
+  _TASK_ID = int(_TASK_ID) - 1
 
 
 def _get_img_list():
@@ -132,6 +132,8 @@ def merge():
   priors = np.asarray(priors)
   priors = np.average(priors, axis=0, weights=weights)
   np.save('/srv/glusterfs/xieya/prior/prior_313_onehot', priors)
+  for p in priors:
+    print(p)
 
 
 if __name__ == "__main__":
