@@ -150,9 +150,9 @@ class Net(object):
             batch_num = 1
 
             # 176x176
-            temp_conv = conv2d('conv_{}'.format(conv_num), data_l, [3, 3, 1, 64], stride=1, relu=True, wd=self.weight_decay)
+            temp_conv = conv2d('conv_{}'.format(conv_num), data_l, [3, 3, 1, 64], stride=1, relu=False, wd=self.weight_decay)
             # temp_conv = batch_norm('bn_{}'.format(batch_num), temp_conv, train=self.train)
-            # temp_conv = tf.nn.leaky_relu(temp_conv)
+            temp_conv = tf.nn.leaky_relu(temp_conv)
             conv_num += 1
             # batch_num += 1
 

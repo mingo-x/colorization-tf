@@ -12,11 +12,11 @@ _RESIZE_SIZE = 0
 _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
-_G_VERSION = 1
+_G_VERSION = 2
 _PROP = False
-_CKPT_PATH = '/srv/glusterfs/xieya/colorization_test_5/models/model.ckpt-317000'
+_CKPT_PATH = '/srv/glusterfs/xieya/colorization_test_10/models/model.ckpt-107000'
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
-OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/ntest5_317k'
+OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/ntest10_107k'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
 #T = 2.63
 T = 2.63
@@ -225,11 +225,11 @@ def main():
 
     with tf.Session() as sess:
         saver.restore(sess, _CKPT_PATH)
-        # for img_name in os.listdir(IMG_DIR):
-        #     if img_name.endswith('.jpg') or img_name.endswith('.JPEG'):
-        #         print(img_name)
-        #         _colorize_single_img(img_name, model, input_tensor, sess)
-        _colorize_ab_canvas(model, input_tensor, sess)
+        for img_name in os.listdir(IMG_DIR):
+            if img_name.endswith('.jpg') or img_name.endswith('.JPEG'):
+                print(img_name)
+                _colorize_single_img(img_name, model, input_tensor, sess)
+        # _colorize_ab_canvas(model, input_tensor, sess)
 
 
 def demo_wgan_ab():
