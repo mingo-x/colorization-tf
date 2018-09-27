@@ -87,7 +87,7 @@ def _calculate_prior(img_paths, points, probs):
     # nd_index = _get_index(img_ab, points)
 
     img_ab_batch = img_lab_batch[:, :, :, 1:]
-    img_313_batch = utils._nnencode(img_ab_batch)
+    img_313_batch = utils._nnencode(img_ab_batch, n=1)
     probs += np.sum(img_313_batch, axis=(0, 1, 2))
 
     # for i in nd_index:
@@ -105,8 +105,8 @@ def main():
     start_time = monotonic.monotonic()
 
     while img_count < len(img_list):
-        img_paths = img_list[img_count: img_count + _BATCH_SIZE]
-        img_count += _BATCH_SIZE
+        img_paths = img_list[img_count: min(img_count + _BATCH_SIZE, len(img_list))]
+        img_count += min(_BATCH_SIZE, len(img_list) - img_count)
         _calculate_prior(img_paths, points, probs)
         if img_count % _PRINT_FREQ == 0:
             print(img_count, monotonic.monotonic() - start_time)
@@ -131,7 +131,7 @@ def merge():
     priors.append(prior)
   priors = np.asarray(priors)
   priors = np.average(priors, axis=0, weights=weights)
-  np.save('/srv/glusterfs/xieya/prior/probs', priors)
+  np.save('/srv/glusterfs/xieya/prior/prior_313_onehot', priors)
 
 
 if __name__ == "__main__":

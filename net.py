@@ -1114,3 +1114,40 @@ class Net(object):
         # data_ab = tf.image.resize_images(data_ab, (shape[1]*4, shape[2]*4))  # [N, H, W, 2]
 
         return data_ab
+
+
+    def caption_encode(captions, caption_lengths, train_vocab_embeddings, hidden_dim, word_embedding_dim):
+        with tf.variable_scope('lstm'):
+            embedding = tf.constant(train_vocab_embeddings)  # Constant?
+            fw_cell = tf.nn.rnn_cell.LSTMCell(hidden_dim)
+            bw_cell = tf.nn.rnn_cell.LSTMCell(hidden_dim)
+            bilstm = tf.nn.bidirectional_dynamic_rnn(
+                cell_fw=fw_cell,
+                cell_bw=bw_cell,
+                dtype=tf.float32,
+                sequence_length=caption_lengths,
+                inputs=captions)
+
+
+    # standard bilstm
+class CaptionEncoder(nn.Module):
+    def __init__(self, word_embedding_dim, hidden_dim, vocab_size, train_vocab_embeddings):
+        super(CaptionEncoder, self).__init__()
+        self.embedding = nn.Embedding(vocab_size, word_embedding_dim)
+        self.embedding.weight.data.copy_(torch.from_numpy(train_vocab_embeddings))
+        self.hidden_size = hidden_dim
+        self.lstm = nn.LSTM(word_embedding_dim, hidden_dim, num_layers=1,
+            bidirectional=True, batch_first=True)
+        self.dropout = nn.Dropout(p=0.2)
+
+    def forward(self, captions, lens):
+        bsz, max_len = captions.size()
+        embeds = self.dropout(self.embedding(captions))
+
+        lens, indices = torch.sort(lens, 0, True)  # Descending.
+        _, (enc_hids, _) = self.lstm(pack(embeds[indices], lens.tolist(), batch_first=True))
+        enc_hids = torch.cat( (enc_hids[0], enc_hids[1]), 1)
+        _, _indices = torch.sort(indices, 0)
+        enc_hids = enc_hids[_indices]
+
+        return enc_hids
