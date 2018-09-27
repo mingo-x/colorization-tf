@@ -54,7 +54,7 @@ class DataSet(object):
 
     for line in input_file:
       line = line.strip()
-      self.record_list.append(line)
+      self.record_list.append(os.path.join('/srv/glusterfs/xieya/data/places365_standard', line))
 
     self.record_point = 0
     self.record_number = len(self.record_list)
