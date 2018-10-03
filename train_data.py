@@ -276,9 +276,11 @@ def get_nongray_list(in_list, out_file, in_dir):
     with open(in_list, 'r') as fin, open(out_file + str(_TASK_ID + 1), 'w') as fout:
         for line in fin:
             if line_idx % _TASK_NUM == _TASK_ID:
-                img_name = line.strip().split()[0]
-                in_path = os.path.join(in_dir, img_name)
-                img = io.imread(in_path)
+                img_path = line.strip()
+                if not os.path.isfile(img_path):
+                    print(img_path)
+                    continue
+                img = io.imread(img_path)
                 if (len(img.shape) == 3 and img.shape[2] == 3):  # Non-gray.
                     fout.write(line)
                 count += 1
@@ -301,5 +303,5 @@ if __name__ == "__main__":
     # get_mean_l('/home/xieya/train.txt', _ORIGINAL_TRAIN_DIR)
     # merge_l()
     # keep_ab('/home/xieya/colorization-tf/resources/val.txt', _ORIGINAL_VAL_DIR, _AB_VAL_SS_DIR, 48.5744)
-    # get_nongray_list('/home/xieya/colorization-tf/data/val.txt', '/home/xieya/colorization-tf/data/val_nongray.txt', _ORIGINAL_VAL_DIR)
-    merge_g('/home/xieya/colorization-tf/data/val_nongray.txt')
+    get_nongray_list('/srv/glusterfs/xieya/data/imagenet1k_uncompressed/train.txt', '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/train_nongray.txt', _ORIGINAL_TRAIN_DIR)
+    # merge_g('/home/xieya/colorization-tf/data/val_nongray.txt')
