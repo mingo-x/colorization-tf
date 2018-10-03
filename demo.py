@@ -13,11 +13,11 @@ _RESIZE_SIZE = 0
 _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
-_G_VERSION = 1
+_G_VERSION = 3
 _PROP = False
-_CKPT_PATH = '/srv/glusterfs/xieya/colorization_test_10/models/model.ckpt-107000'
+_CKPT_PATH = '/srv/glusterfs/xieya/wgan_places365/models/model.ckpt-72000'
 IMG_DIR = '/srv/glusterfs/xieya/data/places365_standard'
-OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/ntest10_107k'
+OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/wgan_p365_72k'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
 #T = 2.63
 T = 2.63
@@ -48,7 +48,8 @@ def _get_model(input_tensor):
 
 
 def _colorize_single_img(img_name, model, input_tensor, sess):
-    img = cv2.imread(os.path.join(IMG_DIR, img_name))
+    img_path = os.path.join(IMG_DIR, img_name)
+    img = cv2.imread(img_path)
     # img = _resize(img)
     img_rs = cv2.resize(img, (INPUT_SIZE, INPUT_SIZE))
     if len(img.shape) == 3:
@@ -76,7 +77,7 @@ def _colorize_single_img(img_name, model, input_tensor, sess):
     img_313_rs = sess.run(model, feed_dict={input_tensor: img_l_rs})
     # img_l_rs_rs = np.zeros((1, 56, 56, 1))
     img_rgb, _ = decode(img_l, img_313_rs, T, _PROP)
-    io.imsave(os.path.join(OUTPUT_DIR, img_name), img_rgb)
+    io.imsave(os.path.join(OUTPUT_DIR, os.path.split(img_name)[1]), img_rgb)
 
 
 def _colorize_ab_canvas(model, input_tensor, sess):
@@ -286,7 +287,7 @@ def places365():
         with open(os.path.join(IMG_DIR, 'val.txt'), 'r') as fin:
             img_name_list = []
             for img_name in fin:
-                img_name_list.append(img_name)
+                img_name_list.append(img_name[: -1])
             random.shuffle(img_name_list)
 
             for img_name in img_name_list[0: 200]:
