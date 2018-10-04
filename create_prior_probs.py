@@ -31,7 +31,7 @@ import sys
 
 _GRID_PATH = ''
 _LOG_FREQ = 100
-_N_CLASSES = 625
+_N_CLASSES = 313
 _TASK_NUM = 100
 _TASK_ID = os.environ.get('SGE_TASK_ID')
 if _TASK_ID is not None:
@@ -136,14 +136,14 @@ def cal_prob_coco():
 def merge():
     print("Merging...")
     probs = np.zeros((_N_CLASSES), dtype=np.float64)
-    path_pattern = '/srv/glusterfs/xieya/prior/coco_{0}_onehot_{1}.npy'
+    path_pattern = '/srv/glusterfs/xieya/prior/{0}_onehot_{1}.npy'
     for i in xrange(_TASK_NUM):
         file_path = path_pattern.format(_N_CLASSES, i)
         p = np.load(file_path)
         probs += p
         print(i)
     probs = probs / np.sum(probs)
-    np.save('/srv/glusterfs/xieya/prior/coco_{}_onehot'.format(_N_CLASSES), probs)
+    np.save('/srv/glusterfs/xieya/prior/{}_onehot'.format(_N_CLASSES), probs)
 
 
 if __name__ == "__main__":
@@ -157,8 +157,8 @@ if __name__ == "__main__":
     points = points[None, :, :]
     probs = np.zeros((_N_CLASSES), dtype=np.float64)
     print("Number of classes: {}.".format(_N_CLASSES))
-    print("Imagenet.")
-    cal_prob()
+    #print("Imagenet.")
+    #cal_prob()
     # print("Coco.")
     # cal_prob_coco()
-    # merge()
+    merge()
