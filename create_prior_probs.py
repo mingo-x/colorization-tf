@@ -3,7 +3,7 @@
 # ----- Parameters passed to the cluster -------
 ## <= 1h is short queue, <= 6h is middle queue, <= 48 h is long queue
 
-#$ -t 1:100
+#$ -t 1:300
 
 #$ -S /srv/glusterfs/xieya/anaconda2/bin/python
 
@@ -31,8 +31,8 @@ import sys
 
 _GRID_PATH = ''
 _LOG_FREQ = 100
-_N_CLASSES = 313
-_TASK_NUM = 100
+_N_CLASSES = 625
+_TASK_NUM = 300
 _TASK_ID = os.environ.get('SGE_TASK_ID')
 if _TASK_ID is not None:
     print("Task id: {}".format(_TASK_ID))
@@ -157,8 +157,8 @@ if __name__ == "__main__":
     points = points[None, :, :]
     probs = np.zeros((_N_CLASSES), dtype=np.float64)
     print("Number of classes: {}.".format(_N_CLASSES))
-    #print("Imagenet.")
-    #cal_prob()
+    print("Imagenet.")
+    cal_prob()
     # print("Coco.")
     # cal_prob_coco()
-    merge()
+    #merge()
