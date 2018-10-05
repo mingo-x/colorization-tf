@@ -24,6 +24,7 @@ import numpy as np
 from skimage.io import imread
 from skimage import color
 from skimage.transform import resize
+import sklearn.neighbors as nn
 # import tensorflow as tf 
 
 import os
@@ -45,23 +46,15 @@ else:
 class NNEncode():
     ''' Encode points using NN search and Gaussian kernel '''
     def __init__(self,NN,sigma,km_filepath='',cc=-1):
-        if(check_value(cc,-1)):
-            self.cc = np.load(km_filepath)
-        else:
-            self.cc = cc
+        self.cc = np.load(km_filepath)
         self.K = self.cc.shape[0]
         self.NN = int(NN)
         self.sigma = sigma
         self.nbrs = nn.NearestNeighbors(n_neighbors=self.NN, algorithm='ball_tree').fit(self.cc)
-
         self.alreadyUsed = False
 
-    def encode_points_mtx_nd(self,pts_nd,axis=1, sameBlock=True, flatten=False):
-        if not flatten:
-            pts_flt = flatten_nd_array(pts_nd,axis=axis)
-        else:
-            pts_flt = pts_nd
-
+    def encode_points_mtx_nd(self,pts_nd,axis=1, sameBlock=True):
+        pts_flt = pts_nd
         P = pts_flt.shape[0]
         if(sameBlock and self.alreadyUsed):
             self.pts_enc_flt[...] = 0 # already pre-allocated
@@ -76,14 +69,11 @@ class NNEncode():
         wts = wts/np.sum(wts,axis=1)[:,na()]
 
         self.pts_enc_flt[self.p_inds, inds] = wts
-        if not flatten:
-            pts_enc_nd = unflatten_2d_array(self.pts_enc_flt, pts_nd, axis=axis)
-        else:
-            pts_enc_nd = self.pts_enc_flt
+        pts_enc_nd = self.pts_enc_flt
 
         return pts_enc_nd
 
-        
+
 def get_index(ab):
     ab = ab[:, np.newaxis, :]
     distance = np.sum(np.square(ab - points), axis=2)
@@ -103,6 +93,54 @@ def get_file_list():
 
 
 def cal_prob():
+    out_path = '/srv/glusterfs/xieya/prior/{0}_onehot_{1}.npy'.format(_N_CLASSES, _TASK_ID)
+    if os.path.isfile(out_path):
+        print('Done.')
+        return
+
+    filename_lists = get_file_list()
+    counter = 0
+    # random.shuffle(filename_lists)
+
+    # construct graph
+    # in_data = tf.placeholder(tf.float64, [None, 2])
+    # expand_in_data = tf.expand_dims(in_data, axis=1)
+
+    # distance = tf.reduce_sum(tf.square(expand_in_data - points), axis=2)
+    # index = tf.argmin(distance, axis=1)
+    # config = tf.ConfigProto()
+    # config.gpu_options.allow_growth = True
+    # sess = tf.Session(config=config)
+
+    for img_f in filename_lists:
+        img_f = img_f.strip()
+        if not os.path.isfile(img_f):
+            print(img_f)
+            continue
+        img = imread(img_f)
+        img = resize(img, (224, 224), preserve_range=True)
+        if len(img.shape) != 3 or img.shape[2] != 3:
+            continue
+        img_lab = color.rgb2lab(img)
+        img_lab = img_lab.reshape((-1, 3))
+        img_ab = img_lab[:, 1:]
+        # nd_index = sess.run(index, feed_dict={in_data: img_ab})
+        nd_index = get_index(img_ab)
+        for i in nd_index:
+            i = int(i)
+            probs[i] += 1
+
+        if counter % _LOG_FREQ == 0:
+            print(counter)
+            sys.stdout.flush()
+        counter += 1
+
+    # sess.close()
+    # probs = probs / np.sum(probs)
+    np.save(out_path, probs)
+
+
+def cal_prob_soft():
     out_path = '/srv/glusterfs/xieya/prior/{0}_onehot_{1}.npy'.format(_N_CLASSES, _TASK_ID)
     if os.path.isfile(out_path):
         print('Done.')
