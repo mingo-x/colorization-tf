@@ -28,6 +28,7 @@ class DataSet(object):
         if dataset_params:
             self.data_path = str(dataset_params['path'])
             self.thread_num = int(dataset_params['thread_num'])
+            self.prior_path = str(dataset_params['prior_path']) if 'prior_path' in dataset_params else './resources/prior_probs_smoothed.npy'
 
         if common_params:
             self.batch_size = int(common_params['batch_size'])
@@ -82,7 +83,7 @@ class DataSet(object):
             images = np.asarray(images, dtype=np.uint8)
             captions = np.asarray(captions, dtype=np.int32)
             lens = np.asarray(lens, dtype=np.int32)
-            l, gt, prior, _ = preprocess(images, c313=True)
+            l, gt, prior, _ = preprocess(images, c313=True, prior_path=self.prior_path)
 
             self.batch_queue.put((l, gt, prior, captions, lens))
 
