@@ -30,8 +30,6 @@ import os
 # import random
 import sys
 
-from utils import NNEncode
-
 _GRID_PATH = ''
 _LOG_FREQ = 100
 _N_CLASSES = 313
@@ -44,6 +42,48 @@ else:
     _TASK_ID = 0
 
 
+class NNEncode():
+    ''' Encode points using NN search and Gaussian kernel '''
+    def __init__(self,NN,sigma,km_filepath='',cc=-1):
+        if(check_value(cc,-1)):
+            self.cc = np.load(km_filepath)
+        else:
+            self.cc = cc
+        self.K = self.cc.shape[0]
+        self.NN = int(NN)
+        self.sigma = sigma
+        self.nbrs = nn.NearestNeighbors(n_neighbors=self.NN, algorithm='ball_tree').fit(self.cc)
+
+        self.alreadyUsed = False
+
+    def encode_points_mtx_nd(self,pts_nd,axis=1, sameBlock=True, flatten=False):
+        if not flatten:
+            pts_flt = flatten_nd_array(pts_nd,axis=axis)
+        else:
+            pts_flt = pts_nd
+
+        P = pts_flt.shape[0]
+        if(sameBlock and self.alreadyUsed):
+            self.pts_enc_flt[...] = 0 # already pre-allocated
+        else:
+            self.alreadyUsed = True
+            self.pts_enc_flt = np.zeros((P,self.K))
+            self.p_inds = np.arange(0,P,dtype='int')[:,na()]
+
+        (dists, inds) = self.nbrs.kneighbors(pts_flt)
+
+        wts = np.exp(-dists**2/(2*self.sigma**2))
+        wts = wts/np.sum(wts,axis=1)[:,na()]
+
+        self.pts_enc_flt[self.p_inds, inds] = wts
+        if not flatten:
+            pts_enc_nd = unflatten_2d_array(self.pts_enc_flt, pts_nd, axis=axis)
+        else:
+            pts_enc_nd = self.pts_enc_flt
+
+        return pts_enc_nd
+
+        
 def get_index(ab):
     ab = ab[:, np.newaxis, :]
     distance = np.sum(np.square(ab - points), axis=2)
