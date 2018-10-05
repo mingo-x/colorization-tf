@@ -164,6 +164,7 @@ def cal_prob_soft():
         img_lab = color.rgb2lab(img)
         img_lab = img_lab.reshape((-1, 3))
         img_ab = img_lab[:, 1:]
+        print(np.min(img_ab), np.max(img_ab))
         img_313 = nnenc.encode_points_mtx_nd(img_ab, axis=1)  # [H*W, 313]
         probs += np.sum(img_313, axis=0)
 
@@ -217,6 +218,7 @@ def cal_prob_coco_soft():
         img_lab = color.rgb2lab(img_rgb)
         img_ab = img_lab[:, :, 1:]
         img_ab = img_ab.reshape((-1, 2))
+        print(np.min(img_ab), np.max(img_ab))
         img_313 = nnenc.encode_points_mtx_nd(img_ab, axis=1)  # [H*W, 313]
         probs += np.sum(img_313, axis=0)
 
@@ -253,8 +255,8 @@ if __name__ == "__main__":
     print("Number of classes: {}.".format(_N_CLASSES))
     print("Imagenet.")
     # cal_prob()
-    # cal_prob_soft()
+    cal_prob_soft()
     # print("Coco.")
     # cal_prob_coco()
-    # cal_prob_coco_soft()
-    merge()
+    cal_prob_coco_soft()
+    # merge()
