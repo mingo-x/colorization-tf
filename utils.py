@@ -333,7 +333,6 @@ def decode(data_l, conv8_313, rebalance=1):
 
   img_lab = np.concatenate((data_l, data_ab), axis=-1)
   img_rgb = color.lab2rgb(img_lab)
-  print(np.min(img_rgb), np.max(img_rgb), img_rgb.dtype, img_rgb.shape)
   return img_rgb, data_ab
 
 def get_data_l(image_path):

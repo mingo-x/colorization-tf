@@ -193,7 +193,7 @@ class Solver_Language(object):
                     # Save sample image
                     img_313 = img_313s[0: 1]
                     img_l = data_l[0: 1]
-                    img_rgb = utils.decode(img_l, img_313, 2.63)
+                    img_rgb, _ = utils.decode(img_l, img_313, 2.63)
                     word_list = list(captions[-1, :lens[-1]])     
                     img_caption = '_'.join(vrev.get(w, 'unk') for w in word_list) 
                     io.imsave('{0}_{1}.jpg'.format(step, img_caption), img_rgb)
