@@ -200,18 +200,17 @@ class PriorFactor():
         elif(axis==3):
             return corr_factor[:,:,:,na()]
 
-def _prior_boost(gt_ab_313, gamma=0.5, alpha=1.0):
+def _prior_boost(gt_ab_313, gamma=0.5, alpha=1.0, prior_path='./resources/prior_probs_smoothed.npy'):
   '''
   Args:
     gt_ab_313: (N, H, W, 313)
   Returns:
     prior_boost: (N, H, W, 1)
   '''
-  enc_dir = './resources'
   gamma = gamma
   alpha = alpha
 
-  pc = PriorFactor(alpha, gamma, priorFile=os.path.join(enc_dir, 'prior_probs_smoothed.npy'))
+  pc = PriorFactor(alpha, gamma, priorFile=prior_path)
 
   gt_ab_313 = np.transpose(gt_ab_313, (0, 3, 1, 2))
   prior_boost = pc.forward(gt_ab_313, axis=1)
@@ -230,7 +229,7 @@ def get_prior(data_ab):
   return prior
 
 
-def preprocess(data, training=True, c313=False, is_gan=False, is_rgb=True):
+def preprocess(data, training=True, c313=False, is_gan=False, is_rgb=True, prior_path='./resources/prior_probs_smoothed.npy'):
   '''Preprocess
   Args: 
     data: RGB batch (N * H * W * 3)
@@ -289,7 +288,7 @@ def preprocess(data, training=True, c313=False, is_gan=False, is_rgb=True):
 
   #Prior_Boost 
   #prior_boost: [N, 1, H/4, W/4]
-  prior_boost = _prior_boost(gt_ab_313)
+  prior_boost = _prior_boost(gt_ab_313, prior_path=prior_path)
 
   #Eltwise
   #prior_boost_nongray: [N, 1, H/4, W/4]
