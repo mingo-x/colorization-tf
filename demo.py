@@ -13,11 +13,10 @@ _RESIZE_SIZE = 0
 _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
-_G_VERSION = 3
-_PROP = False
-_CKPT_PATH = '/srv/glusterfs/xieya/wgan_places365/models/model.ckpt-72000'
-IMG_DIR = '/srv/glusterfs/xieya/data/places365_standard'
-OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/wgan_p365_72k'
+_G_VERSION = 0
+_CKPT_PATH = '/srv/glusterfs/xieya/tf_224/models/model.ckpt-5000'
+IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
+OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/tf224_5k'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
 #T = 2.63
 T = 2.63
@@ -76,7 +75,7 @@ def _colorize_single_img(img_name, model, input_tensor, sess):
     img_l_rs = (img_l_rs.astype(dtype=np.float32)) / 255.0 * 2 - 1
     img_313_rs = sess.run(model, feed_dict={input_tensor: img_l_rs})
     # img_l_rs_rs = np.zeros((1, 56, 56, 1))
-    img_rgb, _ = decode(img_l, img_313_rs, T, _PROP)
+    img_rgb, _ = decode(img_l, img_313_rs, T)
     io.imsave(os.path.join(OUTPUT_DIR, os.path.split(img_name)[1]), img_rgb)
 
 
@@ -117,7 +116,7 @@ def _colorize_ab_canvas(model, input_tensor, sess):
             img_l_rs = (img_l_rs.astype(dtype=np.float32)) / 255.0 * 2 - 1
             img_313_rs = sess.run(model, feed_dict={input_tensor: img_l_rs})
             img_l_rs_rs = np.zeros((1, 64, 64, 1))
-            img_rgb, _ = decode(img_l_rs_rs, img_313_rs, T, _PROP)
+            img_rgb, _ = decode(img_l_rs_rs, img_313_rs, T)
             pr_canvas[i * 64: (i + 1) * 64, j * 64: (j + 1) * 64, :] = img_rgb
 
     io.imsave(os.path.join(OUTPUT_DIR, "gt_ab.jpg"), gt_canvas)
@@ -224,14 +223,16 @@ def main():
         tf.float32, shape=(1, INPUT_SIZE, INPUT_SIZE, 1))
     model = _get_model(input_tensor)
     saver = tf.train.Saver()
+    
+    sess = tf.Session()
+    saver.restore(sess, _CKPT_PATH)
 
-    with tf.Session() as sess:
-        saver.restore(sess, _CKPT_PATH)
-        for img_name in os.listdir(IMG_DIR):
-            if img_name.endswith('.jpg') or img_name.endswith('.JPEG'):
-                print(img_name)
-                _colorize_single_img(img_name, model, input_tensor, sess)
-        # _colorize_ab_canvas(model, input_tensor, sess)
+    for img_name in os.listdir(IMG_DIR):
+        if img_name.endswith('.jpg') or img_name.endswith('.JPEG'):
+            print(img_name)
+            _colorize_single_img(img_name, model, input_tensor, sess)
+     
+    sess.close()
 
 
 def demo_wgan_ab():
@@ -297,8 +298,8 @@ def places365():
 
 if __name__ == "__main__":
     subprocess.check_call(['mkdir', '-p', OUTPUT_DIR])
-    # main()
-    places365()
+    main()
+    # places365()
     # demo_wgan_ab()
     # demo_wgan_rgb()
     # _colorize_high_res_img(_IMG_NAME)
