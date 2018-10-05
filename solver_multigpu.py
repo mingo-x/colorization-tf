@@ -4,7 +4,6 @@ from __future__ import print_function
 
 import tensorflow as tf
 import numpy as np
-import re
 
 from ops import *
 from net import Net
