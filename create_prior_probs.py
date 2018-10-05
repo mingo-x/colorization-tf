@@ -17,6 +17,8 @@
 
 #$ -j y
 
+#$ -cwd
+
 import h5py
 import numpy as np
 from skimage.io import imread
