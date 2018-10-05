@@ -164,7 +164,6 @@ class Solver_Language(object):
                 # Generator training.
                 for _ in xrange(self.g_repeat):
                     data_l, gt_ab_313, prior_boost_nongray, captions, lens = self.dataset.batch()
-                    captions = np.zeros_like(captions)  # Turn of language guiding for testing purpose.
                     sess.run([train_op], feed_dict={
                         self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray,
                         self.captions: captions, self.lens: lens})
