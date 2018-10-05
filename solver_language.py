@@ -165,7 +165,6 @@ class Solver_Language(object):
                 for _ in xrange(self.g_repeat):
                     data_l, gt_ab_313, prior_boost_nongray, captions, lens = self.dataset.batch()
                     captions = np.zeros_like(captions)  # Turn of language guiding for testing purpose.
-                    print(captions.shape, captions.dtype)
                     sess.run([train_op], feed_dict={
                         self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray,
                         self.captions: captions, self.lens: lens})
@@ -196,7 +195,7 @@ class Solver_Language(object):
                     img_rgb, _ = utils.decode(img_l, img_313, 2.63)
                     word_list = list(captions[-1, :lens[-1]])     
                     img_caption = '_'.join(vrev.get(w, 'unk') for w in word_list) 
-                    io.imsave('{0}_{1}.jpg'.format(step, img_caption), img_rgb)
+                    io.imsave(os.path.join(self.train_dir, '{0}_{1}.jpg').format(step, img_caption), img_rgb)
 
                 # Save the model checkpoint periodically.
                 if step % 1000 < self.g_repeat:
