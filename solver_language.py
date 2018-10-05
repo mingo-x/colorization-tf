@@ -165,6 +165,7 @@ class Solver_Language(object):
                 for _ in xrange(self.g_repeat):
                     data_l, gt_ab_313, prior_boost_nongray, captions, lens = self.dataset.batch()
                     captions = np.zeros_like(captions)  # Turn of language guiding for testing purpose.
+                    print(captions.shape, captions.dtype)
                     sess.run([train_op], feed_dict={
                         self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray,
                         self.captions: captions, self.lens: lens})
@@ -175,9 +176,9 @@ class Solver_Language(object):
                     examples_per_sec = num_examples_per_step / duration
                     sec_per_batch = duration / (self.num_gpus * _LOG_FREQ)
 
-                    loss_value, new_loss_value = sess.run(
-                        [self.total_loss, self.new_loss],
-                        feed_dict={self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray})
+                    loss_value, new_loss_value = sess.run([self.total_loss, self.new_loss], feed_dict={
+                        self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray,
+                        self.captions: captions, self.lens: lens})
                     format_str = ('%s: step %d, G loss = %.2f, new loss = %.2f(%.1f examples/sec; %.3f '
                                   'sec/batch)')
                     print (format_str % (datetime.now(),
@@ -187,13 +188,13 @@ class Solver_Language(object):
 
                 if step % 100 < self.g_repeat:
                     summary_str, img_313s = sess.run([summary_op, self.conv8_313], feed_dict={
-                        self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray})
+                        self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray, self.captions: captions, self.lens: lens})
                     summary_writer.add_summary(summary_str, step)
                     # Save sample image
                     img_313 = img_313s[0: 1]
                     img_l = data_l[0: 1]
                     img_rgb = utils.decode(img_l, img_313, 2.63)
-                    word_list = list(captions[-1, :lengths_[-1]])     
+                    word_list = list(captions[-1, :lens[-1]])     
                     img_caption = '_'.join(vrev.get(w, 'unk') for w in word_list) 
                     io.imsave('{0}_{1}.jpg'.format(step, img_caption), img_rgb)
 
