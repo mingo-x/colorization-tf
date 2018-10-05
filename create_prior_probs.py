@@ -117,7 +117,7 @@ def cal_prob():
             print(img_f)
             continue
         img = imread(img_f)
-        img = resize(img, (224, 224), preserve_range=True)
+        img = resize(img, (224, 224))
         if len(img.shape) != 3 or img.shape[2] != 3:
             continue
         img_lab = color.rgb2lab(img)
@@ -156,9 +156,9 @@ def cal_prob_soft():
             print(img_f)
             continue
         img = imread(img_f)
-        img = resize(img, (224, 224), preserve_range=True)
         if len(img.shape) != 3 or img.shape[2] != 3:
             continue
+        img = resize(img, (224, 224), preserve_range=True)
         img_lab = color.rgb2lab(img)
         img_lab = img_lab.reshape((-1, 3))
         img_ab = img_lab[:, 1:]
