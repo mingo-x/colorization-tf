@@ -118,8 +118,12 @@ class DataSet(object):
     while True:
       item = self.record_queue.get()
       out = cv2.imread(item)
+      if out is None:
+        print(item, os.path.isfile(item))
+        continue
       if len(out.shape)==3 and out.shape[2]==3:
         self.image_queue.put(out)
+
   def image_customer(self):
     while True:
       images = []
