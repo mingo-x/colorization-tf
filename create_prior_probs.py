@@ -249,9 +249,10 @@ if __name__ == "__main__":
     points = points.astype(np.float64)
     points = points[None, :, :]
     print("Number of classes: {}.".format(_N_CLASSES))
-    # print("Imagenet.")
+    print("Imagenet.")
     # cal_prob()
-    print("Coco.")
+    cal_prob_soft()
+    # print("Coco.")
     # cal_prob_coco()
-    cal_prob_coco_soft()
+    # cal_prob_coco_soft()
     #merge()
