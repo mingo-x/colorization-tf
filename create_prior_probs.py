@@ -28,10 +28,11 @@ import os
 # import random
 import sys
 
+from utils import NNEncode
 
 _GRID_PATH = ''
 _LOG_FREQ = 100
-_N_CLASSES = 625
+_N_CLASSES = 313
 _TASK_NUM = 300
 _TASK_ID = os.environ.get('SGE_TASK_ID')
 if _TASK_ID is not None:
@@ -133,6 +134,31 @@ def cal_prob_coco():
     np.save('/srv/glusterfs/xieya/prior/coco_{0}_onehot_{1}'.format(_N_CLASSES, _TASK_ID), probs)
 
 
+def cal_prob_coco_soft():
+    hf = h5py.File('/srv/glusterfs/xieya/data/coco_colors.h5', 'r')
+    train_origs = hf['train_ims']  # BGR format
+    counter = 0
+    nnenc = NNEncode(10, 5.0, km_filepath='./resources/pts_in_hull.npy')
+
+    for i in xrange(len(train_origs)):
+        if i % _TASK_NUM != _TASK_ID:
+            continue
+        img_bgr = train_origs[i]
+        img_rgb = img_bgr[:, :, ::-1]
+        img_lab = color.rgb2lab(img_rgb)
+        img_ab = img_lab[:, :, 1:]
+        img_ab = img_ab.reshape((-1, 2))
+        img_313 = nnenc.encode_points_mtx_nd(img_ab, axis=1, flatten=True)  # [H*W, 313]
+        probs += np.sum(img_313, axis=0)
+
+        if counter % _LOG_FREQ == 0:
+            print(counter)
+            sys.stdout.flush()
+        counter += 1
+
+    np.save('/srv/glusterfs/xieya/prior/coco_{0}_onehot_soft_{1}'.format(_N_CLASSES, _TASK_ID), probs)
+
+
 def merge():
     print("Merging...")
     probs = np.zeros((_N_CLASSES), dtype=np.float64)
@@ -157,8 +183,9 @@ if __name__ == "__main__":
     points = points[None, :, :]
     probs = np.zeros((_N_CLASSES), dtype=np.float64)
     print("Number of classes: {}.".format(_N_CLASSES))
-    print("Imagenet.")
-    cal_prob()
-    # print("Coco.")
+    # print("Imagenet.")
+    # cal_prob()
+    print("Coco.")
     # cal_prob_coco()
+    cal_prob_coco_soft()
     #merge()

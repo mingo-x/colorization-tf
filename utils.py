@@ -86,9 +86,11 @@ class NNEncode():
 
         self.alreadyUsed = False
 
-    def encode_points_mtx_nd(self,pts_nd,axis=1,returnSparse=False,sameBlock=True):
-
-        pts_flt = flatten_nd_array(pts_nd,axis=axis)
+    def encode_points_mtx_nd(self,pts_nd,axis=1, sameBlock=True, flatten=False):
+        if not flatten:
+            pts_flt = flatten_nd_array(pts_nd,axis=axis)
+        else:
+            pts_flt = pts_nd
 
         P = pts_flt.shape[0]
         if(sameBlock and self.alreadyUsed):
@@ -98,15 +100,16 @@ class NNEncode():
             self.pts_enc_flt = np.zeros((P,self.K))
             self.p_inds = np.arange(0,P,dtype='int')[:,na()]
 
-        P = pts_flt.shape[0]
-
         (dists, inds) = self.nbrs.kneighbors(pts_flt)
 
         wts = np.exp(-dists**2/(2*self.sigma**2))
         wts = wts/np.sum(wts,axis=1)[:,na()]
 
-        self.pts_enc_flt[self.p_inds,inds] = wts
-        pts_enc_nd = unflatten_2d_array(self.pts_enc_flt,pts_nd,axis=axis)
+        self.pts_enc_flt[self.p_inds, inds] = wts
+        if not flatten:
+            pts_enc_nd = unflatten_2d_array(self.pts_enc_flt, pts_nd, axis=axis)
+        else:
+            pts_enc_nd = self.pts_enc_flt
 
         return pts_enc_nd
 
