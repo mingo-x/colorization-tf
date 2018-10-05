@@ -143,9 +143,9 @@ def cal_prob():
 
 def cal_prob_soft():
     out_path = '/srv/glusterfs/xieya/prior/{0}_onehot_{1}_soft.npy'.format(_N_CLASSES, _TASK_ID)
-    if os.path.isfile(out_path):
-        print('Done.')
-        return
+    # if os.path.isfile(out_path):
+        # print('Done.')
+        # return
 
     filename_lists = get_file_list()
     counter = 0
@@ -158,13 +158,12 @@ def cal_prob_soft():
             print(img_f)
             continue
         img = imread(img_f)
-        img = resize(img, (224, 224), preserve_range=True)
+        img = resize(img, (224, 224))
         if len(img.shape) != 3 or img.shape[2] != 3:
             continue
         img_lab = color.rgb2lab(img)
         img_lab = img_lab.reshape((-1, 3))
         img_ab = img_lab[:, 1:]
-        print(np.min(img_ab), np.max(img_ab))
         img_313 = nnenc.encode_points_mtx_nd(img_ab, axis=1)  # [H*W, 313]
         probs += np.sum(img_313, axis=0)
 
@@ -258,5 +257,5 @@ if __name__ == "__main__":
     cal_prob_soft()
     # print("Coco.")
     # cal_prob_coco()
-    cal_prob_coco_soft()
+    # cal_prob_coco_soft()
     # merge()
