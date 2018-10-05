@@ -59,12 +59,12 @@ class NNEncode():
         else:
             self.alreadyUsed = True
             self.pts_enc_flt = np.zeros((P,self.K))
-            self.p_inds = np.arange(0,P,dtype='int')[:,na()]
+            self.p_inds = np.arange(0,P,dtype='int')[:, np.newaxis]
 
         (dists, inds) = self.nbrs.kneighbors(pts_flt)
 
         wts = np.exp(-dists**2/(2*self.sigma**2))
-        wts = wts/np.sum(wts,axis=1)[:,na()]
+        wts = wts/np.sum(wts,axis=1)[:, np.newaxis]
 
         self.pts_enc_flt[self.p_inds, inds] = wts
         pts_enc_nd = self.pts_enc_flt
