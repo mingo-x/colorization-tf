@@ -162,13 +162,12 @@ class Solver_Language(object):
 
             for step in xrange(start_step, self.max_steps, self.g_repeat):
                 # Generator training.
-                for _ in xrange(self.g_repeat):
-                    data_l, gt_ab_313, prior_boost_nongray, captions, lens = self.dataset.batch()
-                    sess.run([train_op], feed_dict={
-                        self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray,
-                        self.captions: captions, self.lens: lens})
+                data_l, gt_ab_313, prior_boost_nongray, captions, lens = self.dataset.batch()
+                sess.run([train_op], feed_dict={
+                    self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray,
+                    self.captions: captions, self.lens: lens})
 
-                if step % _LOG_FREQ < self.g_repeat:
+                if step % _LOG_FREQ == 0:
                     duration = time.time() - start_time
                     num_examples_per_step = self.batch_size * self.num_gpus * _LOG_FREQ
                     examples_per_sec = num_examples_per_step / duration
@@ -184,7 +183,7 @@ class Solver_Language(object):
                                          examples_per_sec, sec_per_batch))
                     start_time = time.time()
 
-                if step % 100 < self.g_repeat:
+                if step % 100 == 0:
                     summary_str, img_313s = sess.run([summary_op, self.conv8_313], feed_dict={
                         self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray, self.captions: captions, self.lens: lens})
                     summary_writer.add_summary(summary_str, step)
@@ -197,7 +196,7 @@ class Solver_Language(object):
                     io.imsave(os.path.join(self.train_dir, '{0}_{1}.jpg').format(step, img_caption), img_rgb)
 
                 # Save the model checkpoint periodically.
-                if step % 1000 < self.g_repeat:
+                if step % 1000 == 0:
                     checkpoint_path = os.path.join(
                         self.train_dir, 'model.ckpt')
                     saver.save(sess, checkpoint_path, global_step=step)
