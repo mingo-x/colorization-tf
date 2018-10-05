@@ -80,8 +80,8 @@ class DataSet(object):
                 captions.append(caption)
                 lens.append(length)
             images = np.asarray(images, dtype=np.uint8)
-            captions = np.array(captions, dtype=np.int32)
-            lens = np.array(lens, dtype=np.int32)
+            captions = np.asarray(captions, dtype=np.int32)
+            lens = np.asarray(lens, dtype=np.int32)
             l, gt, prior, _ = preprocess(images, c313=True)
 
             self.batch_queue.put((l, gt, prior, captions, lens))
