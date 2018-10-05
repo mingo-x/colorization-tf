@@ -100,6 +100,7 @@ def cal_prob():
 
     filename_lists = get_file_list()
     counter = 0
+    probs = np.zeros((_N_CLASSES), dtype=np.float64)
     # random.shuffle(filename_lists)
 
     # construct graph
@@ -149,6 +150,7 @@ def cal_prob_soft():
     filename_lists = get_file_list()
     counter = 0
     nnenc = NNEncode(10, 5.0, km_filepath='./resources/pts_in_hull.npy')
+    probs = np.zeros((_N_CLASSES), dtype=np.float64)
 
     for img_f in filename_lists:
         img_f = img_f.strip()
@@ -170,8 +172,6 @@ def cal_prob_soft():
             sys.stdout.flush()
         counter += 1
 
-    # sess.close()
-    # probs = probs / np.sum(probs)
     np.save(out_path, probs)
 
 
@@ -179,6 +179,7 @@ def cal_prob_coco():
     hf = h5py.File('/srv/glusterfs/xieya/data/coco_colors.h5', 'r')
     train_origs = hf['train_ims']  # BGR format
     counter = 0
+    probs = np.zeros((_N_CLASSES), dtype=np.float64)
 
     for i in xrange(len(train_origs)):
         if i % _TASK_NUM != _TASK_ID:
@@ -206,6 +207,7 @@ def cal_prob_coco_soft():
     train_origs = hf['train_ims']  # BGR format
     counter = 0
     nnenc = NNEncode(10, 5.0, km_filepath='./resources/pts_in_hull.npy')
+    probs = np.zeros((_N_CLASSES), dtype=np.float64)
 
     for i in xrange(len(train_origs)):
         if i % _TASK_NUM != _TASK_ID:
@@ -248,7 +250,6 @@ if __name__ == "__main__":
     points = np.load(_GRID_PATH)
     points = points.astype(np.float64)
     points = points[None, :, :]
-    probs = np.zeros((_N_CLASSES), dtype=np.float64)
     print("Number of classes: {}.".format(_N_CLASSES))
     # print("Imagenet.")
     # cal_prob()
