@@ -7,6 +7,8 @@ import numpy as np
 
 from ops import *
 import os
+import pickle
+
 
 class Net(object):
 
@@ -14,6 +16,9 @@ class Net(object):
         self.train = train
         self.weight_decay = 0.0
         self.eps = 1e-8
+        self.lstm_hid_dim = 256
+        self.word_embedding = pickle.load(open('/home/xieya/colorfromlanguage/priors/coco_colors_vocab.p', 'r'))
+        self.in_dims = [64, 128, 256, 512, 512, 512, 512, 256]
         if common_params:
           gpu_nums = len(str(common_params['gpus']).split(','))
           self.batch_size = int(int(common_params['batch_size'])/gpu_nums)
@@ -628,6 +633,108 @@ class Net(object):
         conv8_313 = temp_conv
         return conv8_313
 
+    def inference4(self, data_l, captions, lens):
+        caption_feature = caption_encoding(captions, lens)
+        with tf.variable_scope('Film'):
+            gammas = []
+            betas = []
+            for i in range(8):
+                gammas.append(Linear('dense', caption_feature, self.in_dims[i]))
+                betas.append(Linear('dense', caption_feature, self.in_dims[i]))
+
+        with tf.variable_scope('G'):
+            #conv1
+            block_idx = 0
+            conv_num = 1
+            temp_conv = conv2d('conv_{}'.format(conv_num), data_l, [3, 3, 1, 64], stride=1, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 64, 64], stride=2, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = batch_norm('bn_1'.format(conv_num), temp_conv,train=self.train)
+            temp_conv = (1 + gammas[block_idx: block_idx + 1, tf.newaxis, tf.newaxis, :]) * temp_conv + betas[block_idx: block_idx + 1, tf.newaxis, tf.newaxis, :]
+            temp_conv = tf.nn.relu(temp_conv)
+            
+            #conv2
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 64, 128], stride=1, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 128, 128], stride=2, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = batch_norm('bn_2'.format(conv_num), temp_conv,train=self.train)
+            temp_conv = (1 + gammas[block_idx: block_idx + 1, tf.newaxis, tf.newaxis, :]) * temp_conv + betas[block_idx: block_idx + 1, tf.newaxis, tf.newaxis, :]
+            temp_conv = tf.nn.relu(temp_conv)
+
+            #conv3
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 128, 256], stride=1, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 256], stride=1, wd=self.weight_decay)
+            conv_num += 1    
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 256], stride=2, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = batch_norm('bn_3', temp_conv, train=self.train)
+            temp_conv = (1 + gammas[block_idx: block_idx + 1, tf.newaxis, tf.newaxis, :]) * temp_conv + betas[block_idx: block_idx + 1, tf.newaxis, tf.newaxis, :]
+            temp_conv = tf.nn.relu(temp_conv)
+
+            #conv4
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 512], stride=1, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = batch_norm('bn_4', temp_conv,train=self.train)
+            temp_conv = (1 + gammas[block_idx: block_idx + 1, tf.newaxis, tf.newaxis, :]) * temp_conv + betas[block_idx: block_idx + 1, tf.newaxis, tf.newaxis, :]
+            temp_conv = tf.nn.relu(temp_conv)
+
+            #conv5
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
+            conv_num += 1    
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = batch_norm('bn_5', temp_conv,train=self.train)
+            temp_conv = (1 + gammas[block_idx: block_idx + 1, tf.newaxis, tf.newaxis, :]) * temp_conv + betas[block_idx: block_idx + 1, tf.newaxis, tf.newaxis, :]
+            temp_conv = tf.nn.relu(temp_conv)
+
+            #conv6
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
+            conv_num += 1    
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
+            conv_num += 1    
+            temp_conv = batch_norm('bn_6', temp_conv,train=self.train)    
+            temp_conv = (1 + gammas[block_idx: block_idx + 1, tf.newaxis, tf.newaxis, :]) * temp_conv + betas[block_idx: block_idx + 1, tf.newaxis, tf.newaxis, :]
+            temp_conv = tf.nn.relu(temp_conv)
+
+            #conv7
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = batch_norm('bn_7', temp_conv,train=self.train)
+            temp_conv = (1 + gammas[block_idx: block_idx + 1, tf.newaxis, tf.newaxis, :]) * temp_conv + betas[block_idx: block_idx + 1, tf.newaxis, tf.newaxis, :]
+            temp_conv = tf.nn.relu(temp_conv)
+
+            #conv8
+            temp_conv = deconv2d('conv_{}'.format(conv_num), temp_conv, [4, 4, 512, 256], stride=2, wd=self.weight_decay)
+            conv_num += 1    
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 256], stride=1, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 256], stride=1, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = (1 + gammas[block_idx: block_idx + 1, tf.newaxis, tf.newaxis, :]) * temp_conv + betas[block_idx: block_idx + 1, tf.newaxis, tf.newaxis, :]
+            temp_conv = tf.nn.relu(temp_conv)
+
+            #Unary prediction
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [1, 1, 256, 313], stride=1, relu=False, wd=self.weight_decay)
+            conv_num += 1
+
+        conv8_313 = temp_conv
+        return conv8_313
+
     def GAN_G(self, noise=None):
         dim = 64
         with tf.variable_scope('G', reuse=tf.AUTO_REUSE):
@@ -1114,3 +1221,15 @@ class Net(object):
         # data_ab = tf.image.resize_images(data_ab, (shape[1]*4, shape[2]*4))  # [N, H, W, 2]
 
         return data_ab
+
+    def caption_encoding(captions, lens):
+        with tf.variable_scope('LSTM', reuse=tf.AUTO_REUSE):
+            embedding = tf.constant(self.word_embedding, name='word_embedding')
+            encoded_captions = tf.nn.embedding_lookup(embedding, name='lookup')
+            encoded_captions = tf.nn.dropout(encoded_captions, 0.8)
+            lstm_fw = tf.nn.rnn_cell.LSTMCell(self.lstm_hid_dim, reuse=True)
+            lstm_bw = tf.nn.rnn_cell.LSTMCell(self.lstm_hid_dim, reuse=True)
+            (hidden_fw, hidden_bw), _ = tf.nn.bidirectional_dynamic_rnn(lstm_fw, lstm_bw, captions, sequence_length=lens, dtype='float32')
+            hidden = tf.concat((hidden_fw[:, -1, :], hidden_bw[:, -1, :]), 2)
+            return hidden
+
