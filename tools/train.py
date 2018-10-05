@@ -2,6 +2,7 @@ import sys
 sys.path.append('./')
 from optparse import OptionParser
 from solver import Solver
+from solver_language import Solver_Language
 from solver_gan import Solver_GAN
 from solver_multigpu import SolverMultigpu
 from utils import process_config
@@ -26,7 +27,9 @@ for key in net_params:
 
 if common_params['is_gan'] == '1':
     solver = Solver_GAN(True, common_params, solver_params, net_params, dataset_params)
-elif len(str(common_params['gpus']).split(','))==1:
+elif common_params['is_coco'] == '1':
+    solver = Solver_Language(True, common_params, solver_params, net_params, dataset_params)
+elif len(str(common_params['gpus']).split(',')) == 1:
     solver = Solver(True, common_params, solver_params, net_params, dataset_params)
 else:
     solver = SolverMultigpu(True, common_params, solver_params, net_params, dataset_params)

@@ -3,96 +3,93 @@ from __future__ import division
 from __future__ import print_function
 
 import h5py
-
-import os
-import random
 import cv2
 import numpy as np
 from Queue import Queue
 from threading import Thread as Process
-#from multiprocessing import Process,Queue
 import time
 
 from utils import *
 
-from skimage.io import imread
-from skimage.transform import resize
 
 class DataSet(object):
-  """TextDataSet
-  process text input file dataset 
-  text file format:
-    image_path
-  """
-
-  def __init__(self, common_params=None, dataset_params=None):
+    """TextDataSet
+    process text input file dataset 
+    text file format:
+      image_path
     """
-    Args:
-      common_params: A dict
-      dataset_params: A dict
-    """
-    if dataset_params:
-      self.data_path = str(dataset_params['path'])
-      self.thread_num = int(dataset_params['thread_num'])
 
-    #record and image_label queue
-    self.record_queue = Queue(maxsize=15000)
-    self.batch_queue = Queue(maxsize=300)
+    def __init__(self, common_params=None, dataset_params=None):
+        """
+        Args:
+          common_params: A dict
+          dataset_params: A dict
+        """
+        if dataset_params:
+            self.data_path = str(dataset_params['path'])
+            self.thread_num = int(dataset_params['thread_num'])
 
-    hf = h5py.File(self.data_path, 'r')
-    self.train_origs = hf['train_ims']            
-    self.train_words = hf['train_words']                                         
-    self.train_lengths = hf['train_length'] 
+        if common_params:
+            self.batch_size = int(common_params['batch_size'])
 
-    self.record_point = 0
-    self.record_number = len(self.train_origs)
-    self.idx = np.random.permutation(record_number)
+        # record and image_label queue
+        self.record_queue = Queue(maxsize=15000)
+        self.batch_queue = Queue(maxsize=300)
 
-    t_record_producer = Process(target=self.record_producer)
-    t_record_producer.daemon = True
-    t_record_producer.start()
+        hf = h5py.File(self.data_path, 'r')
+        self.train_origs = hf['train_ims']            
+        self.train_words = hf['train_words']                                         
+        self.train_lengths = hf['train_length'] 
 
-    for i in range(self.thread_num):
-      t = Process(target=self.image_customer)
-      t.daemon = True
-      t.start()
-
-  def record_producer(self):
-    """record_queue's processor
-    """
-    while True:
-      if self.record_point % self.record_number == 0:
-        self.idx = np.random.permutation(record_number)
         self.record_point = 0
-      idx = self.idx[self.record_point]
-      self.record_queue.put(idx)
-      self.record_point += 1
+        self.record_number = len(self.train_origs)
+        self.idx = np.random.permutation(self.record_number)
 
-  def image_customer(self):
-    while True:
-      images = []
-      captions = []
-      lens = []
-      for i in range(self.batch_size):
-        idx = self.record_queue.get()
-        image = self.train_origs[idx]
-        caption = self.train_words[idx]
-        length = self.train_lengths[idx]
-        image = cv2.cvtColor(image, cv2.BGR2RGB)
-        images.append(image)
-        captions.append(caption)
-        lens.append(length)
-      images = np.asarray(images, dtype=np.uint8)
-      captions = np.array(captions, dtype=np.int32)
-      lens = np.array(lens, dtype=np.int32)
-      l, gt, prior, _ = preprocess(images, c313=True)
+        t_record_producer = Process(target=self.record_producer)
+        t_record_producer.daemon = True
+        t_record_producer.start()
 
-      self.batch_queue.put((l, gt, prior, captions, lens))
+        for i in range(self.thread_num):
+            t = Process(target=self.image_customer)
+            t.daemon = True
+            t.start()
 
-  def batch(self):
-    """get batch
-    Returns:
-      images: 4-D ndarray [batch_size, height, width, 3]
-    """
-    # print(self.record_queue.qsize(), self.batch_queue.qsize())
-    return self.batch_queue.get()
+    def record_producer(self):
+        """record_queue's processor
+        """
+        while True:
+            if self.record_point % self.record_number == 0:
+                self.idx = np.random.permutation(self.record_number)
+                self.record_point = 0
+            idx = self.idx[self.record_point]
+            self.record_queue.put(idx)
+            self.record_point += 1
+
+    def image_customer(self):
+        while True:
+            images = []
+            captions = []
+            lens = []
+            for i in range(self.batch_size):
+                idx = self.record_queue.get()
+                image = self.train_origs[idx]
+                caption = self.train_words[idx]
+                length = self.train_lengths[idx]
+                image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+                images.append(image)
+                captions.append(caption)
+                lens.append(length)
+            images = np.asarray(images, dtype=np.uint8)
+            captions = np.array(captions, dtype=np.int32)
+            lens = np.array(lens, dtype=np.int32)
+            l, gt, prior, _ = preprocess(images, c313=True)
+
+            self.batch_queue.put((l, gt, prior, captions, lens))
+
+    def batch(self):
+        """get batch
+        Returns:
+          images: 4-D ndarray [batch_size, height, width, 3]
+        """
+        # print(self.record_queue.qsize(), self.batch_queue.qsize())
+        return self.batch_queue.get()

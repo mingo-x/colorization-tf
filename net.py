@@ -17,29 +17,28 @@ class Net(object):
         self.weight_decay = 0.0
         self.eps = 1e-8
         self.lstm_hid_dim = 256
-        self.word_embedding = pickle.load(open('/home/xieya/colorfromlanguage/priors/coco_colors_vocab.p', 'r'))
+        self.word_embedding = pickle.load(open('/srv/glusterfs/xieya/data/w2v_embeddings_colors.p', 'r'))
         self.in_dims = [64, 128, 256, 512, 512, 512, 512, 256]
         if common_params:
-          gpu_nums = len(str(common_params['gpus']).split(','))
-          self.batch_size = int(int(common_params['batch_size'])/gpu_nums)
-          self.is_rgb = True if common_params['is_rgb'] == '1' else False
-          self.output_dim = 3 if self.is_rgb else 2
+            gpu_nums = len(str(common_params['gpus']).split(','))
+            self.batch_size = int(int(common_params['batch_size']) / gpu_nums)
+            self.is_rgb = True if common_params['is_rgb'] == '1' else False
+            self.output_dim = 3 if self.is_rgb else 2
         if net_params:
-          self.weight_decay = float(net_params['weight_decay'])
-          self.alpha = float(net_params['alpha'])
-          print('Adversarial weight {}'.format(self.alpha))
-          self.g_version = int(net_params['g_version'])
-          print('Generator version {}'.format(self.g_version))
-          self.version = int(net_params['version'])
-          print('Discriminator version {}'.format(self.version))
-          self.temp_trainable = True if net_params['temp_trainable'] == '1' else False
-          self.gp_lambda = float(net_params['gp_lambda'])
-          print('Gradient penalty {}.'.format(self.gp_lambda))
-          self.k = float(net_params['k'])
-          print('Gradient norm {}.'.format(self.k))
+            self.weight_decay = float(net_params['weight_decay'])
+            self.alpha = float(net_params['alpha'])
+            print('Adversarial weight {}'.format(self.alpha))
+            self.g_version = int(net_params['g_version'])
+            print('Generator version {}'.format(self.g_version))
+            self.version = int(net_params['version'])
+            print('Discriminator version {}'.format(self.version))
+            self.temp_trainable = True if net_params['temp_trainable'] == '1' else False
+            self.gp_lambda = float(net_params['gp_lambda'])
+            print('Gradient penalty {}.'.format(self.gp_lambda))
+            self.k = float(net_params['k'])
+            print('Gradient norm {}.'.format(self.k))
         else:
-          self.g_version = g_version
-
+            self.g_version = g_version
 
     def inference(self, data_l):
         if self.g_version == 0:
@@ -634,7 +633,7 @@ class Net(object):
         return conv8_313
 
     def inference4(self, data_l, captions, lens):
-        caption_feature = caption_encoding(captions, lens)
+        caption_feature = self.caption_encoding(captions, lens)
         with tf.variable_scope('Film'):
             gammas = []
             betas = []
@@ -643,27 +642,29 @@ class Net(object):
                 betas.append(Linear('dense', caption_feature, self.in_dims[i]))
 
         with tf.variable_scope('G'):
-            #conv1
+            # conv1
             block_idx = 0
             conv_num = 1
             temp_conv = conv2d('conv_{}'.format(conv_num), data_l, [3, 3, 1, 64], stride=1, wd=self.weight_decay)
             conv_num += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 64, 64], stride=2, wd=self.weight_decay)
             conv_num += 1
-            temp_conv = batch_norm('bn_1'.format(conv_num), temp_conv,train=self.train)
-            temp_conv = (1 + gammas[block_idx: block_idx + 1, tf.newaxis, tf.newaxis, :]) * temp_conv + betas[block_idx: block_idx + 1, tf.newaxis, tf.newaxis, :]
+            temp_conv = batch_norm('bn_1', temp_conv, train=self.train)
+            temp_conv = (1 + gammas[block_idx][:, tf.newaxis, tf.newaxis, :]) * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
             temp_conv = tf.nn.relu(temp_conv)
             
-            #conv2
+            # conv2
+            block_idx += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 64, 128], stride=1, wd=self.weight_decay)
             conv_num += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 128, 128], stride=2, wd=self.weight_decay)
             conv_num += 1
-            temp_conv = batch_norm('bn_2'.format(conv_num), temp_conv,train=self.train)
-            temp_conv = (1 + gammas[block_idx: block_idx + 1, tf.newaxis, tf.newaxis, :]) * temp_conv + betas[block_idx: block_idx + 1, tf.newaxis, tf.newaxis, :]
+            temp_conv = batch_norm('bn_2', temp_conv, train=self.train)
+            temp_conv = (1 + gammas[block_idx][:, tf.newaxis, tf.newaxis, :]) * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
             temp_conv = tf.nn.relu(temp_conv)
 
-            #conv3
+            # conv3
+            block_idx += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 128, 256], stride=1, wd=self.weight_decay)
             conv_num += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 256], stride=1, wd=self.weight_decay)
@@ -671,64 +672,69 @@ class Net(object):
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 256], stride=2, wd=self.weight_decay)
             conv_num += 1
             temp_conv = batch_norm('bn_3', temp_conv, train=self.train)
-            temp_conv = (1 + gammas[block_idx: block_idx + 1, tf.newaxis, tf.newaxis, :]) * temp_conv + betas[block_idx: block_idx + 1, tf.newaxis, tf.newaxis, :]
+            temp_conv = (1 + gammas[block_idx][:, tf.newaxis, tf.newaxis, :]) * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
             temp_conv = tf.nn.relu(temp_conv)
 
-            #conv4
+            # conv4
+            block_idx += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 512], stride=1, wd=self.weight_decay)
             conv_num += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, wd=self.weight_decay)
             conv_num += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, wd=self.weight_decay)
             conv_num += 1
-            temp_conv = batch_norm('bn_4', temp_conv,train=self.train)
-            temp_conv = (1 + gammas[block_idx: block_idx + 1, tf.newaxis, tf.newaxis, :]) * temp_conv + betas[block_idx: block_idx + 1, tf.newaxis, tf.newaxis, :]
+            temp_conv = batch_norm('bn_4', temp_conv, train=self.train)
+            temp_conv = (1 + gammas[block_idx][:, tf.newaxis, tf.newaxis, :]) * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
             temp_conv = tf.nn.relu(temp_conv)
 
-            #conv5
+            # conv5
+            block_idx += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
             conv_num += 1    
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
             conv_num += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
             conv_num += 1
-            temp_conv = batch_norm('bn_5', temp_conv,train=self.train)
-            temp_conv = (1 + gammas[block_idx: block_idx + 1, tf.newaxis, tf.newaxis, :]) * temp_conv + betas[block_idx: block_idx + 1, tf.newaxis, tf.newaxis, :]
+            temp_conv = batch_norm('bn_5', temp_conv, train=self.train)
+            temp_conv = (1 + gammas[block_idx][:, tf.newaxis, tf.newaxis, :]) * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
             temp_conv = tf.nn.relu(temp_conv)
 
-            #conv6
+            # conv6
+            block_idx += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
             conv_num += 1    
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
             conv_num += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
             conv_num += 1    
-            temp_conv = batch_norm('bn_6', temp_conv,train=self.train)    
-            temp_conv = (1 + gammas[block_idx: block_idx + 1, tf.newaxis, tf.newaxis, :]) * temp_conv + betas[block_idx: block_idx + 1, tf.newaxis, tf.newaxis, :]
+            temp_conv = batch_norm('bn_6', temp_conv, train=self.train)    
+            temp_conv = (1 + gammas[block_idx][:, tf.newaxis, tf.newaxis, :]) * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
             temp_conv = tf.nn.relu(temp_conv)
 
-            #conv7
+            # conv7
+            block_idx += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, wd=self.weight_decay)
             conv_num += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, wd=self.weight_decay)
             conv_num += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, wd=self.weight_decay)
             conv_num += 1
-            temp_conv = batch_norm('bn_7', temp_conv,train=self.train)
-            temp_conv = (1 + gammas[block_idx: block_idx + 1, tf.newaxis, tf.newaxis, :]) * temp_conv + betas[block_idx: block_idx + 1, tf.newaxis, tf.newaxis, :]
+            temp_conv = batch_norm('bn_7', temp_conv, train=self.train)
+            temp_conv = (1 + gammas[block_idx][:, tf.newaxis, tf.newaxis, :]) * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
             temp_conv = tf.nn.relu(temp_conv)
 
-            #conv8
+            # conv8
+            block_idx += 1
             temp_conv = deconv2d('conv_{}'.format(conv_num), temp_conv, [4, 4, 512, 256], stride=2, wd=self.weight_decay)
             conv_num += 1    
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 256], stride=1, wd=self.weight_decay)
             conv_num += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 256], stride=1, wd=self.weight_decay)
             conv_num += 1
-            temp_conv = (1 + gammas[block_idx: block_idx + 1, tf.newaxis, tf.newaxis, :]) * temp_conv + betas[block_idx: block_idx + 1, tf.newaxis, tf.newaxis, :]
+            temp_conv = (1 + gammas[block_idx][:, tf.newaxis, tf.newaxis, :]) * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
             temp_conv = tf.nn.relu(temp_conv)
 
-            #Unary prediction
+            # Unary prediction
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [1, 1, 256, 313], stride=1, relu=False, wd=self.weight_decay)
             conv_num += 1
 
@@ -1202,34 +1208,26 @@ class Net(object):
         conv 313 to ab.
         Return: []
         '''
-        with tf.variable_scope('T'):
-            temp = variable("T", (1, ), tf.constant_initializer(rebalance), self.temp_trainable)
         enc_dir = './resources'
         cc = np.load(os.path.join(enc_dir, 'pts_in_hull.npy'))
         cc = tf.constant(cc, dtype=tf.float32)  # [313, 2]
-        # cc = tf.expand_dims(cc, 0) 
-        # conv8_313 = conv8_313[0, :, :, :]
         shape = tf.shape(conv8_313)
-        conv8_313_rh = conv8_313 * temp
+        conv8_313_rh = conv8_313 * rebalance
         conv8_313_rh = tf.reshape(conv8_313_rh, (-1, 313))  # [N*H*W/16, 313]
         class8_313_rh = tf.nn.softmax(conv8_313_rh, axis=-1)  # [N*H*W/16, 313]
         
         data_ab = tf.matmul(class8_313_rh, cc)  # [N*H*W/16, 2]
         data_ab = tf.reshape(data_ab, (shape[0], shape[1], shape[2], 2))  # [N, H/4, W/4, 2]
 
-        # Upscale.
-        # data_ab = tf.image.resize_images(data_ab, (shape[1]*4, shape[2]*4))  # [N, H, W, 2]
-
         return data_ab
 
-    def caption_encoding(captions, lens):
+    def caption_encoding(self, captions, lens):
         with tf.variable_scope('LSTM', reuse=tf.AUTO_REUSE):
-            embedding = tf.constant(self.word_embedding, name='word_embedding')
-            encoded_captions = tf.nn.embedding_lookup(embedding, name='lookup')
+            embedding = tf.constant(self.word_embedding, name='word_embedding', dtype='float32')
+            encoded_captions = tf.nn.embedding_lookup(embedding, captions, name='lookup')
             encoded_captions = tf.nn.dropout(encoded_captions, 0.8)
-            lstm_fw = tf.nn.rnn_cell.LSTMCell(self.lstm_hid_dim, reuse=True)
-            lstm_bw = tf.nn.rnn_cell.LSTMCell(self.lstm_hid_dim, reuse=True)
-            (hidden_fw, hidden_bw), _ = tf.nn.bidirectional_dynamic_rnn(lstm_fw, lstm_bw, captions, sequence_length=lens, dtype='float32')
-            hidden = tf.concat((hidden_fw[:, -1, :], hidden_bw[:, -1, :]), 2)
+            lstm_fw = tf.nn.rnn_cell.LSTMCell(self.lstm_hid_dim, reuse=tf.AUTO_REUSE)
+            lstm_bw = tf.nn.rnn_cell.LSTMCell(self.lstm_hid_dim, reuse=tf.AUTO_REUSE)
+            (hidden_fw, hidden_bw), _ = tf.nn.bidirectional_dynamic_rnn(lstm_fw, lstm_bw, encoded_captions, sequence_length=lens, dtype='float32')
+            hidden = tf.concat((hidden_fw[:, -1, :], hidden_bw[:, -1, :]), 1)
             return hidden
-

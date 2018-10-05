@@ -4,6 +4,7 @@ from __future__ import print_function
 
 import h5py
 import numpy as np
+import pickle
 from skimage import io, color
 import tensorflow as tf
 
@@ -14,11 +15,13 @@ import time
 from datetime import datetime
 import os
 
+import utils
+
 
 _LOG_FREQ = 10
 
 
-class Solver(object):
+class Solver_Language(object):
 
     def __init__(
         self,
@@ -77,10 +80,8 @@ class Solver(object):
         with tf.device('/gpu:' + str(self.device_id)):
             self.data_l = tf.placeholder(
                 tf.float32, (self.batch_size, self.height, self.width, 1))
-            self.captions = tf.placeholder(
-                tf.int32, (self.batch_size, 20))
-            self.lens = tf.placeholder(
-                tf.int32, (self.batch_size))
+            self.captions = tf.placeholder(tf.int32, (self.batch_size, 20))
+            self.lens = tf.placeholder(tf.int32, (self.batch_size))
             self.gt_ab_313 = tf.placeholder(
                 tf.float32,
                 (self.batch_size, int(self.height / 4), int(self.width / 4), 313)
@@ -90,34 +91,27 @@ class Solver(object):
                 (self.batch_size, int(self.height / 4), int(self.width / 4), 1)
             )
 
-            conv8_313 = self.net.inference4(self.data_l, self.captions, self.lens)
+            self.conv8_313 = self.net.inference4(self.data_l, self.captions, self.lens)
+            # self.colorized_ab = self.net.conv313_to_ab(conv8_313)
 
             new_loss, g_loss, _ = self.net.loss(
-                scope, conv8_313, self.prior_boost_nongray,
-                self.gt_ab_313, self.data_fake, self.gan,
+                scope, self.conv8_313, self.prior_boost_nongray,
+                self.gt_ab_313, None, self.gan,
                 self.prior_boost)
             tf.summary.scalar('new_loss', new_loss)
             tf.summary.scalar('total_loss', g_loss)
+            print('Graph constructed.')
 
             return new_loss, g_loss
 
-
     def train_model(self):
-        # Load data
-        hfile = '/srv/glusterfs/xieya/data/coco_colors.h5'
-        hf = h5py.File(hfile, 'r')
-        train_origs = hf['train_ims']            
-        train_words = hf['train_words']                                         
-        train_lengths = hf['train_length'] 
-
         with tf.device('/gpu:' + str(self.device_id)):
             self.global_step = tf.get_variable('global_step', [], initializer=tf.constant_initializer(0), trainable=False)
             learning_rate = tf.train.exponential_decay(self.learning_rate, self.global_step,
-                self.decay_steps, self.lr_decay, staircase=True)
+                                                       self.decay_steps, self.lr_decay, staircase=True)
 
-            train_vocab = pickle.load(open('./priors/coco_colors_vocab.p', 'r'))
-            vrev = dict((v,k) for (k,v) in train_vocab.iteritems())          
-            n_vocab = len(train_vocab)
+            train_vocab = pickle.load(open('/home/xieya/colorfromlanguage/priors/coco_colors_vocab.p', 'r'))
+            vrev = dict((v, k) for (k, v) in train_vocab.iteritems())
 
             with tf.name_scope('gpu') as scope:
                 self.new_loss, self.total_loss = self.construct_graph(scope)
@@ -128,18 +122,14 @@ class Solver(object):
                 tf.summary.scalar('learning_rate', learning_rate))
 
             opt = tf.train.AdamOptimizer(
-                learning_rate=learning_rate, beta1=self.moment, beta2=0.9)
-            G_vars = tf.trainable_variables(scope='G')
-
-            grads = opt.compute_gradients(self.new_loss, var_list=G_vars)
+                learning_rate=learning_rate, beta1=self.moment, beta2=0.99)
+            grads = opt.compute_gradients(self.new_loss)
 
             apply_gradient_op = opt.apply_gradients(
                 grads, global_step=self.global_step)
-            # apply_gradient_adv_op = opt.apply_gradients(
-            #     grads_adv)
             variable_averages = tf.train.ExponentialMovingAverage(
                 0.999, self.global_step)
-            variables_averages_op = variable_averages.apply(G_vars + T_vars)
+            variables_averages_op = variable_averages.apply(tf.trainable_variables())
             train_op = tf.group(apply_gradient_op, variables_averages_op)
 
             saver = tf.train.Saver(write_version=tf.train.SaverDef.V2)
@@ -151,18 +141,10 @@ class Solver(object):
             print("Session configured.")
 
             if self.ckpt is not None:
-                if self.restore_opt:
-                    saver.restore(sess, self.ckpt)
-                else:
-                    sess.run(init)
-                    init_saver = tf.train.Saver(G_vars + T_vars + D_vars + [self.global_step])
-                    init_saver.restore(sess, self.ckpt)
-
+                saver.restore(sess, self.ckpt)
                 print(self.ckpt + " restored.")
                 start_step = sess.run(self.global_step)
                 start_step -= int(start_step % 10)
-                # start_step = 230000
-                # sess.run(self.global_step.assign(start_step))
                 print("Global step: {}".format(start_step))
             else:
                 sess.run(init)
@@ -176,15 +158,16 @@ class Solver(object):
 
             summary_writer = tf.summary.FileWriter(self.train_dir, sess.graph)
             start_time = time.time()
-
             start_step = int(start_step)
+
             for step in xrange(start_step, self.max_steps, self.g_repeat):
                 # Generator training.
                 for _ in xrange(self.g_repeat):
                     data_l, gt_ab_313, prior_boost_nongray, captions, lens = self.dataset.batch()
-                    sess.run([train_op], 
-                              feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray,
-                              self.captions:caption, self.lens:lens})
+                    captions = np.zeros_like(captions)  # Turn of language guiding for testing purpose.
+                    sess.run([train_op], feed_dict={
+                        self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray,
+                        self.captions: captions, self.lens: lens})
 
                 if step % _LOG_FREQ < self.g_repeat:
                     duration = time.time() - start_time
@@ -203,13 +186,19 @@ class Solver(object):
                     start_time = time.time()
 
                 if step % 100 < self.g_repeat:
-                    summary_str = sess.run(summary_op, feed_dict={
+                    summary_str, img_313s = sess.run([summary_op, self.conv8_313], feed_dict={
                         self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray})
                     summary_writer.add_summary(summary_str, step)
+                    # Save sample image
+                    img_313 = img_313s[0: 1]
+                    img_l = data_l[0: 1]
+                    img_rgb = utils.decode(img_l, img_313, 2.63)
+                    word_list = list(captions[-1, :lengths_[-1]])     
+                    img_caption = '_'.join(vrev.get(w, 'unk') for w in word_list) 
+                    io.imsave('{0}_{1}.jpg'.format(step, img_caption), img_rgb)
 
                 # Save the model checkpoint periodically.
                 if step % 1000 < self.g_repeat:
                     checkpoint_path = os.path.join(
                         self.train_dir, 'model.ckpt')
                     saver.save(sess, checkpoint_path, global_step=step)
-                
