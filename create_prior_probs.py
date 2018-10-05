@@ -139,24 +139,14 @@ def cal_prob():
 
 
 def cal_prob_soft():
-    out_path = '/srv/glusterfs/xieya/prior/{0}_onehot_{1}.npy'.format(_N_CLASSES, _TASK_ID)
+    out_path = '/srv/glusterfs/xieya/prior/{0}_onehot_{1}_soft.npy'.format(_N_CLASSES, _TASK_ID)
     if os.path.isfile(out_path):
         print('Done.')
         return
 
     filename_lists = get_file_list()
     counter = 0
-    # random.shuffle(filename_lists)
-
-    # construct graph
-    # in_data = tf.placeholder(tf.float64, [None, 2])
-    # expand_in_data = tf.expand_dims(in_data, axis=1)
-
-    # distance = tf.reduce_sum(tf.square(expand_in_data - points), axis=2)
-    # index = tf.argmin(distance, axis=1)
-    # config = tf.ConfigProto()
-    # config.gpu_options.allow_growth = True
-    # sess = tf.Session(config=config)
+    nnenc = NNEncode(10, 5.0, km_filepath='./resources/pts_in_hull.npy')
 
     for img_f in filename_lists:
         img_f = img_f.strip()
@@ -170,11 +160,8 @@ def cal_prob_soft():
         img_lab = color.rgb2lab(img)
         img_lab = img_lab.reshape((-1, 3))
         img_ab = img_lab[:, 1:]
-        # nd_index = sess.run(index, feed_dict={in_data: img_ab})
-        nd_index = get_index(img_ab)
-        for i in nd_index:
-            i = int(i)
-            probs[i] += 1
+        img_313 = nnenc.encode_points_mtx_nd(img_ab, axis=1)  # [H*W, 313]
+        probs += np.sum(img_313, axis=0)
 
         if counter % _LOG_FREQ == 0:
             print(counter)
@@ -226,7 +213,7 @@ def cal_prob_coco_soft():
         img_lab = color.rgb2lab(img_rgb)
         img_ab = img_lab[:, :, 1:]
         img_ab = img_ab.reshape((-1, 2))
-        img_313 = nnenc.encode_points_mtx_nd(img_ab, axis=1, flatten=True)  # [H*W, 313]
+        img_313 = nnenc.encode_points_mtx_nd(img_ab, axis=1)  # [H*W, 313]
         probs += np.sum(img_313, axis=0)
 
         if counter % _LOG_FREQ == 0:
