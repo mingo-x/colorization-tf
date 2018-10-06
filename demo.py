@@ -315,8 +315,10 @@ def colorize_with_language():
         c313_tensor = autocolor.inference4(l_tensor, cap_tensor, len_tensor)
         saver = tf.train.Saver()
         print("Saver created.")
-        
-        with tf.Session() as sess:
+        config = tf.ConfigProto(allow_soft_placement = True)
+        config.gpu_options.allow_growth = True
+
+        with tf.Session(config = config) as sess:
             saver.restore(sess, _CKPT_PATH)
 
             while(True):
