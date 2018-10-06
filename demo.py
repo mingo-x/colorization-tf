@@ -307,12 +307,13 @@ def colorize_with_language():
     train_vocab = pickle.load(open('/home/xieya/colorfromlanguage/priors/coco_colors_vocab.p', 'r'))
     vrev = dict((v, k) for (k, v) in train_vocab.iteritems())
 
-    l_tensor = tf.placeholder(tf.float32, (1, INPUT_SIZE, INPUT_SIZE, 1))
-    cap_tensor = tf.placeholder(tf.int32, (1, 20))
-    len_tensor = tf.placeholder(tf.int32, (1))
-    autocolor = Net(train=False)
-    c313_tensor = autocolor.inference4(l_tensor, cap_tensor, len_tensor)
-    saver = tf.train.Saver()
+    with tf.device('/gpu:0'):
+        l_tensor = tf.placeholder(tf.float32, (1, INPUT_SIZE, INPUT_SIZE, 1))
+        cap_tensor = tf.placeholder(tf.int32, (1, 20))
+        len_tensor = tf.placeholder(tf.int32, (1))
+        autocolor = Net(train=False)
+        c313_tensor = autocolor.inference4(l_tensor, cap_tensor, len_tensor)
+        saver = tf.train.Saver()
 
     with tf.Session() as sess:
         saver.restore(sess, _CKPT_PATH)
