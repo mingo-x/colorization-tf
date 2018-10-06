@@ -41,7 +41,7 @@ def variable_with_weight_decay(name, shape, stddev, wd):
   # var = _variable(name, shape,
   #   tf.truncated_normal_initializer(stddev=stddev, dtype=tf.float32))
   var = variable(name, shape,
-    tf.contrib.layers.variance_scaling_initializer(factor=2.0, mode='FAN_IN', uniform=False, dtype=tf.float32))
+    tf.contrib.layers.variance_scaling_initializer(factor=2.0, mode='FAN_IN', uniform=True, dtype=tf.float32))
   
   if wd is not None:
     weight_decay = tf.multiply(tf.nn.l2_loss(var), wd, name='weight_loss')
