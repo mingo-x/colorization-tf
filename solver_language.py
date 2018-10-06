@@ -200,3 +200,5 @@ class Solver_Language(object):
                     checkpoint_path = os.path.join(
                         self.train_dir, 'model.ckpt')
                     saver.save(sess, checkpoint_path, global_step=step)
+
+            sess.close()
