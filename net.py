@@ -576,6 +576,7 @@ class Net(object):
 
     def inference4(self, data_l, captions, lens):
         caption_feature = self.caption_encoding(captions, lens)
+        caption_feature = tf.zeros_like(caption_feature)
         with tf.variable_scope('Film'):
             gammas = []
             betas = []
