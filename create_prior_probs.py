@@ -94,9 +94,9 @@ def get_file_list():
 
 def cal_prob():
     out_path = '/srv/glusterfs/xieya/prior/{0}_onehot_{1}.npy'.format(_N_CLASSES, _TASK_ID)
-    if os.path.isfile(out_path):
-        print('Done.')
-        return
+    # if os.path.isfile(out_path):
+        # print('Done.')
+        # return
 
     filename_lists = get_file_list()
     counter = 0
@@ -253,8 +253,8 @@ if __name__ == "__main__":
     points = points[None, :, :]
     print("Number of classes: {}.".format(_N_CLASSES))
     print("Imagenet.")
-    # cal_prob()
-    cal_prob_soft()
+    cal_prob()
+    # cal_prob_soft()
     # print("Coco.")
     # cal_prob_coco()
     # cal_prob_coco_soft()
