@@ -334,6 +334,7 @@ def colorize_with_language():
                 word_list = list(img_cap[0, :img_len[0]])
                 img_title = '_'.join(vrev.get(w, 'unk') for w in word_list) 
                 io.imsave(os.path.join(OUTPUT_DIR, '{0}_o_{1}.jpg').format(i, img_title), img_rgb)
+                print(img_title)
 
                 new_caption = raw_input('New caption?')
                 new_words = new_caption.strip().split(' ')
