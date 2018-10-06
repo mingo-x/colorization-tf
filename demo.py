@@ -1,6 +1,7 @@
 import random
 import subprocess
 
+import h5py
 import pickle
 import tensorflow as tf
 from utils import *
@@ -296,11 +297,60 @@ def places365():
                 _colorize_single_img(img_name, model, input_tensor, sess)
 
 
+def colorize_with_language():
+    hf = h5py.File('/srv/glusterfs/xieya/data/coco_colors.h5')
+    val_imgs = hf['val_ims']
+    val_caps = hf['val_words']
+    val_lens = hf['val_length']
+    val_num = len(val_imgs)
+
+    train_vocab = pickle.load(open('/home/xieya/colorfromlanguage/priors/coco_colors_vocab.p', 'r'))
+    vrev = dict((v, k) for (k, v) in train_vocab.iteritems())
+
+    l_tensor = tf.placeholder(tf.float32, (1, INPUT_SIZE, INPUT_SIZE, 1))
+    cap_tensor = tf.placeholder(tf.int32, (1, 20))
+    len_tensor = tf.placeholder(tf.int32, (1))
+    autocolor = Net(train=False)
+    c313_tensor = autocolor.inference4(l_tensor, cap_tensor, len_tensor)
+    saver = tf.train.Saver()
+
+    with tf.Session() as sess:
+        saver.restore(sess, _CKPT_PATH)
+
+        while(True):
+            i = random.randint(0, val_num - 1)
+            img_bgr = val_imgs[i]
+            img_l = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
+            img_l = (img_l.astype(dtype=np.float32)) / 255.0 * 2 - 1
+            img_l = img_l[None, :, :, None]
+            img_cap = val_caps[i: i + 1]
+            img_len = val_lens[i: i + 1]
+            img_313 = sess.run(c313_tensor, feed_dict={l_tensor: img_l, cap_tensor: img_cap, len_tensor: img_len})
+            img_rgb, _ = decode(img_l, img_313, 2.63)
+            word_list = list(img_cap[0, :img_len[0]])
+            img_title = '_'.join(vrev.get(w, 'unk') for w in word_list) 
+            io.imsave(os.path.join(OUTPUT_DIR, '{0}_o_{1}.jpg').format(i, img_title), img_rgb)
+
+            new_caption = raw_input('New caption?')
+            new_words = new_caption.strip().split(' ')
+            new_img_cap = np.zeros_like(img_cap)
+            new_img_len = np.zeros_like(img_len)
+            for j in xrange(len(new_words)):
+                new_img_cap[0, j] = train_vocab.get(new_words[j], 0)
+            new_img_len[0] = len(new_words)
+            new_img_313 = sess.run(c313_tensor, feed_dict={l_tensor: img_l, cap_tensor: new_img_cap, len_tensor: new_img_len})
+            new_img_rgb, _ = decode(img_l, new_img_313, 2.63)
+            new_word_list = list(new_img_cap[0, :new_img_len[0]])
+            new_img_title = '_'.join(vrev.get(w, 'unk') for w in new_word_list) 
+            io.imsave(os.path.join(OUTPUT_DIR, '{0}_n_{1}.jpg').format(i, new_img_title), new_img_rgb)
+
+
 if __name__ == "__main__":
     subprocess.check_call(['mkdir', '-p', OUTPUT_DIR])
-    main()
+    # main()
     # places365()
     # demo_wgan_ab()
     # demo_wgan_rgb()
     # _colorize_high_res_img(_IMG_NAME)
     # cifar()
+    colorize_with_language()
