@@ -91,7 +91,7 @@ class Solver_Language(object):
                 (self.batch_size, int(self.height / 4), int(self.width / 4), 1)
             )
 
-            self.conv8_313 = self.net.inference4(self.data_l, self.captions, self.lens)
+            self.conv8_313, self.gamma = self.net.inference4(self.data_l, self.captions, self.lens)
             # self.colorized_ab = self.net.conv313_to_ab(conv8_313)
 
             new_loss, g_loss, _ = self.net.loss(
@@ -190,7 +190,7 @@ class Solver_Language(object):
                     start_time = time.time()
 
                 if step % 100 == 0:
-                    summary_str, img_313s = sess.run([summary_op, self.conv8_313], feed_dict={
+                    summary_str, img_313s, gammas = sess.run([summary_op, self.conv8_313, self.gamma], feed_dict={
                         self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray, self.captions: captions, self.lens: lens})
                     summary_writer.add_summary(summary_str, step)
                     # Save sample image
@@ -200,6 +200,7 @@ class Solver_Language(object):
                     word_list = list(captions[0, :lens[0]])
                     img_caption = '_'.join(vrev.get(w, 'unk') for w in word_list) 
                     io.imsave(os.path.join(self.train_dir, '{0}_{1}.jpg').format(step, img_caption), img_rgb)
+                    print(gammas[0])
 
                 # Save the model checkpoint periodically.
                 if step % 1000 == 0:
