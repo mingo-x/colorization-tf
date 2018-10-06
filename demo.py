@@ -314,8 +314,10 @@ def colorize_with_language():
         autocolor = Net(train=False)
         c313_tensor = autocolor.inference4(l_tensor, cap_tensor, len_tensor)
         saver = tf.train.Saver()
+        print("Saver created.")
 
     with tf.Session() as sess:
+	print('Session entered.')
         saver.restore(sess, _CKPT_PATH)
 
         while(True):
