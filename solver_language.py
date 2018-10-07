@@ -91,7 +91,7 @@ class Solver_Language(object):
                 (self.batch_size, int(self.height / 4), int(self.width / 4), 1)
             )
 
-            self.conv8_313, self.caption, self.cap_emb, self.cap_fw = self.net.inference4(self.data_l, self.captions, self.lens)
+            self.conv8_313 = self.net.inference4(self.data_l, self.captions, self.lens)
             # self.colorized_ab = self.net.conv313_to_ab(conv8_313)
 
             new_loss, g_loss, _ = self.net.loss(
@@ -179,7 +179,7 @@ class Solver_Language(object):
                     examples_per_sec = num_examples_per_step / duration
                     sec_per_batch = duration / (self.num_gpus * _LOG_FREQ)
 
-                    loss_value, new_loss_value, cap, cap_emb, cap_fw = sess.run([self.total_loss, self.new_loss, self.caption, self.cap_emb, self.cap_fw], feed_dict={
+                    loss_value, new_loss_value = sess.run([self.total_loss, self.new_loss], feed_dict={
                         self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray,
                         self.captions: captions, self.lens: lens})
                     format_str = ('%s: step %d, G loss = %.2f, new loss = %.2f(%.1f examples/sec; %.3f '
@@ -187,9 +187,6 @@ class Solver_Language(object):
                     print (format_str % (datetime.now(),
                                          step, loss_value, new_loss_value,
                                          examples_per_sec, sec_per_batch))
-                    print(cap[0, 100: 132])
-                    print(cap_emb[0, lens[0] - 1, 100: 132])
-                    print(cap_fw[0, 100:132])
                     start_time = time.time()
 
                 if step % 100 == 0:
