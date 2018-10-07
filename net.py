@@ -575,7 +575,7 @@ class Net(object):
         return conv8_313
 
     def inference4(self, data_l, captions, lens):
-        caption_feature, cap_embedding, cap_fw = self.caption_encoding(captions, lens)
+        caption_feature = self.caption_encoding(captions, lens)
         # caption_feature = tf.zeros_like(caption_feature)
         with tf.variable_scope('Film'):
             gammas = []
@@ -682,7 +682,7 @@ class Net(object):
             conv_num += 1
 
         conv8_313 = temp_conv
-        return conv8_313, caption_feature, cap_embedding, cap_fw
+        return conv8_313
 
     def GAN_G(self, noise=None):
         dim = 64
@@ -1172,6 +1172,6 @@ class Net(object):
             initializer = tf.contrib.layers.variance_scaling_initializer(factor=2.0, mode='FAN_IN', uniform=False, dtype=tf.float32)
             lstm_fw = tf.nn.rnn_cell.LSTMCell(self.lstm_hid_dim, reuse=tf.AUTO_REUSE, initializer=initializer)
             lstm_bw = tf.nn.rnn_cell.LSTMCell(self.lstm_hid_dim, reuse=tf.AUTO_REUSE, initializer=initializer)
-            (output_fw, _), (state_fw, state_bw) = tf.nn.bidirectional_dynamic_rnn(lstm_fw, lstm_bw, encoded_captions, sequence_length=lens, dtype='float32')
+            _, (state_fw, state_bw) = tf.nn.bidirectional_dynamic_rnn(lstm_fw, lstm_bw, encoded_captions, sequence_length=lens, dtype='float32')
             hidden = tf.concat((state_fw.h, state_bw.h), 1)
-            return hidden, output_fw, state_fw.h
+            return hidden
