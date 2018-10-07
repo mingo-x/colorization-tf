@@ -339,7 +339,7 @@ def colorize_with_language():
                 print(gammas2[0, 0: 8])
                 print(gammas4[0, 0: 8])
                 print(gammas6[0, 0: 8])
-                print(caption[0, 0: 16])
+                print(caption[0, 100: 116])
 
                 new_caption = raw_input('New caption?')
                 new_words = new_caption.strip().split(' ')
@@ -357,7 +357,7 @@ def colorize_with_language():
                 print(gammas2[0, 0: 8])
                 print(gammas4[0, 0: 8])
                 print(gammas6[0, 0: 8])
-                print(caption[0, 0: 16])
+                print(caption[0, 100: 116])
 
 
 if __name__ == "__main__":
