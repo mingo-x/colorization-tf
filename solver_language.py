@@ -200,7 +200,7 @@ class Solver_Language(object):
                     word_list = list(captions[0, :lens[0]])
                     img_caption = '_'.join(vrev.get(w, 'unk') for w in word_list) 
                     io.imsave(os.path.join(self.train_dir, '{0}_{1}.jpg').format(step, img_caption), img_rgb)
-                    print(gammas[0])
+                    print(gammas[0, 0: 32])
 
                 # Save the model checkpoint periodically.
                 if step % 1000 == 0:

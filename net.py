@@ -1169,7 +1169,7 @@ class Net(object):
             embedding = tf.constant(self.word_embedding, name='word_embedding', dtype='float32')
             encoded_captions = tf.nn.embedding_lookup(embedding, captions, name='lookup')
             encoded_captions = tf.nn.dropout(encoded_captions, 0.8)
-            initializer = tf.contrib.layers.variance_scaling_initializer(factor=2.0, mode='FAN_IN', uniform=True, dtype=tf.float32)
+            initializer = tf.contrib.layers.variance_scaling_initializer(factor=2.0, mode='FAN_IN', uniform=False, dtype=tf.float32)
             lstm_fw = tf.nn.rnn_cell.LSTMCell(self.lstm_hid_dim, reuse=tf.AUTO_REUSE, initializer=initializer)
             lstm_bw = tf.nn.rnn_cell.LSTMCell(self.lstm_hid_dim, reuse=tf.AUTO_REUSE, initializer=initializer)
             (hidden_fw, hidden_bw), _ = tf.nn.bidirectional_dynamic_rnn(lstm_fw, lstm_bw, encoded_captions, sequence_length=lens, dtype='float32')
