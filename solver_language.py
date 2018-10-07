@@ -91,7 +91,7 @@ class Solver_Language(object):
                 (self.batch_size, int(self.height / 4), int(self.width / 4), 1)
             )
 
-            self.conv8_313, self.gamma = self.net.inference4(self.data_l, self.captions, self.lens)
+            self.conv8_313, _, _, self.gamma, _ = self.net.inference4(self.data_l, self.captions, self.lens)
             # self.colorized_ab = self.net.conv313_to_ab(conv8_313)
 
             new_loss, g_loss, _ = self.net.loss(
