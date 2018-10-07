@@ -312,7 +312,7 @@ def colorize_with_language():
         cap_tensor = tf.placeholder(tf.int32, (1, 20))
         len_tensor = tf.placeholder(tf.int32, (1))
         autocolor = Net(train=False)
-        c313_tensor, caption_tensor, cap_emb_tensor = autocolor.inference4(l_tensor, cap_tensor, len_tensor)
+        c313_tensor, caption_tensor, cap_emb_tensor, cap_fw_tensor = autocolor.inference4(l_tensor, cap_tensor, len_tensor)
         saver = tf.train.Saver()
         print("Saver created.")
         config = tf.ConfigProto(allow_soft_placement = True)
@@ -321,37 +321,43 @@ def colorize_with_language():
         with tf.Session(config = config) as sess:
             saver.restore(sess, _CKPT_PATH)
 
-            while(True):
-                i = random.randint(0, val_num - 1)
-                img_bgr = val_imgs[i]
-                img_l = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
-                img_l = (img_l.astype(dtype=np.float32)) / 255.0 * 2 - 1
-                img_l = img_l[None, :, :, None]
-                img_cap = val_caps[i: i + 1]
-                img_len = val_lens[i: i + 1]
-                img_313, caption, cap_emb = sess.run([c313_tensor, caption_tensor, cap_emb_tensor], feed_dict={l_tensor: img_l, cap_tensor: img_cap, len_tensor: img_len})
-                img_rgb, _ = decode(img_l, img_313, 2.63)
-                word_list = list(img_cap[0, :img_len[0]])
-                img_title = '_'.join(vrev.get(w, 'unk') for w in word_list) 
-                io.imsave(os.path.join(OUTPUT_DIR, '{0}_o_{1}.jpg').format(i, img_title), img_rgb)
-                print(img_title)
-                print(caption[0, 100: 116])
-                print(cap_emb[0, 0, 100: 116])
+            try:
+                while(True):
+                    i = random.randint(0, val_num - 1)
+                    img_bgr = val_imgs[i]
+                    img_l = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
+                    img_l = (img_l.astype(dtype=np.float32)) / 255.0 * 2 - 1
+                    img_l = img_l[None, :, :, None]
+                    img_cap = val_caps[i: i + 1]
+                    img_len = val_lens[i: i + 1]
+                    img_313, caption, cap_emb, cap_fw = sess.run([c313_tensor, caption_tensor, cap_emb_tensor, cap_fw_tensor], feed_dict={l_tensor: img_l, cap_tensor: img_cap, len_tensor: img_len})
+                    img_rgb, _ = decode(img_l, img_313, 2.63)
+                    word_list = list(img_cap[0, :img_len[0]])
+                    img_title = '_'.join(vrev.get(w, 'unk') for w in word_list) 
+                    io.imsave(os.path.join(OUTPUT_DIR, '{0}_o_{1}.jpg').format(i, img_title), img_rgb)
+                    print(img_title)
+                    print(caption[0, 100: 116])
+                    print(cap_emb[0, 1, 100: 116])
+                    print(cap_fw[0, 1, 100: 116])
 
-                new_caption = raw_input('New caption?')
-                new_words = new_caption.strip().split(' ')
-                new_img_cap = np.zeros_like(img_cap)
-                new_img_len = np.zeros_like(img_len)
-                for j in xrange(len(new_words)):
-                    new_img_cap[0, j] = train_vocab.get(new_words[j], 0)
-                new_img_len[0] = len(new_words)
-                new_img_313, caption, cap_emb = sess.run([c313_tensor, cap_tensor, cap_emb_tensor], feed_dict={l_tensor: img_l, cap_tensor: new_img_cap, len_tensor: new_img_len})
-                new_img_rgb, _ = decode(img_l, new_img_313, 2.63)
-                new_word_list = list(new_img_cap[0, :new_img_len[0]])
-                new_img_title = '_'.join(vrev.get(w, 'unk') for w in new_word_list) 
-                io.imsave(os.path.join(OUTPUT_DIR, '{0}_n_{1}.jpg').format(i, new_img_title), new_img_rgb)
-                print(caption[0, 100: 116])
-                print(cap_emb[0, 0, 100: 116])
+                    new_caption = raw_input('New caption?')
+                    new_words = new_caption.strip().split(' ')
+                    new_img_cap = np.zeros_like(img_cap)
+                    new_img_len = np.zeros_like(img_len)
+                    for j in xrange(len(new_words)):
+                        new_img_cap[0, j] = train_vocab.get(new_words[j], 0)
+                    new_img_len[0] = len(new_words)
+                    new_img_313, caption, cap_emb, cap_fw = sess.run([c313_tensor, caption_tensor, cap_emb_tensor, cap_fw_tensor], feed_dict={l_tensor: img_l, cap_tensor: new_img_cap, len_tensor: new_img_len})
+                    new_img_rgb, _ = decode(img_l, new_img_313, 2.63)
+                    new_word_list = list(new_img_cap[0, :new_img_len[0]])
+                    new_img_title = '_'.join(vrev.get(w, 'unk') for w in new_word_list) 
+                    io.imsave(os.path.join(OUTPUT_DIR, '{0}_n_{1}.jpg').format(i, new_img_title), new_img_rgb)
+                    print(caption[0, 100: 116])
+                    print(cap_emb[0, 1, 100: 116])
+                    print(cap_fw[0, 1, 100: 116])
+            finally:
+                hf.close()
+                print('H5 closed.')
 
 
 if __name__ == "__main__":
