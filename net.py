@@ -1173,5 +1173,5 @@ class Net(object):
             lstm_fw = tf.nn.rnn_cell.LSTMCell(self.lstm_hid_dim, reuse=tf.AUTO_REUSE, initializer=initializer)
             lstm_bw = tf.nn.rnn_cell.LSTMCell(self.lstm_hid_dim, reuse=tf.AUTO_REUSE, initializer=initializer)
             _, (hidden_fw, hidden_bw) = tf.nn.bidirectional_dynamic_rnn(lstm_fw, lstm_bw, encoded_captions, sequence_length=lens, dtype='float32')
-            hidden = tf.concat((hidden_fw, hidden_bw), 1)
-            return hidden, encoded_captions, hidden_fw
+            hidden = tf.concat((hidden_fw.h, hidden_bw.h), 1)
+            return hidden, encoded_captions, hidden_fw.h

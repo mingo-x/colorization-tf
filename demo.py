@@ -338,7 +338,7 @@ def colorize_with_language():
                     print(img_title)
                     print(caption[0, 100: 116])
                     print(cap_emb[0, 1, 100: 116])
-                    print(cap_fw[0, 1, 100: 116])
+                    print(cap_fw[0, 100: 116])
 
                     new_caption = raw_input('New caption?')
                     new_words = new_caption.strip().split(' ')
@@ -354,7 +354,7 @@ def colorize_with_language():
                     io.imsave(os.path.join(OUTPUT_DIR, '{0}_n_{1}.jpg').format(i, new_img_title), new_img_rgb)
                     print(caption[0, 100: 116])
                     print(cap_emb[0, 1, 100: 116])
-                    print(cap_fw[0, 1, 100: 116])
+                    print(cap_fw[0, 100: 116])
             finally:
                 hf.close()
                 print('H5 closed.')
