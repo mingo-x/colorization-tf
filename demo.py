@@ -337,7 +337,7 @@ def colorize_with_language():
                     io.imsave(os.path.join(OUTPUT_DIR, '{0}_o_{1}.jpg').format(i, img_title), img_rgb)
                     print(img_title)
                     print(caption[0, 100: 116])
-                    print(cap_emb[0, 1, 100: 116])
+                    print(cap_emb[0, new_img_len[0] - 1, 100: 116])
                     print(cap_fw[0, 100: 116])
 
                     new_caption = raw_input('New caption?')
@@ -353,7 +353,7 @@ def colorize_with_language():
                     new_img_title = '_'.join(vrev.get(w, 'unk') for w in new_word_list) 
                     io.imsave(os.path.join(OUTPUT_DIR, '{0}_n_{1}.jpg').format(i, new_img_title), new_img_rgb)
                     print(caption[0, 100: 116])
-                    print(cap_emb[0, 1, 100: 116])
+                    print(cap_emb[0, new_img_len[0] - 1, 100: 116])
                     print(cap_fw[0, 100: 116])
             finally:
                 hf.close()
