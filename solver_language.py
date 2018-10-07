@@ -189,7 +189,7 @@ class Solver_Language(object):
                                          examples_per_sec, sec_per_batch))
                     print(cap[0, 100: 132])
                     print(cap_emb[0, 1, 100: 132])
-                    print(cap_fw[0, 1, 100:132])
+                    print(cap_fw[0, 100:132])
                     start_time = time.time()
 
                 if step % 100 == 0:
