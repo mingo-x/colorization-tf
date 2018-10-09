@@ -46,6 +46,7 @@ class Solver_Language(object):
             self.gan = True if common_params['gan'] == '1' else False
             self.prior_boost = True if common_params['prior_boost'] == '1' else False
             self.corr = True if common_params['correspondence'] == '1' else False
+            self.with_caption = True if common_params['with_caption'] == '1' else False
             if self.corr:
                 print('Discriminator has correspondence.')
             else:
@@ -91,7 +92,10 @@ class Solver_Language(object):
                 (self.batch_size, int(self.height / 4), int(self.width / 4), 1)
             )
 
-            self.conv8_313 = self.net.inference4(self.data_l, self.captions, self.lens)
+            if self.with_caption:
+                self.conv8_313 = self.net.inference4(self.data_l, self.captions, self.lens)
+            else:
+                self.conv8_313 = self.net.inference1(self.data_l)
             # self.colorized_ab = self.net.conv313_to_ab(conv8_313)
 
             new_loss, g_loss, _ = self.net.loss(

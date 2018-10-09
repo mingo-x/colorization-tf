@@ -77,6 +77,10 @@ class DataSet(object):
                 caption = self.train_words[idx]
                 length = self.train_lengths[idx]
                 image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+                # Augmentation.
+                mirror = np.random.randint(0, 2)
+                if mirror:
+                    image = np.fliplr(image)
                 images.append(image)
                 captions.append(caption)
                 lens.append(length)
