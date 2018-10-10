@@ -49,6 +49,8 @@ class Net(object):
             return self.inference2(data_l)
         elif self.g_version == 3:
             return self.inference3(data_l)
+        elif self.g_version == 5:
+            return self.inference5(data_l)
 
 
     def inference0(self, data_l):
