@@ -162,7 +162,7 @@ class Solver_Language(object):
                 start_step = 0
 
                 if self.init_ckpt is not None:
-                    init_saver = tf.train.Saver(tf.global_variables(scope='G'))
+                    init_saver = tf.train.Saver(tf.global_variables(scope='G') + tf.global_variables(scope='Film'))
                     init_saver.restore(sess, self.init_ckpt)
                     print('Init generator with {}.'.format(self.init_ckpt))
 
