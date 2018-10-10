@@ -15,9 +15,9 @@ _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
 _G_VERSION = 1
-_CKPT_PATH = '/srv/glusterfs/xieya/tf_coco_imgp/models/model.ckpt-4000'
+_CKPT_PATH = '/srv/glusterfs/xieya/tf_coco_cocop/models/model.ckpt-74000'
 IMG_DIR = '/srv/glusterfs/xieya/data/DAVIS/JPEGImages/Full-Resolution/bus'
-OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/tf_coco_impg_4k'
+OUTPUT_DIR = '/home/xieya/tmp'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
 _VIDEO_IN_DIR = '/srv/glusterfs/xieya/data/DAVIS/JPEGImages/Full-Resolution/bus'
 _VIDEO_OUT_DIR = '/srv/glusterfs/xieya/video/bus/vgg_rs'
@@ -429,7 +429,7 @@ def colorize_coco_without_language():
                 img_313 = sess.run(c313_tensor, feed_dict={l_tensor: img_l})
                 img_rgb, _ = decode(img_l, img_313, 2.63)
                 io.imsave(os.path.join(OUTPUT_DIR, '{0}.jpg').format(i), img_rgb)
-                cv2.imwrite(os.path.join(OUTPUT_DIR, '{0}_gt.jpg').format(i), img_bgr)
+                # cv2.imwrite(os.path.join(OUTPUT_DIR, '{0}_gt.jpg').format(i), img_bgr)
                 print(i)
     hf.close()
     print('H5 closed.')
