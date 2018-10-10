@@ -140,6 +140,7 @@ class Solver(object):
             opt = tf.train.AdamOptimizer(
                 learning_rate=learning_rate, beta1=self.moment, beta2=0.9)
             G_vars = tf.trainable_variables(scope='G')
+            F_vars = tf.trainable_variables(scope='Film')
             T_vars = tf.trainable_variables(scope='T')
 
             with tf.variable_scope('T', reuse=True):
@@ -153,7 +154,7 @@ class Solver(object):
             if self.gan:
                 grads = opt.compute_gradients(self.new_loss * self.net.alpha + self.adv_loss + T_loss, var_list=G_vars + T_vars)
             else:
-                grads = opt.compute_gradients(self.new_loss, var_list=G_vars)
+                grads = opt.compute_gradients(self.new_loss, var_list=G_vars + F_vars)
             # grads_adv = opt.compute_gradients(self.adv_loss + T_loss, var_list=G_vars + T_vars)
 
             # for grad, var in grads:
@@ -176,7 +177,7 @@ class Solver(object):
             #     grads_adv)
             variable_averages = tf.train.ExponentialMovingAverage(
                 0.999, self.global_step)
-            variables_averages_op = variable_averages.apply(G_vars + T_vars)
+            variables_averages_op = variable_averages.apply(G_vars + T_vars + F_vars)
             train_op = tf.group(apply_gradient_op, variables_averages_op)
 
             if self.gan:

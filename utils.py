@@ -1,3 +1,4 @@
+import cv2
 from skimage import color
 from skimage.transform import downscale_local_mean, resize
 from skimage.io import imread, imsave
@@ -331,7 +332,8 @@ def decode(data_l, conv8_313, rebalance=1):
   cc = np.load(os.path.join(enc_dir, 'pts_in_hull.npy'))
   
   data_ab = np.dot(class8_313_rh, cc)
-  data_ab = resize(data_ab, (height, width))
+  # data_ab = resize(data_ab, (height, width))
+  data_ab = cv2.resize(data_ab, (height, width), interpolation=cv2.INTER_CUBIC)
 
   img_lab = np.concatenate((data_l, data_ab), axis=-1)
   img_rgb = color.lab2rgb(img_lab)

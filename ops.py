@@ -166,3 +166,7 @@ def deconv2d(scope, input, kernel_size, stride=1, relu=True, wd=nilboy_weight_de
 
 def batch_norm(scope, x, train=True):
   return tf.contrib.layers.batch_norm(x, center=True, scale=True, updates_collections=None, is_training=train, trainable=True, scope=scope)
+
+
+def bn(scope, x, train=True):
+  return tf.contrib.layers.batch_norm(x, epsilon=1e-5, center=False, scale=False, updates_collections=None, is_training=train, trainable=False, scope=scope)
