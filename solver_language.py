@@ -95,15 +95,15 @@ class Solver_Language(object):
             if self.with_caption:
                 if self.ckpt is None and self.init_ckpt is not None:
                     # Restore gamma and beta of BN.
-                    biases = []
+                    self.biases = []
                     for i in xrange(8):
                         gamma = tf.get_variable('G/bn_{}/gamma'.format(i + 1), (self.net.in_dims[i], ), dtype=tf.float32)
                         beta = tf.get_variable('G/bn_{}/beta'.format(i + 1), (self.net.in_dims[i], ), dtype=tf.float32)
                         bn_saver = tf.train.Saver({'G/bn_{}/gamma'.format(i + 1): gamma, 'G/bn_{}/beta'.format(i + 1): beta})
                         bn_saver.restore(sess, self.init_ckpt)
                         bias = tf.concat((gamma, beta), axis=-1)
-                        biases.append(sess.run(bias))
-                self.conv8_313, self.gamma, self.beta = self.net.inference4(self.data_l, self.captions, self.lens, biases)
+                        self.biases.append(sess.run(bias))
+                self.conv8_313, self.gamma, self.beta = self.net.inference4(self.data_l, self.captions, self.lens, self.biases)
             else:
                 self.conv8_313 = self.net.inference(self.data_l)
             # self.colorized_ab = self.net.conv313_to_ab(conv8_313)
@@ -178,7 +178,7 @@ class Solver_Language(object):
                     print('Init generator with {}.'.format(self.init_ckpt))
 
                 gamma, beta = sess.run([self.gamma, self.beta])
-                print(biases[0])
+                print(self.biases[0])
                 print(np.concatenate((gamma, beta), axis=-1))
 
             summary_writer = tf.summary.FileWriter(self.train_dir, sess.graph)
