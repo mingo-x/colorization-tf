@@ -169,4 +169,4 @@ def batch_norm(scope, x, train=True):
 
 
 def bn(scope, x, train=True):
-  return tf.contrib.layers.batch_norm(x, epsilon=1e-5, center=False, scale=False, updates_collections=None, is_training=train, trainable=False, scope=scope)
+  return tf.contrib.layers.batch_norm(x, epsilon=1e-5, center=False, scale=False, updates_collections=None, is_training=train, trainable=True, scope=scope)
