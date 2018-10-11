@@ -103,7 +103,7 @@ class Solver_Language(object):
                         bn_saver.restore(sess, self.init_ckpt)
                         bias = tf.concat((gamma, beta), axis=-1)
                         biases.append(sess.run(bias))
-                self.conv8_313 = self.net.inference4(self.data_l, self.captions, self.lens, biases)
+                self.conv8_313, self.gamma, self.beta = self.net.inference4(self.data_l, self.captions, self.lens, biases)
             else:
                 self.conv8_313 = self.net.inference(self.data_l)
             # self.colorized_ab = self.net.conv313_to_ab(conv8_313)
@@ -176,6 +176,10 @@ class Solver_Language(object):
                     init_saver = tf.train.Saver(tf.global_variables(scope='G'))
                     init_saver.restore(sess, self.init_ckpt)
                     print('Init generator with {}.'.format(self.init_ckpt))
+
+                gamma, beta = sess.run([self.gamma, self,beta])
+                print(biases[0])
+                print(np.concatenate((gamma, beta), axis=-1))
 
             summary_writer = tf.summary.FileWriter(self.train_dir, sess.graph)
             start_time = time.time()

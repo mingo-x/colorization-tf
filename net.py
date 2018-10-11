@@ -688,7 +688,7 @@ class Net(object):
             conv_num += 1
 
         conv8_313 = temp_conv
-        return conv8_313
+        return conv8_313, gammas[0], betas[0]
 
     def inference5(self, data_l):
         gammas = []
