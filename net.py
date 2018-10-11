@@ -688,6 +688,7 @@ class Net(object):
             conv_num += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 256], stride=1, relu=False, wd=self.weight_decay)
             conv_num += 1
+            temp_conv = bn('bn_8', temp_conv, train=self.train)
             temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
             temp_conv = tf.nn.relu(temp_conv)
 
@@ -795,6 +796,7 @@ class Net(object):
             conv_num += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 256], stride=1, relu=False, wd=self.weight_decay)
             conv_num += 1
+            temp_conv = bn('bn_8', temp_conv, train=self.train)
             temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
             temp_conv = tf.nn.relu(temp_conv)
 
