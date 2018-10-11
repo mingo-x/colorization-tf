@@ -93,7 +93,22 @@ class Solver_Language(object):
             )
 
             if self.with_caption:
-                self.conv8_313 = self.net.inference4(self.data_l, self.captions, self.lens)
+                if self.ckpt is None and self.init_ckpt is not None:
+                    # Restore gamma and beta of BN.
+                    biases = []
+                    for i in xrange(8):
+                        gamma = tf.get_variable('G/bn_{}/gamma'.format(i + 1), (self.batch_size, ), dtype=tf.float32)
+                        beta = tf.get_variable('G/bn_{}/beta'.format(i + 1), (self.batch_size, ), dtype=tf.float32)
+                        bn_saver = tf.train.saver({'G/bn_{}/gamma'.format(i + 1): gamma, 'G/bn_{}/beta'.format(i + 1): beta})
+                        bn_saver.restore(sess, self.init_ckpt)
+                        gamma = gamma[:, tf.newaxis]
+                        beta = beta[:, tf.newaxis]
+                        gamma = tf.manip.tile(gamma, (1, self.net.in_dims[i]))
+                        beta = tf.manip.tile(beta, (1, self.net.in_dims[i]))
+                        bias = tf.concat((gamma, beta), axis=-1)
+                        biases.append(sess.run(bias))
+                        print(biases[-1].shape)
+                self.conv8_313 = self.net.inference4(self.data_l, self.captions, self.lens, biases)
             else:
                 self.conv8_313 = self.net.inference(self.data_l)
             # self.colorized_ab = self.net.conv313_to_ab(conv8_313)
@@ -162,7 +177,7 @@ class Solver_Language(object):
                 start_step = 0
 
                 if self.init_ckpt is not None:
-                    init_saver = tf.train.Saver(tf.global_variables(scope='G') + tf.global_variables(scope='Film'))
+                    init_saver = tf.train.Saver(tf.global_variables(scope='G'))
                     init_saver.restore(sess, self.init_ckpt)
                     print('Init generator with {}.'.format(self.init_ckpt))
 

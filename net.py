@@ -55,11 +55,12 @@ class Net(object):
 
 
     def inference0(self, data_l):
+        output = data_l * 50
         with tf.variable_scope('G'):
             #conv1
             conv_num = 1
 
-            temp_conv = conv2d('conv_{}'.format(conv_num), data_l, [3, 3, 1, 64], stride=1, wd=self.weight_decay)
+            temp_conv = conv2d('conv_{}'.format(conv_num),output, [3, 3, 1, 64], stride=1, wd=self.weight_decay)
             conv_num += 1
 
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 64, 64], stride=2, wd=self.weight_decay)
@@ -577,14 +578,14 @@ class Net(object):
         conv8_313 = temp_conv
         return conv8_313
 
-    def inference4(self, data_l, captions, lens):
-        caption_feature = self.caption_encoding(captions, lens)
-        # caption_feature = tf.zeros_like(caption_feature)
+    def inference4(self, data_l, captions, lens, biases):
+        # caption_feature = self.caption_encoding(captions, lens)
+        caption_feature = tf.zeros_like(caption_feature)
         with tf.variable_scope('Film'):
             gammas = []
             betas = []
             for i in range(8):
-                dense = Linear('dense', caption_feature, self.in_dims[i] * 2)
+                dense = Linear('dense_{}'.format(i), caption_feature, self.in_dims[i] * 2, tf.constant_initializer(biases[i]))
                 gamma, beta = tf.split(dense, 2, axis=-1)
                 gammas.append(gamma)
                 betas.append(beta)
@@ -690,15 +691,13 @@ class Net(object):
         return conv8_313
 
     def inference5(self, data_l):
-        caption_feature = tf.zeros((self.batch_size, 512))
-        with tf.variable_scope('Film'):
-            gammas = []
-            betas = []
-            for i in range(8):
-                dense = Linear('dense', caption_feature, self.in_dims[i] * 2)
-                gamma, beta = tf.split(dense, 2, axis=-1)
-                gammas.append(gamma)
-                betas.append(beta)
+        gammas = []
+        betas = []
+        for i in range(8):
+            dense = Linear('dense', caption_feature, self.in_dims[i] * 2)
+            gamma, beta = tf.split(dense, 2, axis=-1)
+            gammas.append(variable_with_weight_decay('gamma{}'.format(i), (self.batch_size, )))
+            betas.append(beta)
 
         with tf.variable_scope('G'):
             # conv1
