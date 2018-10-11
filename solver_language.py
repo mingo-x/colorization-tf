@@ -186,6 +186,7 @@ class Solver_Language(object):
             start_step = int(start_step)
 
             for step in xrange(start_step, self.max_steps, self.g_repeat):
+                data_l, gt_ab_313, prior_boost_nongray, captions, lens = self.dataset.batch()
                 if step % _LOG_FREQ == 0:
                     duration = time.time() - start_time
                     num_examples_per_step = self.batch_size * self.num_gpus * _LOG_FREQ
@@ -203,7 +204,6 @@ class Solver_Language(object):
                     start_time = time.time()
 
                 # Generator training.
-                data_l, gt_ab_313, prior_boost_nongray, captions, lens = self.dataset.batch()
                 sess.run([train_op], feed_dict={
                     self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray,
                     self.captions: captions, self.lens: lens})
