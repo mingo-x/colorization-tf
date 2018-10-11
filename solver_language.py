@@ -177,7 +177,7 @@ class Solver_Language(object):
                     init_saver.restore(sess, self.init_ckpt)
                     print('Init generator with {}.'.format(self.init_ckpt))
 
-                gamma, beta = sess.run([self.gamma, self,beta])
+                gamma, beta = sess.run([self.gamma, self.beta])
                 print(biases[0])
                 print(np.concatenate((gamma, beta), axis=-1))
 
