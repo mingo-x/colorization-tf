@@ -579,7 +579,7 @@ class Net(object):
         return conv8_313
 
     def inference4(self, data_l, captions, lens, biases):
-        # caption_feature = self.caption_encoding(captions, lens)
+        caption_feature = self.caption_encoding(captions, lens)
         caption_feature = tf.zeros_like(caption_feature)
         with tf.variable_scope('Film'):
             gammas = []
