@@ -77,7 +77,7 @@ class Solver_Language(object):
             common_params=common_params, dataset_params=dataset_params)
         print("Solver initialization done.")
 
-    def construct_graph(self, scope):
+    def construct_graph(self, scope, sess):
         with tf.device('/gpu:' + str(self.device_id)):
             self.data_l = tf.placeholder(
                 tf.float32, (self.batch_size, self.height, self.width, 1))
@@ -99,7 +99,7 @@ class Solver_Language(object):
                     for i in xrange(8):
                         gamma = tf.get_variable('G/bn_{}/gamma'.format(i + 1), (self.batch_size, ), dtype=tf.float32)
                         beta = tf.get_variable('G/bn_{}/beta'.format(i + 1), (self.batch_size, ), dtype=tf.float32)
-                        bn_saver = tf.train.saver({'G/bn_{}/gamma'.format(i + 1): gamma, 'G/bn_{}/beta'.format(i + 1): beta})
+                        bn_saver = tf.train.Saver({'G/bn_{}/gamma'.format(i + 1): gamma, 'G/bn_{}/beta'.format(i + 1): beta})
                         bn_saver.restore(sess, self.init_ckpt)
                         gamma = gamma[:, tf.newaxis]
                         beta = beta[:, tf.newaxis]
@@ -132,8 +132,13 @@ class Solver_Language(object):
             train_vocab = pickle.load(open('/home/xieya/colorfromlanguage/priors/coco_colors_vocab.p', 'r'))
             vrev = dict((v, k) for (k, v) in train_vocab.iteritems())
 
+            config = tf.ConfigProto(allow_soft_placement=True)
+            config.gpu_options.allow_growth = True
+            sess = tf.Session(config=config)
+            print("Session configured.")
+
             with tf.name_scope('gpu') as scope:
-                self.new_loss, self.total_loss = self.construct_graph(scope)
+                self.new_loss, self.total_loss = self.construct_graph(scope, sess)
                 self.summaries = tf.get_collection(
                     tf.GraphKeys.SUMMARIES, scope)
 
@@ -160,11 +165,7 @@ class Solver_Language(object):
             saver = tf.train.Saver(write_version=tf.train.SaverDef.V2)
             summary_op = tf.summary.merge(self.summaries)
             init = tf.global_variables_initializer()
-            config = tf.ConfigProto(allow_soft_placement=True)
-            config.gpu_options.allow_growth = True
-            sess = tf.Session(config=config)
-            print("Session configured.")
-
+        
             if self.ckpt is not None:
                 saver.restore(sess, self.ckpt)
                 print(self.ckpt + " restored.")
