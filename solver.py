@@ -168,8 +168,8 @@ class Solver(object):
             # for var in tf.global_variables(scope='G'):
             #     self.summaries.append(tf.summary.histogram(var.op.name, var))
 
-            for var in tf.global_variables(scope='G'):
-                print(var)
+            # for var in tf.global_variables(scope='G'):
+                # print(var)
 
             apply_gradient_op = opt.apply_gradients(
                 grads, global_step=self.global_step)
