@@ -179,19 +179,13 @@ class Solver_Language(object):
 
                 gamma, beta = sess.run([self.gamma, self.beta])
                 print(self.biases[0])
-                print(np.concatenate((gamma, beta), axis=-1))
+                print(np.concatenate((gamma[0], beta[0]), axis=-1))
 
             summary_writer = tf.summary.FileWriter(self.train_dir, sess.graph)
             start_time = time.time()
             start_step = int(start_step)
 
             for step in xrange(start_step, self.max_steps, self.g_repeat):
-                # Generator training.
-                data_l, gt_ab_313, prior_boost_nongray, captions, lens = self.dataset.batch()
-                sess.run([train_op], feed_dict={
-                    self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray,
-                    self.captions: captions, self.lens: lens})
-
                 if step % _LOG_FREQ == 0:
                     duration = time.time() - start_time
                     num_examples_per_step = self.batch_size * self.num_gpus * _LOG_FREQ
@@ -207,6 +201,12 @@ class Solver_Language(object):
                                          step, loss_value, new_loss_value,
                                          examples_per_sec, sec_per_batch))
                     start_time = time.time()
+
+                # Generator training.
+                data_l, gt_ab_313, prior_boost_nongray, captions, lens = self.dataset.batch()
+                sess.run([train_op], feed_dict={
+                    self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray,
+                    self.captions: captions, self.lens: lens})
 
                 if step % 100 == 0:
                     summary_str, img_313s = sess.run([summary_op, self.conv8_313], feed_dict={

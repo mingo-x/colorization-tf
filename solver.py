@@ -170,6 +170,7 @@ class Solver(object):
 
             total_param = 0
             for var in tf.global_variables(scope='G'):
+                print(var)
                 total_param += np.prod(var.get_shape())
             print('Total params: {}.'.format(total_param))
 

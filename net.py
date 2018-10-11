@@ -585,7 +585,7 @@ class Net(object):
             gammas = []
             betas = []
             for i in range(8):
-                dense = Linear('dense_{}'.format(i), caption_feature, self.in_dims[i] * 2, tf.constant_initializer(biases[i]))
+                dense = Linear('dense_{}'.format(i), caption_feature, self.in_dims[i] * 2, tf.constant_initializer(biases[i], dtype=tf.float32))
                 gamma, beta = tf.split(dense, 2, axis=-1)
                 gammas.append(gamma)
                 betas.append(beta)
