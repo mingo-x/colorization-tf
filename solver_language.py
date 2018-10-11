@@ -177,9 +177,10 @@ class Solver_Language(object):
                     init_saver.restore(sess, self.init_ckpt)
                     print('Init generator with {}.'.format(self.init_ckpt))
 
-                gamma, beta = sess.run([self.gamma, self.beta])
-                print(self.biases[0])
-                print(np.concatenate((gamma[0], beta[0]), axis=-1))
+                if self.with_caption:
+                    gamma, beta = sess.run([self.gamma, self.beta])
+                    print(self.biases[0])
+                    print(np.concatenate((gamma[0], beta[0]), axis=-1))
 
             summary_writer = tf.summary.FileWriter(self.train_dir, sess.graph)
             start_time = time.time()
