@@ -47,18 +47,14 @@ class Solver_Language(object):
             self.prior_boost = True if common_params['prior_boost'] == '1' else False
             self.corr = True if common_params['correspondence'] == '1' else False
             self.with_caption = True if common_params['with_caption'] == '1' else False
-            if self.corr:
-                print('Discriminator has correspondence.')
-            else:
-                print('Discriminator has no correspondence.')
-            if self.gan:
-                print('Using GAN.')
-            else:
-                print('Not using GAN.')
             if self.prior_boost:
                 print('Using prior boost.')
             else:
                 print('Not using prior boost.')
+            if self.with_caption:
+                print('Training with captions.')
+            else:
+                print('Training without captions.')
 
         if solver_params:
             self.learning_rate = float(solver_params['learning_rate'])
@@ -103,7 +99,7 @@ class Solver_Language(object):
                         bn_saver.restore(sess, self.init_ckpt)
                         bias = tf.concat((gamma, beta), axis=-1)
                         self.biases.append(sess.run(bias))
-                self.conv8_313, self.gamma, self.beta = self.net.inference4(self.data_l, self.captions, self.lens, self.biases)
+                self.conv8_313 = self.net.inference4(self.data_l, self.captions, self.lens, self.biases)
             else:
                 self.conv8_313 = self.net.inference(self.data_l)
             # self.colorized_ab = self.net.conv313_to_ab(conv8_313)
@@ -178,11 +174,6 @@ class Solver_Language(object):
                     init_saver = tf.train.Saver(tf.global_variables(scope='G'))
                     init_saver.restore(sess, self.init_ckpt)
                     print('Init generator with {}.'.format(self.init_ckpt))
-
-                if self.with_caption:
-                    gamma, beta = sess.run([self.gamma, self.beta])
-                    print(self.biases[0])
-                    print(np.concatenate((gamma[0], beta[0]), axis=-1))
 
             summary_writer = tf.summary.FileWriter(self.train_dir, sess.graph)
             start_time = time.time()
