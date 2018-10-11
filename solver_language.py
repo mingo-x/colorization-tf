@@ -144,11 +144,13 @@ class Solver_Language(object):
                 learning_rate=learning_rate, beta1=self.moment, beta2=0.99)
             grads = opt.compute_gradients(self.new_loss)
 
-            for grad, var in grads:
-                if grad is not None:
-                    self.summaries.append(tf.summary.histogram(var.op.name + '/gradients', grad))
+            # for grad, var in grads:
+            #     if grad is not None:
+            #         self.summaries.append(tf.summary.histogram(var.op.name + '/gradients', grad))
+            # for var in tf.global_variables():
+            #     self.summaries.append(tf.summary.histogram(var.op.name, var))
             for var in tf.global_variables():
-                self.summaries.append(tf.summary.histogram(var.op.name, var))
+                print(var)
 
             apply_gradient_op = opt.apply_gradients(
                 grads, global_step=self.global_step)
