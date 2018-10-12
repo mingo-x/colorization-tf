@@ -575,7 +575,7 @@ class Net(object):
         conv8_313 = temp_conv
         return conv8_313
 
-    def inference4(self, data_l, captions, lens, biases=None):
+    def inference4(self, data_l, captions, lens, biases=None, kernel_initializer=None):
         caption_feature = self.caption_encoding(captions, lens)
         # caption_feature = tf.zeros_like(caption_feature)
         with tf.variable_scope('Film'):
@@ -586,7 +586,8 @@ class Net(object):
                     initializer = tf.zeros_initializer(dtype=tf.float32)
                 else:
                     initializer = tf.constant_initializer(biases[i], dtype=tf.float32)
-                dense = Linear('dense_{}'.format(i), caption_feature, self.in_dims[i] * 2, initializer)
+
+                dense = Linear('dense_{}'.format(i), caption_feature, self.in_dims[i] * 2, initializer, kernel_initializer)
                 gamma, beta = tf.split(dense, 2, axis=-1)
                 gammas.append(gamma)
                 betas.append(beta)
