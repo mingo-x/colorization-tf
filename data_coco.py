@@ -32,6 +32,7 @@ class DataSet(object):
 
         if common_params:
             self.batch_size = int(common_params['batch_size'])
+            self.with_caption = True if common_params['with_caption'] == '1' else False
 
         # record and image_label queue
         self.record_queue = Queue(maxsize=15000)
@@ -87,7 +88,7 @@ class DataSet(object):
             images = np.asarray(images, dtype=np.uint8)
             captions = np.asarray(captions, dtype=np.int32)
             lens = np.asarray(lens, dtype=np.int32)
-            l, gt, prior, _ = preprocess(images, c313=True, prior_path=self.prior_path)
+            l, gt, prior, _ = preprocess(images, c313=True, prior_path=self.prior_path, mask_gray=(not self.with_caption))
 
             self.batch_queue.put((l, gt, prior, captions, lens))
 

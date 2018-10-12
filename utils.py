@@ -230,7 +230,7 @@ def get_prior(data_ab):
   return prior
 
 
-def preprocess(data, training=True, c313=False, is_gan=False, is_rgb=True, prior_path='./resources/prior_probs_smoothed.npy'):
+def preprocess(data, training=True, c313=False, is_gan=False, is_rgb=True, prior_path='./resources/prior_probs_smoothed.npy', mask_gray=True):
   '''Preprocess
   Args: 
     data: RGB batch (N * H * W * 3)
@@ -276,7 +276,8 @@ def preprocess(data, training=True, c313=False, is_gan=False, is_rgb=True, prior
 
   #NonGrayMask {N, 1, 1, 1}
   thresh = 5
-  nongray_mask = (np.sum(np.sum(np.sum(np.abs(data_ab_ss) > thresh, axis=1), axis=1), axis=1) > 0)[:, np.newaxis, np.newaxis, np.newaxis]
+  if mask_gray:
+    nongray_mask = (np.sum(np.sum(np.sum(np.abs(data_ab_ss) > thresh, axis=1), axis=1), axis=1) > 0)[:, np.newaxis, np.newaxis, np.newaxis]
 
   #NNEncoder
   #gt_ab_313: [N, H/4, W/4, 313]
@@ -293,7 +294,10 @@ def preprocess(data, training=True, c313=False, is_gan=False, is_rgb=True, prior
 
   #Eltwise
   #prior_boost_nongray: [N, 1, H/4, W/4]
-  prior_boost_nongray = prior_boost * nongray_mask
+  if mask_gray:
+    prior_boost_nongray = prior_boost * nongray_mask
+  else:
+    prior_boost_nongray = prior_boost
 
   if training:
     if c313:
