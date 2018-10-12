@@ -156,7 +156,7 @@ class Solver_Language(object):
             variables_averages_op = variable_averages.apply(tf.trainable_variables())
             train_op = tf.group(apply_gradient_op, variables_averages_op)
 
-            saver = tf.train.Saver(write_version=tf.train.SaverDef.V2)
+            saver = tf.train.Saver(write_version=tf.train.SaverDef.V2, max_to_keep=10, keep_checkpoint_every_n_hours=1)
             summary_op = tf.summary.merge(self.summaries)
             init = tf.global_variables_initializer()
         
