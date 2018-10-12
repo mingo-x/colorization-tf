@@ -89,6 +89,7 @@ class Solver_Language(object):
             )
 
             if self.with_caption:
+                self.biases = None
                 if self.ckpt is None and self.init_ckpt is not None:
                     # Restore gamma and beta of BN.
                     self.biases = []
