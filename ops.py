@@ -56,7 +56,8 @@ def ConvMeanPool(scope, input, filter_size):
 
 
 def Linear(scope, input, dim, bias_initializer=tf.constant_initializer(0.0)):
-  kernel_initializer = tf.contrib.layers.variance_scaling_initializer(factor=2.0, mode='FAN_IN', uniform=True, dtype=tf.float32)
+  # kernel_initializer = tf.contrib.layers.variance_scaling_initializer(factor=2.0, mode='FAN_IN', uniform=True, dtype=tf.float32)
+  kernel_initializer = tf.zeros_initializer(dtype=tf.float32)
   return tf.layers.dense(input, dim, kernel_initializer=kernel_initializer, bias_initializer=bias_initializer)
 
 

@@ -583,9 +583,9 @@ class Net(object):
             betas = []
             for i in range(8):
                 if biases is None:
-                  initializer = tf.zeros_initializer(dtype=tf.float32)
+                    initializer = tf.zeros_initializer(dtype=tf.float32)
                 else:
-                  initializer = tf.constant_initializer(biases[i], dtype=tf.float32)
+                    initializer = tf.constant_initializer(biases[i], dtype=tf.float32)
                 dense = Linear('dense_{}'.format(i), caption_feature, self.in_dims[i] * 2, initializer)
                 gamma, beta = tf.split(dense, 2, axis=-1)
                 gammas.append(gamma)
