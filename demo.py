@@ -15,13 +15,13 @@ _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
 _G_VERSION = 1
-_CKPT_PATH = '/srv/glusterfs/xieya/tf_coco_cocop/models/model.ckpt-74000'
-IMG_DIR = '/srv/glusterfs/xieya/data/DAVIS/JPEGImages/Full-Resolution/bus'
-OUTPUT_DIR = '/home/xieya/tmp'
+_CKPT_PATH = '/srv/glusterfs/xieya/vgg_1/models/model.ckpt-1000'
+IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
+OUTPUT_DIR = '/home/xieya/tmp1'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
 _VIDEO_IN_DIR = '/srv/glusterfs/xieya/data/DAVIS/JPEGImages/Full-Resolution/bus'
 _VIDEO_OUT_DIR = '/srv/glusterfs/xieya/video/bus/vgg_rs'
-_NEW_CAPTION = False
+_NEW_CAPTION = True
 # T = 2.63
 T = 2.63
 
@@ -55,7 +55,7 @@ def _get_model(input_tensor):
 def _colorize_single_img(img_name, model, input_tensor, sess):
     img_path = os.path.join(IMG_DIR, img_name)
     img = cv2.imread(img_path)
-    img = _resize(img)
+    # img = _resize(img)
     img_rs = cv2.resize(img, (INPUT_SIZE, INPUT_SIZE))
     if len(img.shape) == 3:
         img_l = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -303,7 +303,7 @@ def places365():
 
 
 def colorize_with_language():
-    hf = h5py.File('/srv/glusterfs/xieya/data/coco_colors.h5')
+    hf = h5py.File('/srv/glusterfs/xieya/data/coco_colors.h5', 'r')
     val_imgs = hf['val_ims']
     val_caps = hf['val_words']
     val_lens = hf['val_length']
@@ -406,7 +406,7 @@ def colorize_video_with_language():
 
 
 def colorize_coco_without_language():
-    hf = h5py.File('/srv/glusterfs/xieya/data/coco_colors.h5')
+    hf = h5py.File('/srv/glusterfs/xieya/data/coco_colors.h5', 'r')
     val_imgs = hf['val_ims']
     val_num = len(val_imgs)
     with tf.device('/gpu:0'):
@@ -420,8 +420,8 @@ def colorize_coco_without_language():
         with tf.Session(config=config) as sess:
             saver.restore(sess, _CKPT_PATH)
 
-            for i in xrange(200):
-                # i = random.randint(0, val_num - 1)
+            for _ in xrange(200):
+                i = random.randint(0, val_num - 1)
                 img_bgr = val_imgs[i]
                 img_l = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
                 img_l = (img_l.astype(dtype=np.float32)) / 255.0 * 2 - 1
@@ -443,6 +443,6 @@ if __name__ == "__main__":
     # demo_wgan_rgb()
     # _colorize_high_res_img(_IMG_NAME)
     # cifar()
-    # colorize_with_language()
+    colorize_with_language()
     # colorize_video_with_language()
-    colorize_coco_without_language()
+    # colorize_coco_without_language()
