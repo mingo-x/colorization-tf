@@ -146,7 +146,7 @@ class Solver_Language(object):
             #         self.summaries.append(tf.summary.histogram(var.op.name + '/gradients', grad))
             # for var in tf.global_variables():
             #     self.summaries.append(tf.summary.histogram(var.op.name, var))
-            for var in tf.global_variables(scope='G'):
+            for var in tf.global_variables():
                 print(var)
 
             apply_gradient_op = opt.apply_gradients(
