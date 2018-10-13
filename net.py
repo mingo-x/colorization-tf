@@ -575,7 +575,7 @@ class Net(object):
         conv8_313 = temp_conv
         return conv8_313
 
-    def inference4(self, data_l, captions, lens, biases=None):
+    def inference4(self, data_l, captions, lens, biases=None, kernel_initializer=None):
         caption_feature = self.caption_encoding(captions, lens)
         # caption_feature = tf.zeros_like(caption_feature)
         with tf.variable_scope('Film'):
@@ -586,7 +586,8 @@ class Net(object):
                     initializer = tf.zeros_initializer(dtype=tf.float32)
                 else:
                     initializer = tf.constant_initializer(biases[i], dtype=tf.float32)
-                dense = Linear('dense_{}'.format(i), caption_feature, self.in_dims[i] * 2, initializer)
+
+                dense = Linear('dense_{}'.format(i), caption_feature, self.in_dims[i] * 2, initializer, kernel_initializer)
                 gamma, beta = tf.split(dense, 2, axis=-1)
                 gammas.append(gamma)
                 betas.append(beta)
@@ -1177,7 +1178,7 @@ class Net(object):
             embedding = tf.constant(self.word_embedding, name='word_embedding', dtype='float32')
             encoded_captions = tf.nn.embedding_lookup(embedding, captions, name='lookup')
             encoded_captions = tf.nn.dropout(encoded_captions, 0.8)
-            initializer = tf.contrib.layers.variance_scaling_initializer(factor=2.0, mode='FAN_IN', uniform=False, dtype=tf.float32)
+            initializer = tf.contrib.layers.variance_scaling_initializer(factor=2.0, mode='FAN_IN', uniform=True, dtype=tf.float32)
             lstm_fw = tf.nn.rnn_cell.LSTMCell(self.lstm_hid_dim, reuse=tf.AUTO_REUSE, initializer=initializer)
             lstm_bw = tf.nn.rnn_cell.LSTMCell(self.lstm_hid_dim, reuse=tf.AUTO_REUSE, initializer=initializer)
             _, (state_fw, state_bw) = tf.nn.bidirectional_dynamic_rnn(lstm_fw, lstm_bw, encoded_captions, sequence_length=lens, dtype='float32')

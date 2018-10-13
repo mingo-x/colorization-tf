@@ -47,6 +47,7 @@ class Solver_Language(object):
             self.prior_boost = True if common_params['prior_boost'] == '1' else False
             self.corr = True if common_params['correspondence'] == '1' else False
             self.with_caption = True if common_params['with_caption'] == '1' else False
+            self.kernel_zero = True if common_params['kernel_zero'] == '1' else False
             if self.prior_boost:
                 print('Using prior boost.')
             else:
@@ -100,7 +101,10 @@ class Solver_Language(object):
                         bn_saver.restore(sess, self.init_ckpt)
                         bias = tf.concat((gamma, beta), axis=-1)
                         self.biases.append(sess.run(bias))
-                self.conv8_313 = self.net.inference4(self.data_l, self.captions, self.lens, self.biases)
+                kernel = None
+                if self.kernel_zero:
+                    kernel = tf.zeros_initializer(dtype=tf.float32)
+                self.conv8_313 = self.net.inference4(self.data_l, self.captions, self.lens, self.biases, kernel)
             else:
                 self.conv8_313 = self.net.inference(self.data_l)
             # self.colorized_ab = self.net.conv313_to_ab(conv8_313)

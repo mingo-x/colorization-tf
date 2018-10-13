@@ -15,7 +15,7 @@ _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
 _G_VERSION = 1
-_CKPT_PATH = '/srv/glusterfs/xieya/vgg_1/models/model.ckpt-1000'
+_CKPT_PATH = '/srv/glusterfs/xieya/vgg_1/models/model.ckpt-45000'
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
 OUTPUT_DIR = '/home/xieya/tmp1'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
@@ -327,8 +327,12 @@ def colorize_with_language():
             saver.restore(sess, _CKPT_PATH)
 
             try:
+                idx = [335, 3735]
                 for _ in xrange(200):
                     i = random.randint(0, val_num - 1)
+                    idx.append(i)
+
+                for i in idx:
                     img_bgr = val_imgs[i]
                     img_l = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
                     img_l = (img_l.astype(dtype=np.float32)) / 255.0 * 2 - 1
@@ -427,7 +431,7 @@ def colorize_coco_without_language():
                 img_l = (img_l.astype(dtype=np.float32)) / 255.0 * 2 - 1
                 img_l = img_l[None, :, :, None]
                 img_313 = sess.run(c313_tensor, feed_dict={l_tensor: img_l})
-                img_rgb, _ = decode(img_l, img_313, 2.63)
+                img_rgb, _ = decode(img_l, img_313, 1.5)
                 io.imsave(os.path.join(OUTPUT_DIR, '{0}.jpg').format(i), img_rgb)
                 # cv2.imwrite(os.path.join(OUTPUT_DIR, '{0}_gt.jpg').format(i), img_bgr)
                 print(i)
