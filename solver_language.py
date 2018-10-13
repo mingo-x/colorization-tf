@@ -104,6 +104,7 @@ class Solver_Language(object):
                 kernel = None
                 if self.kernel_zero:
                     kernel = tf.zeros_initializer(dtype=tf.float32)
+                    print('Film dense kernel initialized with zeros.')
                 self.conv8_313 = self.net.inference4(self.data_l, self.captions, self.lens, self.biases, kernel)
             else:
                 self.conv8_313 = self.net.inference(self.data_l)

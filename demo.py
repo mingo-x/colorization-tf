@@ -330,8 +330,9 @@ def colorize_with_language():
                 for _ in xrange(200):
                     i = random.randint(0, val_num - 1)
                     img_bgr = val_imgs[i]
-                    img_l = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
-                    img_l = (img_l.astype(dtype=np.float32)) / 255.0 * 2 - 1
+                    img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+                    img_l = color.rgb2lab(img_rgb)[:, :, 0]
+                    img_l = (img_l.astype(dtype=np.float32) - 50.) / 50.
                     img_l = img_l[None, :, :, None]
                     img_cap = val_caps[i: i + 1]
                     img_len = val_lens[i: i + 1]
