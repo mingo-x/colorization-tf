@@ -21,6 +21,9 @@ import utils
 _LOG_FREQ = 10
 
 
+def scalar_summary(tag, value):
+    return tf.Summary(value=[tf.Summary.Value(tag=tag, simple_value=value)])
+
 class Solver_Language(object):
 
     def __init__(
@@ -227,8 +230,8 @@ class Solver_Language(object):
                         eval_loss_rb += new_loss_value
                     eval_loss /= 32 * self.batch_size
                     eval_loss_rb /= 32 * self.batch_size
-                    eval_loss_sum = utils.scalar_summary('eval_loss', eval_loss)
-                    eval_loss_rb_sum = utils.scalar_summary('eval_loss_rb', eval_loss_rb)
+                    eval_loss_sum = scalar_summary('eval_loss', eval_loss)
+                    eval_loss_rb_sum = scalar_summary('eval_loss_rb', eval_loss_rb)
                     summary_writer.add_summary(eval_loss_sum, step)
                     summary_writer.add_summary(eval_loss_rb_sum, step)
                     print('Evaluation at step {0}: loss {1}, rebalanced loss {2}.'.format(step, eval_loss, eval_loss_rb))
