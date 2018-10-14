@@ -883,6 +883,7 @@ class Net(object):
 
         wd_loss = tf.add_n(tf.get_collection('losses', scope=scope))
         l2_loss = tf.get_variable('regularization', (1, ), initializer=tf.zeros_initializer, dtype=tf.float32)
+        print(wd_loss.get_shape(), l2_loss.get_shape())
         for tf_var in tf.trainable_variables():
             if 'kernel' in tf_var.name:
                   l2_loss += tf.nn.l2_loss(tf_var)
