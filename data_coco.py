@@ -72,8 +72,8 @@ class DataSet(object):
             if self.record_point % self.record_number == 0:
                 self.idx = np.random.permutation(self.record_number)
                 self.record_point = 0
-            idx = self.idx[self.record_point]
-            self.record_queue.put(idx)
+            i = self.idx[self.record_point]
+            self.record_queue.put(i)
             self.record_point += 1
 
     def image_customer(self):
@@ -81,7 +81,7 @@ class DataSet(object):
             images = []
             captions = []
             lens = []
-            for i in range(self.batch_size):
+            for _ in range(self.batch_size):
                 idx = self.record_queue.get()
                 image = self.train_origs[idx]
                 caption = self.train_words[idx]
