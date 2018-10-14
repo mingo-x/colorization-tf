@@ -426,3 +426,7 @@ def save_images(X, save_path):
         img[j*h:j*h+h, i*w:i*w+w] = x
 
     imsave(save_path, img)
+
+
+def scalar_summary(tag, value):
+    return tf.Summary(value=[tf.Summary.Value(tag=tag, simple_value=value)])

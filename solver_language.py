@@ -72,6 +72,8 @@ class Solver_Language(object):
             train=train, common_params=common_params, net_params=net_params)
         self.dataset = DataSet(
             common_params=common_params, dataset_params=dataset_params)
+        self.val_dataset = DataSet(common_params=common_params, dataset_params=dataset_params, train=False)
+
         print("Solver initialization done.")
 
     def construct_graph(self, scope, sess):
@@ -212,6 +214,25 @@ class Solver_Language(object):
                     summary_str, img_313s = sess.run([summary_op, self.conv8_313], feed_dict={
                         self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray, self.captions: captions, self.lens: lens})
                     summary_writer.add_summary(summary_str, step)
+
+                    # Evaluate 1000 images.
+                    eval_loss = 0.0
+                    eval_loss_rb = 0.0
+                    for _ in xrange(25):
+                        val_data_l, val_gt_ab_313, val_prior_boost_nongray, val_captions, val_lens = self.val_dataset.batch()
+                        loss_value, new_loss_value = sess.run([self.total_loss, self.new_loss], feed_dict={
+                            self.data_l: val_data_l, self.gt_ab_313: val_gt_ab_313, self.prior_boost_nongray: val_prior_boost_nongray,
+                            self.captions: val_captions, self.lens: val_lens})
+                        eval_loss += loss_value
+                        eval_loss_rb += new_loss_value
+                    eval_loss /= 1000
+                    eval_loss_rb /= 1000
+                    eval_loss_sum = utils.scalar_summary('eval_loss', eval_loss)
+                    eval_loss_rb_sum = utils.scalar_summary('eval_loss_rb', eval_loss_rb)
+                    summary_writer.add_summary(eval_loss_sum, step)
+                    summary_writer.add_summary(eval_loss_rb_sum, step)
+                    print('Evaluation at step {0}: loss {1}, rebalanced loss {2}.'.format(step, eval_loss, eval_loss_rb))
+                    
                     # Save sample image
                     img_313 = img_313s[0: 1]
                     img_l = data_l[0: 1]
