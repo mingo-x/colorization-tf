@@ -214,7 +214,7 @@ class Solver_Language(object):
                     self.captions: captions, self.lens: lens})
 
                 if step % 100 == 0:
-                    summary_str, img_313s = sess.run([summary_op, self.conv8_313], feed_dict={
+                    summary_str = sess.run(summary_op, feed_dict={
                         self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray, self.captions: captions, self.lens: lens})
                     summary_writer.add_summary(summary_str, step)
 
@@ -223,7 +223,7 @@ class Solver_Language(object):
                     eval_loss_rb = 0.0
                     for _ in xrange(32):
                         val_data_l, val_gt_ab_313, val_prior_boost_nongray, val_captions, val_lens = self.val_dataset.batch()
-                        loss_value, new_loss_value = sess.run([self.total_loss, self.new_loss], feed_dict={
+                        loss_value, new_loss_value, img_313s = sess.run([self.total_loss, self.new_loss, self.conv8_313], feed_dict={
                             self.data_l: val_data_l, self.gt_ab_313: val_gt_ab_313, self.prior_boost_nongray: val_prior_boost_nongray,
                             self.captions: val_captions, self.lens: val_lens})
                         eval_loss += loss_value
@@ -238,9 +238,9 @@ class Solver_Language(object):
 
                     # Save sample image
                     img_313 = img_313s[0: 1]
-                    img_l = data_l[0: 1]
+                    img_l = val_data_l[0: 1]
                     img_rgb, _ = utils.decode(img_l, img_313, 2.63)
-                    word_list = list(captions[0, :lens[0]])
+                    word_list = list(val_captions[0, :val_lens[0]])
                     img_caption = '_'.join(vrev.get(w, 'unk') for w in word_list) 
                     io.imsave(os.path.join(self.train_dir, '{0}_{1}.jpg').format(step, img_caption), img_rgb)
 
