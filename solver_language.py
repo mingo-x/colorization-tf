@@ -100,8 +100,8 @@ class Solver_Language(object):
                     # Restore gamma and beta of BN.
                     self.biases = []
                     for i in xrange(8):
-                        gamma = tf.get_variable('gamma{}'.format(i + 1), (self.net.in_dims[i], ), dtype=tf.float32)
-                        beta = tf.get_variable('beta{}'.format(i + 1), (self.net.in_dims[i], ), dtype=tf.float32)
+                        gamma = tf.get_variable('gamma{}'.format(i + 1), (self.net.in_dims[i], ), dtype=tf.float32, trainable=False)
+                        beta = tf.get_variable('beta{}'.format(i + 1), (self.net.in_dims[i], ), dtype=tf.float32, trainable=False)
                         bn_saver = tf.train.Saver({'G/bn_{}/gamma'.format(i + 1): gamma, 'G/bn_{}/beta'.format(i + 1): beta})
                         bn_saver.restore(sess, self.init_ckpt)
                         bias = tf.concat((gamma, beta), axis=-1)
@@ -119,8 +119,10 @@ class Solver_Language(object):
                 scope, self.conv8_313, self.prior_boost_nongray,
                 self.gt_ab_313, None, self.gan,
                 self.prior_boost)
+
             tf.summary.scalar('new_loss', new_loss)
             tf.summary.scalar('total_loss', g_loss)
+            tf.summary.scalar('weight_loss', wd_loss)
             print('Graph constructed.')
 
             return new_loss, g_loss, wd_loss
