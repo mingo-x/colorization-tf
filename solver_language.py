@@ -115,7 +115,7 @@ class Solver_Language(object):
                 self.conv8_313 = self.net.inference(self.data_l)
             # self.colorized_ab = self.net.conv313_to_ab(conv8_313)
 
-            new_loss, g_loss, _ = self.net.loss(
+            new_loss, g_loss, wd_loss = self.net.loss(
                 scope, self.conv8_313, self.prior_boost_nongray,
                 self.gt_ab_313, None, self.gan,
                 self.prior_boost)
@@ -123,7 +123,7 @@ class Solver_Language(object):
             tf.summary.scalar('total_loss', g_loss)
             print('Graph constructed.')
 
-            return new_loss, g_loss
+            return new_loss, g_loss, wd_loss
 
     def train_model(self):
         with tf.device('/gpu:' + str(self.device_id)):
@@ -140,7 +140,7 @@ class Solver_Language(object):
             print("Session configured.")
 
             with tf.name_scope('gpu') as scope:
-                self.new_loss, self.total_loss = self.construct_graph(scope, sess)
+                self.new_loss, self.total_loss, self.wd_loss = self.construct_graph(scope, sess)
                 self.summaries = tf.get_collection(
                     tf.GraphKeys.SUMMARIES, scope)
 
@@ -198,13 +198,13 @@ class Solver_Language(object):
                     examples_per_sec = num_examples_per_step / duration
                     sec_per_batch = duration / (self.num_gpus * _LOG_FREQ)
 
-                    loss_value, new_loss_value = sess.run([self.total_loss, self.new_loss], feed_dict={
+                    loss_value, new_loss_value, wd_loss_value = sess.run([self.total_loss, self.new_loss, self.wd_loss], feed_dict={
                         self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray,
                         self.captions: captions, self.lens: lens})
-                    format_str = ('%s: step %d, G loss = %.2f, new loss = %.2f(%.1f examples/sec; %.3f '
+                    format_str = ('%s: step %d, G loss = %.2f, new loss = %.2f, w loss = %.3f (%.1f examples/sec; %.3f '
                                   'sec/batch)')
                     print (format_str % (datetime.now(),
-                                         step, loss_value, new_loss_value,
+                                         step, loss_value, new_loss_value, wd_loss_value,
                                          examples_per_sec, sec_per_batch))
                     start_time = time.time()
 

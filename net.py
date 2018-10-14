@@ -765,8 +765,9 @@ class Net(object):
 
         tf.summary.scalar(
             'weight_loss', tf.add_n(tf.get_collection('losses', scope=scope)))
-        new_loss  = new_loss + tf.add_n(tf.get_collection('losses', scope=scope))
-        return new_loss, g_loss, None
+        wd_loss = tf.add_n(tf.get_collection('losses', scope=scope))
+        new_loss  = new_loss + wd_loss
+        return new_loss, g_loss, wd_loss
 
         if is_boost:
             #
