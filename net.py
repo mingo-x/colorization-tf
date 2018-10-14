@@ -760,7 +760,7 @@ class Net(object):
         g_loss = tf.nn.softmax_cross_entropy_with_logits_v2(logits=flat_conv8_313, labels=flat_gt_ab_313)
         new_loss = g_loss * flat_prior
         g_loss = tf.reduce_mean(g_loss)
-        new_loss = tf.reduce_sum(new_loss) / tf.reduce_sum(flat_prior)
+        new_loss = tf.reduce_mean(new_loss)
 
         tf.summary.scalar(
             'weight_loss', tf.add_n(tf.get_collection('losses', scope=scope)))
