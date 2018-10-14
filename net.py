@@ -756,15 +756,16 @@ class Net(object):
         flat_conv8_313 = tf.reshape(conv8_313, [-1, 313])
         flat_gt_ab_313 = tf.reshape(gt_ab_313, [-1, 313])
         flat_gt_ab_313 = tf.stop_gradient(flat_gt_ab_313)
-        flat_prior = tf.reshape(prior_boost_nongray, [-1])
+        # flat_prior = tf.reshape(prior_boost_nongray, [-1])
         g_loss = tf.nn.softmax_cross_entropy_with_logits_v2(logits=flat_conv8_313, labels=flat_gt_ab_313)
-        new_loss = g_loss * flat_prior
+        g_loss = tf.reshape(g_loss, tf.shape(prior_boost_nongray))
+        new_loss = g_loss * prior_boost_nongray
         g_loss = tf.reduce_mean(g_loss)
         new_loss = tf.reduce_mean(new_loss)
 
         tf.summary.scalar(
             'weight_loss', tf.add_n(tf.get_collection('losses', scope=scope)))
-        new_loss  = new_loss + tf.add_n(tf.get_collection('losses', scope=scope))
+        new_loss  = new_loss + 3e-4 * tf.add_n(tf.get_collection('losses', scope=scope))
         return new_loss, g_loss, None
 
         if is_boost:
