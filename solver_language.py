@@ -206,7 +206,6 @@ class Solver_Language(object):
                     print (format_str % (datetime.now(),
                                          step, loss_value, new_loss_value,
                                          examples_per_sec, sec_per_batch))
-                    print(np.mean(prior_boost_nongray))
                     start_time = time.time()
 
                 # Generator training.

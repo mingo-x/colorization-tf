@@ -761,7 +761,7 @@ class Net(object):
         g_loss = tf.reshape(g_loss, tf.shape(prior_boost_nongray))
         new_loss = g_loss * prior_boost_nongray
         g_loss = tf.reduce_mean(g_loss)
-        new_loss = tf.reduce_mean(new_loss)
+        new_loss = tf.reduce_sum(new_loss) / tf.reduce_sum(prior_boost_nongray)
 
         tf.summary.scalar(
             'weight_loss', tf.add_n(tf.get_collection('losses', scope=scope)))
