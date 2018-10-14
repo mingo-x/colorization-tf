@@ -131,6 +131,8 @@ def conv2d(scope, input, kernel_size, stride=1, dilation=1, relu=True, wd=nilboy
     else:
       conv1 = bias
   return conv1
+  # padding = 'same' if same else 'valid'
+  # return tf.layers.conv2d(input, kernel_size[-1], kernel_size[0], stride, padding, )
 
 def deconv2d(scope, input, kernel_size, stride=1, relu=True, wd=nilboy_weight_decay):
   """convolutional layer

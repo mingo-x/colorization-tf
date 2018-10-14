@@ -693,6 +693,124 @@ class Net(object):
         conv8_313 = temp_conv
         return conv8_313
 
+    def inference5(self, data_l, captions, lens, biases=None, kernel_initializer=None):
+        '''Using fewer FiLM layers.'''
+        caption_feature = self.caption_encoding(captions, lens)
+        with tf.variable_scope('Film'):
+            gammas = []
+            betas = []
+            for i in range(4, 8):
+                if biases is None:
+                    initializer = tf.zeros_initializer(dtype=tf.float32)
+                else:
+                    initializer = tf.constant_initializer(biases[i], dtype=tf.float32)
+
+                dense = Linear('dense_{}'.format(i), caption_feature, self.in_dims[i] * 2, initializer, kernel_initializer)
+                gamma, beta = tf.split(dense, 2, axis=-1)
+                gammas.append(gamma)
+                betas.append(beta)
+
+        with tf.variable_scope('G'):
+            # conv1
+            block_idx = 0
+            conv_num = 1
+            temp_conv = conv2d('conv_{}'.format(conv_num), data_l, [3, 3, 1, 64], stride=1, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 64, 64], stride=2, relu=False, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = batch_norm('bn_1', temp_conv, train=self.train)
+            # temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
+            temp_conv = tf.nn.relu(temp_conv)
+            
+            # conv2
+            block_idx += 1
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 64, 128], stride=1, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 128, 128], stride=2, relu=False, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = batch_norm('bn_2', temp_conv, train=self.train)
+            # temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
+            temp_conv = tf.nn.relu(temp_conv)
+
+            # conv3
+            block_idx += 1
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 128, 256], stride=1, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 256], stride=1, wd=self.weight_decay)
+            conv_num += 1    
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 256], stride=2, relu=False, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = batch_norm('bn_3', temp_conv, train=self.train)
+            # temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
+            temp_conv = tf.nn.relu(temp_conv)
+
+            # conv4
+            block_idx += 1
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 512], stride=1, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, relu=False, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = bn('bn_4', temp_conv, train=self.train)
+            temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
+            temp_conv = tf.nn.relu(temp_conv)
+
+            # conv5
+            block_idx += 1
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
+            conv_num += 1    
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, relu=False, dilation=2, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = bn('bn_5', temp_conv, train=self.train)
+            temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
+            temp_conv = tf.nn.relu(temp_conv)
+
+            # conv6
+            block_idx += 1
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
+            conv_num += 1    
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, relu=False, dilation=2, wd=self.weight_decay)
+            conv_num += 1    
+            temp_conv = bn('bn_6', temp_conv, train=self.train)    
+            temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
+            temp_conv = tf.nn.relu(temp_conv)
+
+            # conv7
+            block_idx += 1
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, relu=False, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = bn('bn_7', temp_conv, train=self.train)
+            temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
+            temp_conv = tf.nn.relu(temp_conv)
+
+            # conv8
+            block_idx += 1
+            temp_conv = deconv2d('conv_{}'.format(conv_num), temp_conv, [4, 4, 512, 256], stride=2, wd=self.weight_decay)
+            conv_num += 1    
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 256], stride=1, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 256], stride=1, relu=False, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = batch_norm('bn_8', temp_conv, train=self.train)
+            # temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
+            temp_conv = tf.nn.relu(temp_conv)
+
+            # Unary prediction
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [1, 1, 256, 313], stride=1, relu=False, wd=self.weight_decay)
+            conv_num += 1
+
+        conv8_313 = temp_conv
+        return conv8_313
+
     def GAN_G(self, noise=None):
         dim = 64
         with tf.variable_scope('G', reuse=tf.AUTO_REUSE):
@@ -763,9 +881,11 @@ class Net(object):
         g_loss = tf.reduce_mean(g_loss)
         new_loss = tf.reduce_sum(new_loss) / tf.reduce_sum(prior_boost_nongray)
 
-        tf.summary.scalar(
-            'weight_loss', tf.add_n(tf.get_collection('losses', scope=scope)))
         wd_loss = tf.add_n(tf.get_collection('losses', scope=scope))
+        l2_loss = self.weight_decay * tf.reduce_sum(
+            tf.nn.l2_loss(tf_var) for tf_var in tf.trainable_variables() if "kernel" in tf_var.name)
+        wd_loss += l2_loss
+
         new_loss  = new_loss + wd_loss
         return new_loss, g_loss, wd_loss
 
@@ -1183,7 +1303,6 @@ class Net(object):
             embedding = tf.constant(self.word_embedding, name='word_embedding', dtype='float32')
             encoded_captions = tf.nn.embedding_lookup(embedding, captions, name='lookup')
             encoded_captions = tf.nn.dropout(encoded_captions, 0.8)
-            # print(encoded_captions.get_shape())
             initializer = tf.contrib.layers.variance_scaling_initializer(factor=2.0, mode='FAN_IN', uniform=True, dtype=tf.float32)
             lstm_fw = tf.nn.rnn_cell.LSTMCell(self.lstm_hid_dim, reuse=tf.AUTO_REUSE, initializer=initializer)
             lstm_bw = tf.nn.rnn_cell.LSTMCell(self.lstm_hid_dim, reuse=tf.AUTO_REUSE, initializer=initializer)
