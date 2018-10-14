@@ -19,7 +19,7 @@ class DataSet(object):
       image_path
     """
 
-    def __init__(self, common_params=None, dataset_params=None):
+    def __init__(self, common_params=None, dataset_params=None, train=True):
         """
         Args:
           common_params: A dict
@@ -34,14 +34,23 @@ class DataSet(object):
             self.batch_size = int(common_params['batch_size'])
             self.with_caption = True if common_params['with_caption'] == '1' else False
 
+        self.training = train
+
         # record and image_label queue
         self.record_queue = Queue(maxsize=15000)
         self.batch_queue = Queue(maxsize=300)
 
         hf = h5py.File(self.data_path, 'r')
-        self.train_origs = hf['train_ims']            
-        self.train_words = hf['train_words']                                         
-        self.train_lengths = hf['train_length'] 
+
+        if self.training:
+            self.train_origs = hf['train_ims']            
+            self.train_words = hf['train_words']                                         
+            self.train_lengths = hf['train_length'] 
+        else:
+            self.train_origs = hf['val_ims']            
+            self.train_words = hf['val_words']                                         
+            self.train_lengths = hf['val_length'] 
+            self.thread_num = 1
 
         self.record_point = 0
         self.record_number = len(self.train_origs)
