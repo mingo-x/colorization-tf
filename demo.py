@@ -15,9 +15,9 @@ _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
 _G_VERSION = 1
-_CKPT_PATH = '/srv/glusterfs/xieya/vgg_1/models/model.ckpt-45000'
+_CKPT_PATH = '/srv/glusterfs/xieya/tf_coco_5/models/model.ckpt-11000'
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
-OUTPUT_DIR = '/home/xieya/tmp1'
+OUTPUT_DIR = '/home/xieya/tmp'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
 _VIDEO_IN_DIR = '/srv/glusterfs/xieya/data/DAVIS/JPEGImages/Full-Resolution/bus'
 _VIDEO_OUT_DIR = '/srv/glusterfs/xieya/video/bus/vgg_rs'
@@ -448,6 +448,6 @@ if __name__ == "__main__":
     # demo_wgan_rgb()
     # _colorize_high_res_img(_IMG_NAME)
     # cifar()
-    colorize_with_language()
+    # colorize_with_language()
     # colorize_video_with_language()
-    # colorize_coco_without_language()
+    colorize_coco_without_language()
