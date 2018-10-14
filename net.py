@@ -882,8 +882,14 @@ class Net(object):
         new_loss = tf.reduce_sum(new_loss) / tf.reduce_sum(prior_boost_nongray)
 
         wd_loss = tf.add_n(tf.get_collection('losses', scope=scope))
-        l2_losses = [tf.nn.l2_loss(tf_var) for tf_var in tf.trainable_variables() if "kernel" in tf_var.name]
-        l2_loss = self.weight_decay * tf.add_n(l2_losses)
+        l2_loss = tf.get_variable('regularization', (), initializer=tf.zeros_initializer, dtype=tf.float32)
+        for var in tf.trainable_variables():
+            if 'kernel' in var.name:
+                l2_loss += tf.nn.l2_loss(var)
+        l2_loss *= self.weight_decay
+
+        # l2_losses = [tf.nn.l2_loss(tf_var) for tf_var in tf.trainable_variables() if "kernel" in tf_var.name]
+        # l2_loss = self.weight_decay * tf.add_n(l2_losses)
         wd_loss += l2_loss
 
         new_loss  = new_loss + wd_loss
