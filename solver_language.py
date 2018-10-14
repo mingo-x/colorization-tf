@@ -228,8 +228,8 @@ class Solver_Language(object):
                             self.captions: val_captions, self.lens: val_lens})
                         eval_loss += loss_value
                         eval_loss_rb += new_loss_value
-                    eval_loss /= 32 * self.batch_size
-                    eval_loss_rb /= 32 * self.batch_size
+                    eval_loss /= 32
+                    eval_loss_rb /= 32
                     eval_loss_sum = scalar_summary('eval_loss', eval_loss)
                     eval_loss_rb_sum = scalar_summary('eval_loss_rb', eval_loss_rb)
                     summary_writer.add_summary(eval_loss_sum, step)
