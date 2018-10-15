@@ -149,8 +149,8 @@ def _nnencode(data_ab_ss, n=10):
 
 class LookupEncode():
     '''Encode points using lookups'''
-    def __init__(self, prior_path=''):
-        self.cc = np.load(prior_path)
+    def __init__(self, grid_path=''):
+        self.cc = np.load(grid_path)
         self.grid_width = 10
         self.offset = np.abs(np.amin(self.cc)) + 17 # add to get rid of negative numbers
         self.x_mult = 300 # differentiate x from y
