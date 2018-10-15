@@ -308,7 +308,7 @@ def places365():
 
 def is_grayscale(gt_ab):
     thresh = 5
-    is_gray = np.sum(np.sum(np.sum(np.abs(gt_ab) > thresh, axis=1), axis=1), axis=1) > 0
+    is_gray = np.sum(np.sum(np.sum(np.abs(gt_ab) > thresh, axis=1), axis=1), axis=1) == 0
     return is_gray
 
 
@@ -357,6 +357,10 @@ def colorize_with_language():
         len_tensor = tf.placeholder(tf.int32, (1))
         autocolor = Net(train=False)
         c313_tensor = autocolor.inference4(l_tensor, cap_tensor, len_tensor)
+        gt_313_tensor = tf.placeholder(tf.float32, (1, _INPUT_SIZE / 4, _INPUT_SIZE / 4, 313))
+        pred_313_tensor = tf.placeholder(tf.float32, (1, _INPUT_SIZE / 4, _INPUT_SIZE / 4, 313))
+        prior_tensor = tf.placeholder(tf.float32, (1, _INPUT_SIZE / 4, _INPUT_SIZE / 4, 1))
+        ce_loss_tensor, rb_loss_tensor = cross_entropy_loss(gt_313_tensor, pred_313_tensor, prior_tensor)
         saver = tf.train.Saver()
         print("Saver created.")
         config = tf.ConfigProto(allow_soft_placement=True)
@@ -367,23 +371,27 @@ def colorize_with_language():
 
             try:
                 idx = [335, 3735]
-                for _ in xrange(200):
-                    i = random.randint(0, val_num - 1)
+                for i in xrange(200, 400):
+                    # i = random.randint(0, val_num - 1)
                     idx.append(i)
 
                 for i in idx:
                     img_bgr = val_imgs[i]
                     img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
-                    img_l = color.rgb2lab(img_rgb)[:, :, 0]
+                    img_lab = color.rgb2lab(img_rgb)
+                    img_l = img_lab[None, :, :, 0: 1]
+                    img_ab = img_lab[None, :, :, 1:]
                     img_l = (img_l.astype(dtype=np.float32) - 50.) / 50.
-                    img_l = img_l[None, :, :, None]
+
                     img_cap = val_caps[i: i + 1]
                     img_len = val_lens[i: i + 1]
                     img_313 = sess.run(c313_tensor, feed_dict={l_tensor: img_l, cap_tensor: img_cap, len_tensor: img_len})
-                    img_rgb, _ = decode(img_l, img_313, 2.63)
+                    img_dec, _ = decode(img_l, img_313, 2.63)
+                    ce_loss, rb_loss = metrics(img_ab, img_313, sess, gt_313_tensor, pred_313_tensor, prior_tensor, ce_loss_tensor, rb_loss_tensor)
+
                     word_list = list(img_cap[0, :img_len[0]])
                     img_title = '_'.join(vrev.get(w, 'unk') for w in word_list) 
-                    io.imsave(os.path.join(OUTPUT_DIR, '{0}_o_{1}.jpg').format(i, img_title), img_rgb)
+                    io.imsave(os.path.join(OUTPUT_DIR, '{0}_o_{1}_{2:.3f}_{3:.3f}.jpg').format(i, img_title, ce_loss, rb_loss), img_dec)
                     print(img_title)
 
                     if _NEW_CAPTION:
@@ -395,10 +403,12 @@ def colorize_with_language():
                             new_img_cap[0, j] = train_vocab.get(new_words[j], 0)
                         new_img_len[0] = len(new_words)
                         new_img_313 = sess.run(c313_tensor, feed_dict={l_tensor: img_l, cap_tensor: new_img_cap, len_tensor: new_img_len})
-                        new_img_rgb, _ = decode(img_l, new_img_313, 2.63)
+                        new_img_dec, _ = decode(img_l, new_img_313, 2.63)
+                        new_ce_loss, new_rb_loss = metrics(img_ab, new_img_313, sess, gt_313_tensor, pred_313_tensor, prior_tensor, ce_loss_tensor, rb_loss_tensor)
+
                         new_word_list = list(new_img_cap[0, :new_img_len[0]])
                         new_img_title = '_'.join(vrev.get(w, 'unk') for w in new_word_list) 
-                        io.imsave(os.path.join(OUTPUT_DIR, '{0}_n_{1}.jpg').format(i, new_img_title), new_img_rgb)
+                        io.imsave(os.path.join(OUTPUT_DIR, '{0}_n_{1}_{2:.3f}_{3:.3f}.jpg').format(i, new_img_title, new_ce_loss, new_rb_loss), new_img_dec)
             finally:
                 hf.close()
                 print('H5 closed.')
@@ -481,7 +491,7 @@ def colorize_coco_without_language():
                 img_bgr = val_imgs[i]
                 img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
                 img_lab = color.rgb2lab(img_rgb)
-                img_lab = cv2.resize(img_lab, (224, 224), interpolation=cv2.INTER_CUBIC)
+                # img_lab = cv2.resize(img_lab, (224, 224), interpolation=cv2.INTER_CUBIC)
                 img_l = img_lab[None, :, :, 0: 1]
                 img_ab = img_lab[None, :, :, 1:]
                 if is_grayscale(img_ab):
