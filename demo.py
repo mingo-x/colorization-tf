@@ -375,6 +375,13 @@ def colorize_with_language():
     train_vocab = pickle.load(open('/home/xieya/colorfromlanguage/priors/coco_colors_vocab.p', 'r'))
     vrev = dict((v, k) for (k, v) in train_vocab.iteritems())
 
+    orig_dir = os.path.join(_OUTPUT_DIR, 'original')
+    new_dir = os.path.join(_OUTPUT_DIR, 'new')
+    if not os.path.exists(orig_dir):
+        os.makedirs(orig_dir)
+    if not os.path.exists(new_dir):
+        os.makedirs(new_dir)
+
     with tf.device('/gpu:0'):
         l_tensor = tf.placeholder(tf.float32, (1, _INPUT_SIZE, _INPUT_SIZE, 1))
         cap_tensor = tf.placeholder(tf.int32, (1, 20))
@@ -417,7 +424,7 @@ def colorize_with_language():
 
                     word_list = list(img_cap[0, :img_len[0]])
                     img_title = '_'.join(vrev.get(w, 'unk') for w in word_list) 
-                    io.imsave(os.path.join(_OUTPUT_DIR, '{0}_o_{1}_{2:.3f}_{3:.3f}_{4:.3f}_{5:.3f}.jpg').format(i, img_title, ce_loss, rb_loss, auc_score, auc_rb_score), img_dec)
+                    io.imsave(os.path.join(orig_dir, '{0}_{1}_{2:.3f}_{3:.3f}_{4:.3f}_{5:.3f}.jpg').format(i, img_title, ce_loss, rb_loss, auc_score, auc_rb_score), img_dec)
                     print(img_title)
 
                     if _NEW_CAPTION:
@@ -434,7 +441,7 @@ def colorize_with_language():
 
                         new_word_list = list(new_img_cap[0, :new_img_len[0]])
                         new_img_title = '_'.join(vrev.get(w, 'unk') for w in new_word_list) 
-                        io.imsave(os.path.join(_OUTPUT_DIR, '{0}_n_{1}_{2:.3f}_{3:.3f}.jpg').format(i, new_img_title, new_ce_loss, new_rb_loss), new_img_dec)
+                        io.imsave(os.path.join(new_dir, '{0}_{1}_{2:.3f}_{3:.3f}.jpg').format(i, new_img_title, new_ce_loss, new_rb_loss), new_img_dec)
             finally:
                 hf.close()
                 print('H5 closed.')
@@ -546,7 +553,7 @@ def save_ground_truth():
         print(i)
 
 
-def merge():
+def merge(gt_dir, cic_dir, coco_dir, cap_dir):
     return
 
 
