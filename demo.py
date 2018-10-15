@@ -2,6 +2,7 @@ import random
 import subprocess
 
 import h5py
+import numpy as np
 import pickle
 import tensorflow as tf
 from utils import *
@@ -9,7 +10,9 @@ from net import Net
 from skimage import io, color, transform
 import cv2
 
-INPUT_SIZE = 224
+import utils
+
+_INPUT_SIZE = 224
 _RESIZE_SIZE = 0
 _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
@@ -18,6 +21,7 @@ _G_VERSION = 1
 _CKPT_PATH = '/srv/glusterfs/xieya/tf_coco_5/models/model.ckpt-38000'
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
 OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/tf_coco_5_38k'
+_PRIOR_PATH = '/srv/glusterfs/xieya/prior/coco_313_soft.npy'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
 _VIDEO_IN_DIR = '/srv/glusterfs/xieya/data/DAVIS/JPEGImages/Full-Resolution/bus'
 _VIDEO_OUT_DIR = '/srv/glusterfs/xieya/video/bus/vgg_4'
@@ -56,7 +60,7 @@ def _colorize_single_img(img_name, model, input_tensor, sess):
     img_path = os.path.join(IMG_DIR, img_name)
     img = cv2.imread(img_path)
     # img = _resize(img)
-    img_rs = cv2.resize(img, (INPUT_SIZE, INPUT_SIZE))
+    img_rs = cv2.resize(img, (_INPUT_SIZE, _INPUT_SIZE))
     if len(img.shape) == 3:
         img_l = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         img_l = img_l[None, :, :, None]
@@ -70,7 +74,7 @@ def _colorize_single_img(img_name, model, input_tensor, sess):
     # img_rgb_sk = io.imread(os.path.join("/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val", img_name))
     # if len(img_rgb_sk.shape) < 3 or img_rgb_sk.shape[2] != 3:
     #     return
-    # img_rgb_sk = cv2.resize(img_rgb_sk, (INPUT_SIZE, INPUT_SIZE))
+    # img_rgb_sk = cv2.resize(img_rgb_sk, (_INPUT_SIZE, _INPUT_SIZE))
     # img_lab = color.rgb2lab(img_rgb_sk)
     # img_lab_rs = transform.downscale_local_mean(img_lab, (4, 4, 1))
     # img_lab_rs[:, :, 0] = 50
@@ -165,7 +169,7 @@ def _colorize_cifar_batch(img_batch, model, input_tensor, sess):
 
     # Upscale.
     img_batch_rs = map(
-        lambda x: transform.resize(x, (INPUT_SIZE, INPUT_SIZE)), img_batch)
+        lambda x: transform.resize(x, (_INPUT_SIZE, _INPUT_SIZE)), img_batch)
     img_lab_batch_rs = color.rgb2lab(img_batch_rs)
     img_l_batch_rs = img_lab_batch_rs[:, :, :, 0:1]
     img_l_batch_rs = img_l_batch_rs - 50.
@@ -191,7 +195,7 @@ def cifar():
     cifar_data_size = cifar_data.shape[0]
 
     input_tensor = tf.placeholder(
-        tf.float32, shape=(_CIFAR_BATCH_SIZE, INPUT_SIZE, INPUT_SIZE, 1))
+        tf.float32, shape=(_CIFAR_BATCH_SIZE, _INPUT_SIZE, _INPUT_SIZE, 1))
     model = _get_model(input_tensor)
     saver = tf.train.Saver()
 
@@ -226,7 +230,7 @@ def _colorize_high_res_img(img_name):
 
 def main():
     input_tensor = tf.placeholder(
-        tf.float32, shape=(1, INPUT_SIZE, INPUT_SIZE, 1))
+        tf.float32, shape=(1, _INPUT_SIZE, _INPUT_SIZE, 1))
     model = _get_model(input_tensor)
     saver = tf.train.Saver()
     
@@ -285,7 +289,7 @@ def demo_wgan_rgb():
 
 def places365():
     input_tensor = tf.placeholder(
-        tf.float32, shape=(1, INPUT_SIZE, INPUT_SIZE, 1))
+        tf.float32, shape=(1, _INPUT_SIZE, _INPUT_SIZE, 1))
     model = _get_model(input_tensor)
     saver = tf.train.Saver()
 
@@ -302,6 +306,41 @@ def places365():
                 _colorize_single_img(img_name, model, input_tensor, sess)
 
 
+def is_grayscale(gt_ab):
+    thresh = 5
+    is_gray = np.sum(np.sum(np.sum(np.abs(gt_ab) > thresh, axis=1), axis=1), axis=1) > 0
+    return is_gray
+
+
+def metrics(gt_ab, pred_313, sess, gt_313_tensor, pred_313_tensor, prior_tensor, ce_loss_tensor, rb_loss_tensor):
+    gt_ab_ss = transform.downscale_local_mean(gt_ab, (1, 4, 4, 1))
+
+    #NNEncoder
+    #gt_ab_313: [N, H/4, W/4, 313]
+    gt_313 = utils._nnencode(gt_ab_ss)
+
+    #Prior_Boost 
+    #prior_boost: [N, 1, H/4, W/4]
+    prior_boost = utils._prior_boost(gt_313, prior_path=_PRIOR_PATH)
+
+    ce_loss, rb_loss = sess.run([ce_loss_tensor, rb_loss_tensor], 
+        feed_dict={gt_313_tensor: gt_313, pred_313_tensor: pred_313, prior_tensor: prior_boost})
+
+    return ce_loss, rb_loss
+
+
+def cross_entropy_loss(gt_313, conv8_313, prior_boost_nongray):
+    flat_conv8_313 = tf.reshape(conv8_313, [-1, 313])
+    flat_gt_313 = tf.reshape(gt_313, [-1, 313])
+    ce_loss = tf.nn.softmax_cross_entropy_with_logits_v2(logits=flat_conv8_313, labels=flat_gt_313)
+    ce_loss = tf.reshape(ce_loss, tf.shape(prior_boost_nongray))
+    rb_loss = ce_loss * prior_boost_nongray
+    ce_loss = tf.reduce_mean(ce_loss)
+    rb_loss = tf.reduce_sum(rb_loss) / tf.reduce_sum(prior_boost_nongray)
+
+    return ce_loss, rb_loss
+
+
 def colorize_with_language():
     hf = h5py.File('/srv/glusterfs/xieya/data/coco_colors.h5', 'r')
     val_imgs = hf['val_ims']
@@ -313,7 +352,7 @@ def colorize_with_language():
     vrev = dict((v, k) for (k, v) in train_vocab.iteritems())
 
     with tf.device('/gpu:0'):
-        l_tensor = tf.placeholder(tf.float32, (1, INPUT_SIZE, INPUT_SIZE, 1))
+        l_tensor = tf.placeholder(tf.float32, (1, _INPUT_SIZE, _INPUT_SIZE, 1))
         cap_tensor = tf.placeholder(tf.int32, (1, 20))
         len_tensor = tf.placeholder(tf.int32, (1))
         autocolor = Net(train=False)
@@ -370,7 +409,7 @@ def colorize_video_with_language():
     vrev = dict((v, k) for (k, v) in train_vocab.iteritems())
 
     with tf.device('/gpu:0'):
-        l_tensor = tf.placeholder(tf.float32, (1, INPUT_SIZE, INPUT_SIZE, 1))
+        l_tensor = tf.placeholder(tf.float32, (1, _INPUT_SIZE, _INPUT_SIZE, 1))
         cap_tensor = tf.placeholder(tf.int32, (1, 20))
         len_tensor = tf.placeholder(tf.int32, (1))
         autocolor = Net(train=False)
@@ -415,9 +454,13 @@ def colorize_coco_without_language():
     val_imgs = hf['val_ims']
     val_num = len(val_imgs)
     with tf.device('/gpu:0'):
-        l_tensor = tf.placeholder(tf.float32, (1, INPUT_SIZE, INPUT_SIZE, 1))
+        l_tensor = tf.placeholder(tf.float32, (1, _INPUT_SIZE, _INPUT_SIZE, 1))
         autocolor = Net(train=False, g_version=_G_VERSION)
         c313_tensor = autocolor.inference(l_tensor)
+        gt_313_tensor = tf.placeholder(tf.float32, (1, _INPUT_SIZE / 4, _INPUT_SIZE / 4, 313))
+        pred_313_tensor = tf.placeholder(tf.float32, (1, _INPUT_SIZE / 4, _INPUT_SIZE / 4, 313))
+        prior_tensor = tf.placeholder(tf.float32, (1, _INPUT_SIZE / 4, _INPUT_SIZE / 4, 1))
+        ce_loss_tensor, rb_loss_tensor = cross_entropy_loss(gt_313_tensor, pred_313_tensor, prior_tensor)
         saver = tf.train.Saver()
         config = tf.ConfigProto(allow_soft_placement=True)
         config.gpu_options.allow_growth = True
@@ -430,19 +473,25 @@ def colorize_coco_without_language():
             saver.restore(sess, _CKPT_PATH)
             
             # img_names = os.listdir(_VIDEO_IN_DIR)
-            for _ in xrange(200):
+            for i in xrange(200, 400):
             # for img_name in img_names:
                 # img_bgr = cv2.imread(os.path.join(_VIDEO_IN_DIR, img_name))
                 # img_bgr = _resize(img_bgr)
-                i = random.randint(0, val_num - 1)
+                # i = random.randint(0, val_num - 1)
                 img_bgr = val_imgs[i]
-                img_l = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
-                img_l = cv2.resize(img_l, (224, 224), interpolation=cv2.INTER_CUBIC)
-                img_l = (img_l.astype(dtype=np.float32)) / 255.0 * 2 - 1
-                img_l = img_l[None, :, :, None]
+                img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+                img_lab = color.rgb2lab(img_rgb)
+                img_lab = cv2.resize(img_lab, (224, 224), interpolation=cv2.INTER_CUBIC)
+                img_l = img_lab[None, :, :, 0: 1]
+                img_ab = img_lab[None, :, :, 1:]
+                if is_grayscale(img_ab):
+                    continue
+                img_l = (img_l.astype(dtype=np.float32) - 50.) / 50.
                 img_313 = sess.run(c313_tensor, feed_dict={l_tensor: img_l})
-                img_rgb, _ = decode(img_l, img_313, T)
-                io.imsave(os.path.join(OUTPUT_DIR, '{0}.jpg').format(i), img_rgb)
+                img_dec, _ = decode(img_l, img_313, T)
+                # Evaluate metrics
+                ce_loss, rb_loss = metrics(img_ab, img_313, sess, gt_313_tensor, pred_313_tensor, prior_tensor, ce_loss_tensor, rb_loss_tensor)
+                io.imsave(os.path.join(OUTPUT_DIR, '{0}_{1:.3f}_{2:.3f}.jpg').format(i, ce_loss, rb_loss), img_dec)
                 # io.imsave(os.path.join(out_dir, img_name), img_rgb)
                 # cv2.imwrite(os.path.join(OUTPUT_DIR, '{0}_gt.jpg').format(i), img_bgr)
                 print(i)
