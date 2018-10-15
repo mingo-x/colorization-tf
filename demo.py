@@ -341,7 +341,7 @@ def cross_entropy_loss(gt_313, conv8_313, prior_boost_nongray):
     return ce_loss, rb_loss
 
 
-def _l2_loss(real_batch, pred_batch, prior=None):
+def _auc(real_batch, pred_batch, prior=None):
     l2_dist = np.sqrt(np.sum(np.square(real_batch - pred_batch), axis=3))
     if prior is None:
         ones = np.ones_like(l2_dist)
@@ -546,4 +546,5 @@ if __name__ == "__main__":
     # cifar()
     # colorize_with_language()
     # colorize_video_with_language()
-    colorize_coco_without_language()
+    # colorize_coco_without_language()
+    save_ground_truth()
