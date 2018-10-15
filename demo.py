@@ -349,7 +349,7 @@ def _auc(gt_ab, pred_ab):
     gt_313 = utils._nnencode(gt_ab_ss)
     prior = utils._prior_boost(gt_313, gamma=0, prior_path=_PRIOR_PATH)
 
-    l2_dist = np.sqrt(np.sum(np.square(gt_ab - pred_ab), axis=3))
+    l2_dist = np.sqrt(np.sum(np.square(gt_ab - pred_ab[np.newaxis, : , :, :]), axis=3))
     ones = np.ones_like(l2_dist)
     zeros = np.zeros_like(l2_dist)
     scores = []
@@ -526,10 +526,11 @@ def colorize_coco_without_language():
                     continue
                 img_l = (img_l.astype(dtype=np.float32) - 50.) / 50.
                 img_313 = sess.run(c313_tensor, feed_dict={l_tensor: img_l})
-                img_dec, _ = decode(img_l, img_313, T)
+                img_dec, ab_dec = decode(img_l, img_313, T)
                 # Evaluate metrics
                 ce_loss, rb_loss = metrics(img_ab, img_313, sess, gt_313_tensor, pred_313_tensor, prior_tensor, ce_loss_tensor, rb_loss_tensor)
-                io.imsave(os.path.join(_OUTPUT_DIR, '{0}_{1:.3f}_{2:.3f}.jpg').format(i, ce_loss, rb_loss), img_dec)
+                auc, auc_rb = _auc(img_ab, ab_dec)
+                io.imsave(os.path.join(_OUTPUT_DIR, '{0}_{1:.3f}_{2:.3f}_{3:.3f}_{4:.3f}.jpg').format(i, ce_loss, rb_loss, auc, auc_rb), img_dec)
                 # io.imsave(os.path.join(out_dir, img_name), img_rgb)
                 # cv2.imwrite(os.path.join(_OUTPUT_DIR, '{0}_gt.jpg').format(i), img_bgr)
                 print(i)
