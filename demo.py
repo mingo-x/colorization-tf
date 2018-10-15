@@ -13,6 +13,7 @@ import cv2
 
 import utils
 
+_AUC_THRESHOLD = 150
 _INPUT_SIZE = 224
 _RESIZE_SIZE = 0
 _CIFAR_IMG_SIZE = 32
@@ -351,16 +352,16 @@ def _auc(gt_ab, pred_ab):
     zeros = np.zeros_like(l2_dist)
     scores = []
     scores_rb = []
-    for thr in range(0, 150 + 1):
+    for thr in range(0, _AUC_THRESHOLD + 1):
         score = np.sum(
             np.where(np.less_equal(l2_dist, thr), ones, zeros)) / np.sum(ones)
         score_rb = np.sum(
             np.where(np.less_equal(l2_dist, thr), prior, zeros)) / np.sum(prior)
         scores.append(score)
         scores_rb.append(score_rb)
-    x = [i for i in range(0, THRESHOLD + 1)]
-    auc_score = auc(x, scores)/ THRESHOLD
-    auc_rb_score = auc(x, scores_rb) / THRESHOLD
+    x = [i for i in range(0, _AUC_THRESHOLD + 1)]
+    auc_score = auc(x, scores)/ _AUC_THRESHOLD
+    auc_rb_score = auc(x, scores_rb) / _AUC_THRESHOLD
 
     return auc_score, auc_rb_score
 
