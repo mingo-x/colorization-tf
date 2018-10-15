@@ -343,10 +343,7 @@ def cross_entropy_loss(gt_313, conv8_313, prior_boost_nongray):
 
 
 def _auc(gt_ab, pred_ab):
-    gt_ab_ss = transform.downscale_local_mean(gt_ab, (1, 4, 4, 1))
-    #NNEncoder
-    #gt_ab_313: [N, H/4, W/4, 313]
-    gt_313 = utils._nnencode(gt_ab_ss)
+    gt_313 = utils._nnencode(gt_ab)
     prior = utils._prior_boost(gt_313, gamma=0, prior_path=_PRIOR_PATH)
 
     l2_dist = np.sqrt(np.sum(np.square(gt_ab - pred_ab[np.newaxis, : , :, :]), axis=3))
@@ -414,7 +411,7 @@ def colorize_with_language():
                     img_cap = val_caps[i: i + 1]
                     img_len = val_lens[i: i + 1]
                     img_313 = sess.run(c313_tensor, feed_dict={l_tensor: img_l, cap_tensor: img_cap, len_tensor: img_len})
-                    img_dec, _ = decode(img_l, img_313, 2.63)
+                    img_dec, ab_dec = decode(img_l, img_313, 2.63)
                     ce_loss, rb_loss = metrics(img_ab, img_313, sess, gt_313_tensor, pred_313_tensor, prior_tensor, ce_loss_tensor, rb_loss_tensor)
 
                     word_list = list(img_cap[0, :img_len[0]])
