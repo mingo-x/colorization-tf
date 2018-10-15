@@ -20,7 +20,7 @@ _CIFAR_COUNT = 0
 _G_VERSION = 1
 _CKPT_PATH = '/srv/glusterfs/xieya/tf_coco_5/models/model.ckpt-38000'
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
-OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/tf_coco_5_38k'
+_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/coco_gt'
 _PRIOR_PATH = '/srv/glusterfs/xieya/prior/coco_313_soft.npy'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
 _VIDEO_IN_DIR = '/srv/glusterfs/xieya/data/DAVIS/JPEGImages/Full-Resolution/bus'
@@ -79,14 +79,14 @@ def _colorize_single_img(img_name, model, input_tensor, sess):
     # img_lab_rs = transform.downscale_local_mean(img_lab, (4, 4, 1))
     # img_lab_rs[:, :, 0] = 50
     # img_rgb_rs = color.lab2rgb(img_lab_rs)
-    # io.imsave(os.path.join(OUTPUT_DIR, "test_" + img_name), img_rgb_rs)
+    # io.imsave(os.path.join(_OUTPUT_DIR, "test_" + img_name), img_rgb_rs)
 
     img_l = (img_l.astype(dtype=np.float32)) / 255.0 * 2 - 1
     img_l_rs = (img_l_rs.astype(dtype=np.float32)) / 255.0 * 2 - 1
     img_313_rs = sess.run(model, feed_dict={input_tensor: img_l_rs})
     # img_l_rs_rs = np.zeros((1, 56, 56, 1))
     img_rgb, _ = decode(img_l_rs, img_313_rs, T)
-    io.imsave(os.path.join(OUTPUT_DIR, os.path.split(img_name)[1]), img_rgb)
+    io.imsave(os.path.join(_OUTPUT_DIR, os.path.split(img_name)[1]), img_rgb)
 
 
 def _colorize_ab_canvas(model, input_tensor, sess):
@@ -129,8 +129,8 @@ def _colorize_ab_canvas(model, input_tensor, sess):
             img_rgb, _ = decode(img_l_rs_rs, img_313_rs, T)
             pr_canvas[i * 64: (i + 1) * 64, j * 64: (j + 1) * 64, :] = img_rgb
 
-    io.imsave(os.path.join(OUTPUT_DIR, "gt_ab.jpg"), gt_canvas)
-    io.imsave(os.path.join(OUTPUT_DIR, "pr_ab.jpg"), pr_canvas)
+    io.imsave(os.path.join(_OUTPUT_DIR, "gt_ab.jpg"), gt_canvas)
+    io.imsave(os.path.join(_OUTPUT_DIR, "pr_ab.jpg"), pr_canvas)
 
 
 def _get_cifar_data(training=True):
@@ -184,7 +184,7 @@ def _colorize_cifar_batch(img_batch, model, input_tensor, sess):
         img_l = img_l[None, :, :, :]
         img_rgb, _ = decode(img_l, img_313_rs, T)
         imsave(
-            os.path.join(OUTPUT_DIR, str(_CIFAR_COUNT).zfill(5) + '.jpg'),
+            os.path.join(_OUTPUT_DIR, str(_CIFAR_COUNT).zfill(5) + '.jpg'),
             img_rgb)
         _CIFAR_COUNT += 1
     print('Progress: {}'.format(_CIFAR_COUNT))
@@ -225,7 +225,7 @@ def _colorize_high_res_img(img_name):
             img_313 = sess.run(conv8_313)
 
         img_rgb, _ = decode(img_l, img_313, T)
-        imsave(os.path.join(OUTPUT_DIR, img_name), img_rgb)
+        imsave(os.path.join(_OUTPUT_DIR, img_name), img_rgb)
     
 
 def main():
@@ -341,6 +341,22 @@ def cross_entropy_loss(gt_313, conv8_313, prior_boost_nongray):
     return ce_loss, rb_loss
 
 
+def _l2_loss(real_batch, pred_batch, prior=None):
+    l2_dist = np.sqrt(np.sum(np.square(real_batch - pred_batch), axis=3))
+    if prior is None:
+        ones = np.ones_like(l2_dist)
+    else:
+        ones = prior
+    ones_sum = np.sum(ones)
+    zeros = np.zeros_like(l2_dist)
+    scores = []
+    for thr in range(0, THRESHOLD + 1):
+        score = np.sum(
+            np.where(np.less_equal(l2_dist, thr), ones, zeros)) / ones_sum
+        scores.append(score)
+    return scores
+
+
 def colorize_with_language():
     hf = h5py.File('/srv/glusterfs/xieya/data/coco_colors.h5', 'r')
     val_imgs = hf['val_ims']
@@ -381,8 +397,9 @@ def colorize_with_language():
                     img_lab = color.rgb2lab(img_rgb)
                     img_l = img_lab[None, :, :, 0: 1]
                     img_ab = img_lab[None, :, :, 1:]
+                    if is_grayscale(img_ab):
+                        continue
                     img_l = (img_l.astype(dtype=np.float32) - 50.) / 50.
-
                     img_cap = val_caps[i: i + 1]
                     img_len = val_lens[i: i + 1]
                     img_313 = sess.run(c313_tensor, feed_dict={l_tensor: img_l, cap_tensor: img_cap, len_tensor: img_len})
@@ -391,7 +408,7 @@ def colorize_with_language():
 
                     word_list = list(img_cap[0, :img_len[0]])
                     img_title = '_'.join(vrev.get(w, 'unk') for w in word_list) 
-                    io.imsave(os.path.join(OUTPUT_DIR, '{0}_o_{1}_{2:.3f}_{3:.3f}.jpg').format(i, img_title, ce_loss, rb_loss), img_dec)
+                    io.imsave(os.path.join(_OUTPUT_DIR, '{0}_o_{1}_{2:.3f}_{3:.3f}.jpg').format(i, img_title, ce_loss, rb_loss), img_dec)
                     print(img_title)
 
                     if _NEW_CAPTION:
@@ -408,7 +425,7 @@ def colorize_with_language():
 
                         new_word_list = list(new_img_cap[0, :new_img_len[0]])
                         new_img_title = '_'.join(vrev.get(w, 'unk') for w in new_word_list) 
-                        io.imsave(os.path.join(OUTPUT_DIR, '{0}_n_{1}_{2:.3f}_{3:.3f}.jpg').format(i, new_img_title, new_ce_loss, new_rb_loss), new_img_dec)
+                        io.imsave(os.path.join(_OUTPUT_DIR, '{0}_n_{1}_{2:.3f}_{3:.3f}.jpg').format(i, new_img_title, new_ce_loss, new_rb_loss), new_img_dec)
             finally:
                 hf.close()
                 print('H5 closed.')
@@ -501,17 +518,26 @@ def colorize_coco_without_language():
                 img_dec, _ = decode(img_l, img_313, T)
                 # Evaluate metrics
                 ce_loss, rb_loss = metrics(img_ab, img_313, sess, gt_313_tensor, pred_313_tensor, prior_tensor, ce_loss_tensor, rb_loss_tensor)
-                io.imsave(os.path.join(OUTPUT_DIR, '{0}_{1:.3f}_{2:.3f}.jpg').format(i, ce_loss, rb_loss), img_dec)
+                io.imsave(os.path.join(_OUTPUT_DIR, '{0}_{1:.3f}_{2:.3f}.jpg').format(i, ce_loss, rb_loss), img_dec)
                 # io.imsave(os.path.join(out_dir, img_name), img_rgb)
-                # cv2.imwrite(os.path.join(OUTPUT_DIR, '{0}_gt.jpg').format(i), img_bgr)
+                # cv2.imwrite(os.path.join(_OUTPUT_DIR, '{0}_gt.jpg').format(i), img_bgr)
                 print(i)
                 # print(img_name)
     hf.close()
     print('H5 closed.')
 
 
+def save_ground_truth():
+    hf = h5py.File('/srv/glusterfs/xieya/data/coco_colors.h5', 'r')
+    val_imgs = hf['val_ims']
+    for i in xrange(200, 400):
+        img_bgr = val_imgs[i]
+        cv2.imwrite(os.path.join(_OUTPUT_DIR, '{0}.jpg'.format(i)), img_bgr)
+        print(i)
+
+
 if __name__ == "__main__":
-    subprocess.check_call(['mkdir', '-p', OUTPUT_DIR])
+    subprocess.check_call(['mkdir', '-p', _OUTPUT_DIR])
     # main()
     # places365()
     # demo_wgan_ab()
