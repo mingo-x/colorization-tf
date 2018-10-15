@@ -413,10 +413,11 @@ def colorize_with_language():
                     img_313 = sess.run(c313_tensor, feed_dict={l_tensor: img_l, cap_tensor: img_cap, len_tensor: img_len})
                     img_dec, ab_dec = decode(img_l, img_313, 2.63)
                     ce_loss, rb_loss = metrics(img_ab, img_313, sess, gt_313_tensor, pred_313_tensor, prior_tensor, ce_loss_tensor, rb_loss_tensor)
+                    auc_score, auc_rb_score = _auc(img_ab, ab_dec)
 
                     word_list = list(img_cap[0, :img_len[0]])
                     img_title = '_'.join(vrev.get(w, 'unk') for w in word_list) 
-                    io.imsave(os.path.join(_OUTPUT_DIR, '{0}_o_{1}_{2:.3f}_{3:.3f}.jpg').format(i, img_title, ce_loss, rb_loss), img_dec)
+                    io.imsave(os.path.join(_OUTPUT_DIR, '{0}_o_{1}_{2:.3f}_{3:.3f}_{4:.3f}_{5:.3f}.jpg').format(i, img_title, ce_loss, rb_loss, auc_score, auc_rb_score), img_dec)
                     print(img_title)
 
                     if _NEW_CAPTION:
@@ -526,8 +527,8 @@ def colorize_coco_without_language():
                 img_dec, ab_dec = decode(img_l, img_313, T)
                 # Evaluate metrics
                 ce_loss, rb_loss = metrics(img_ab, img_313, sess, gt_313_tensor, pred_313_tensor, prior_tensor, ce_loss_tensor, rb_loss_tensor)
-                auc, auc_rb = _auc(img_ab, ab_dec)
-                io.imsave(os.path.join(_OUTPUT_DIR, '{0}_{1:.3f}_{2:.3f}_{3:.3f}_{4:.3f}.jpg').format(i, ce_loss, rb_loss, auc, auc_rb), img_dec)
+                auc_score, auc_rb_score = _auc(img_ab, ab_dec)
+                io.imsave(os.path.join(_OUTPUT_DIR, '{0}_{1:.3f}_{2:.3f}_{3:.3f}_{4:.3f}.jpg').format(i, ce_loss, rb_loss, auc_score, auc_rb_score), img_dec)
                 # io.imsave(os.path.join(out_dir, img_name), img_rgb)
                 # cv2.imwrite(os.path.join(_OUTPUT_DIR, '{0}_gt.jpg').format(i), img_bgr)
                 print(i)
