@@ -90,7 +90,7 @@ def _l2_loss(real_batch, pred_batch, prior=None):
     scores = []
     for thr in range(0, THRESHOLD + 1):
         score = np.sum(
-            np.where(np.less_equal(l2_dist, thr), ones, zeros)) / ones_sum
+            np.where(np.less_equal(l2_dist, thr), ones, zeros)) / ones_sum  # Devide by weight sum? Or?
         scores.append(score)
     return scores
 

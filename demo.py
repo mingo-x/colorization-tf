@@ -8,6 +8,7 @@ import tensorflow as tf
 from utils import *
 from net import Net
 from skimage import io, color, transform
+from sklearn.metrics import auc
 import cv2
 
 import utils
@@ -321,7 +322,7 @@ def metrics(gt_ab, pred_313, sess, gt_313_tensor, pred_313_tensor, prior_tensor,
 
     #Prior_Boost 
     #prior_boost: [N, 1, H/4, W/4]
-    prior_boost = utils._prior_boost(gt_313, gamma=0., prior_path=_PRIOR_PATH)
+    prior_boost = utils._prior_boost(gt_313, gamma=0.5, prior_path=_PRIOR_PATH)
 
     ce_loss, rb_loss = sess.run([ce_loss_tensor, rb_loss_tensor], 
         feed_dict={gt_313_tensor: gt_313, pred_313_tensor: pred_313, prior_tensor: prior_boost})
@@ -341,20 +342,30 @@ def cross_entropy_loss(gt_313, conv8_313, prior_boost_nongray):
     return ce_loss, rb_loss
 
 
-def _auc(real_batch, pred_batch, prior=None):
-    l2_dist = np.sqrt(np.sum(np.square(real_batch - pred_batch), axis=3))
-    if prior is None:
-        ones = np.ones_like(l2_dist)
-    else:
-        ones = prior
-    ones_sum = np.sum(ones)
+def _auc(gt_ab, pred_ab):
+    gt_ab_ss = transform.downscale_local_mean(gt_ab, (1, 4, 4, 1))
+    #NNEncoder
+    #gt_ab_313: [N, H/4, W/4, 313]
+    gt_313 = utils._nnencode(gt_ab_ss)
+    prior = utils._prior_boost(gt_313, gamma=0, prior_path=_PRIOR_PATH)
+
+    l2_dist = np.sqrt(np.sum(np.square(gt_ab - pred_ab), axis=3))
+    ones = np.ones_like(l2_dist)
     zeros = np.zeros_like(l2_dist)
     scores = []
-    for thr in range(0, THRESHOLD + 1):
+    scores_rb = []
+    for thr in range(0, 150 + 1):
         score = np.sum(
-            np.where(np.less_equal(l2_dist, thr), ones, zeros)) / ones_sum
+            np.where(np.less_equal(l2_dist, thr), ones, zeros)) / np.sum(ones)
+        score_rb = np.sum(
+            np.where(np.less_equal(l2_dist, thr), prior, zeros)) / np.sum(prior)
         scores.append(score)
-    return scores
+        scores_rb.append(score_rb)
+    x = [i for i in range(0, THRESHOLD + 1)]
+    auc_score = auc(x, scores)/ THRESHOLD
+    auc_rb_score = auc(x, scores_rb) / THRESHOLD
+
+    return auc_score, auc_rb_score
 
 
 def colorize_with_language():
