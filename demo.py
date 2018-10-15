@@ -552,7 +552,7 @@ def merge():
 
 if __name__ == "__main__":
     subprocess.check_call(['mkdir', '-p', _OUTPUT_DIR])
-    lookup = utils.LookupEncode(_PRIOR_PATH)
+    lookup = utils.LookupEncode('resources/pts_in_hull.npy')
     prior_factor = utils.PriorFactor(priorFile=_PRIOR_PATH)
     # main()
     # places365()
