@@ -31,7 +31,6 @@ _NEW_CAPTION = True
 # T = 2.63
 T = 2.63
 
-
 def _resize(image):
     h = image.shape[0]
     w = image.shape[1]
@@ -344,10 +343,10 @@ def cross_entropy_loss(gt_313, conv8_313, prior_boost_nongray):
 
 
 def _auc(gt_ab, pred_ab):
-    gt_313 = utils._nnencode(gt_ab)
-    prior = utils._prior_boost(gt_313, gamma=0, prior_path=_PRIOR_PATH)
+    ab_idx = lookup.encode_points(gt_ab[0])
+    prior = prior_factor.get_weights(ab_idx)
 
-    l2_dist = np.sqrt(np.sum(np.square(gt_ab - pred_ab[np.newaxis, : , :, :]), axis=3))
+    l2_dist = np.sqrt(np.sum(np.square(gt_ab[0] - pred_ab), axis=2))
     ones = np.ones_like(l2_dist)
     zeros = np.zeros_like(l2_dist)
     scores = []
@@ -547,8 +546,14 @@ def save_ground_truth():
         print(i)
 
 
+def merge():
+    return
+
+
 if __name__ == "__main__":
     subprocess.check_call(['mkdir', '-p', _OUTPUT_DIR])
+    lookup = utils.LookupEncode(_PRIOR_PATH)
+    prior_factor = utils.PriorFactor(priorFile=_PRIOR_PATH)
     # main()
     # places365()
     # demo_wgan_ab()
