@@ -146,12 +146,54 @@ def _nnencode(data_ab_ss, n=10):
   gt_ab_313 = np.transpose(gt_ab_313, (0, 2, 3, 1))
   return gt_ab_313
 
+
+class LookupEncode():
+    '''Encode points using lookups'''
+    def __init__(self, prior_path=''):
+        self.cc = np.load(prior_path)
+        self.grid_width = 10
+        self.offset = np.abs(np.amin(self.cc)) + 17 # add to get rid of negative numbers
+        self.x_mult = 300 # differentiate x from y
+        self.labels = {}
+        for idx, (x,y) in enumerate(self.cc):
+            x += self.offset
+            x *= self.x_mult
+            y += self.offset
+            if x+y in self.labels:
+                print('Id collision!!!')
+            self.labels[x+y] = idx
+
+    def encode_points(self, pts_nd):
+        '''Return 3d prior.'''
+        pts_flt = pts_nd.reshape((-1, 2))
+
+        # round AB coordinates to nearest grid tick
+        pgrid = np.round(pts_flt / self.grid_width) * self.grid_width
+
+        # get single number by applying offsets
+        pvals = pgrid + self.offset
+        pvals = pvals[:, 0] * self.x_mult + pvals[:, 1]
+
+        labels = np.zeros(pvals.shape,dtype='int32')
+        labels.fill(-1)
+
+        # lookup in label index and assign values
+        for k in self.labels:
+            labels[pvals == k] = self.labels[k]
+
+        if len(labels[labels == -1]) > 0:
+            print("Point outside of grid!!!")
+            labels[labels == -1] = 0
+
+        return labels.reshape(pts_nd.shape[:-1])
+
+
 # ***************************
 # ***** SUPPORT CLASSES *****
 # ***************************
 class PriorFactor():
     ''' Class handles prior factor '''
-    def __init__(self,alpha,gamma=0,verbose=False,priorFile=''):
+    def __init__(self,alpha=1.0,gamma=0,verbose=False,priorFile=''):
         # INPUTS
         #   alpha           integer     prior correction factor, 0 to ignore prior, 1 to divide by prior, alpha to divide by prior**alpha
         #   gamma           integer     percentage to mix in uniform prior with empirical prior
@@ -201,6 +243,9 @@ class PriorFactor():
             return corr_factor[:,:,na(),:]
         elif(axis==3):
             return corr_factor[:,:,:,na()]
+
+    def get_weights(self, ab_idx):
+        return self.prior_factor[ab_idx]
 
 def _prior_boost(gt_ab_313, gamma=0.5, alpha=1.0, prior_path='./resources/prior_probs_smoothed.npy'):
   '''
