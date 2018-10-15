@@ -886,7 +886,7 @@ class Net(object):
         for var in tf.trainable_variables():
             if 'kernel' in var.name:
                 l2_loss += tf.nn.l2_loss(var)
-        l2_loss *= self.weight_decay
+        l2_loss = l2_loss * self.weight_decay
         # l2_losses = [tf.nn.l2_loss(tf_var) for tf_var in tf.trainable_variables() if "kernel" in tf_var.name]
         # l2_loss = self.weight_decay * tf.add_n(l2_losses)
         wd_loss += l2_loss 

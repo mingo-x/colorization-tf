@@ -187,7 +187,8 @@ class PriorFactor():
     def print_correction_stats(self):
         print 'Prior factor correction:'
         print '  (alpha,gamma) = (%.2f, %.2f)'%(self.alpha,self.gamma)
-        print '  (min,max,mean,med,exp) = (%.2f, %.2f, %.2f, %.2f, %.2f)'%(np.min(self.prior_factor),np.max(self.prior_factor),np.mean(self.prior_factor),np.median(self.prior_factor),np.sum(self.prior_factor*self.prior_probs))
+        print '  (min,max,mean,med,exp,std) = (%.3f, %.3f, %.3f, %.3f, %.3f, %.3f)'%(
+          np.min(self.prior_factor),np.max(self.prior_factor),np.mean(self.prior_factor),np.median(self.prior_factor),np.sum(self.prior_factor*self.prior_probs), np.std(self.prior_factor))
 
     def forward(self, data_ab_quant,axis=1):
         data_ab_maxind = np.argmax(data_ab_quant,axis=axis)

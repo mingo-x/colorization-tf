@@ -15,12 +15,12 @@ _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
 _G_VERSION = 1
-_CKPT_PATH = '/srv/glusterfs/xieya/tf_coco_5/models/model.ckpt-11000'
+_CKPT_PATH = '/srv/glusterfs/xieya/tf_coco_5/models/model.ckpt-38000'
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
-OUTPUT_DIR = '/home/xieya/tmp'
+OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/tf_coco_5_38k'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
 _VIDEO_IN_DIR = '/srv/glusterfs/xieya/data/DAVIS/JPEGImages/Full-Resolution/bus'
-_VIDEO_OUT_DIR = '/srv/glusterfs/xieya/video/bus/vgg_rs'
+_VIDEO_OUT_DIR = '/srv/glusterfs/xieya/video/bus/vgg_4'
 _NEW_CAPTION = True
 # T = 2.63
 T = 2.63
@@ -405,7 +405,7 @@ def colorize_video_with_language():
                 img_l = (img_l.astype(dtype=np.float32)) / 255.0 * 2 - 1
                 img_l = img_l[None, :, :, None]
                 img_313 = sess.run(c313_tensor, feed_dict={l_tensor: img_l, cap_tensor: img_cap, len_tensor: img_len})
-                img_rgb, _ = decode(img_l, img_313, 2.63)
+                img_rgb, _ = decode(img_l, img_313, T)
                 io.imsave(os.path.join(out_dir, img_name), img_rgb)
                 print(img_name)
 
@@ -422,20 +422,31 @@ def colorize_coco_without_language():
         config = tf.ConfigProto(allow_soft_placement=True)
         config.gpu_options.allow_growth = True
 
+        out_dir = os.path.join(_VIDEO_OUT_DIR, 'nocap')
+        if not os.path.exists(out_dir):
+            os.makedirs(out_dir)
+
         with tf.Session(config=config) as sess:
             saver.restore(sess, _CKPT_PATH)
-
+            
+            # img_names = os.listdir(_VIDEO_IN_DIR)
             for _ in xrange(200):
+            # for img_name in img_names:
+                # img_bgr = cv2.imread(os.path.join(_VIDEO_IN_DIR, img_name))
+                # img_bgr = _resize(img_bgr)
                 i = random.randint(0, val_num - 1)
                 img_bgr = val_imgs[i]
                 img_l = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
+                img_l = cv2.resize(img_l, (224, 224), interpolation=cv2.INTER_CUBIC)
                 img_l = (img_l.astype(dtype=np.float32)) / 255.0 * 2 - 1
                 img_l = img_l[None, :, :, None]
                 img_313 = sess.run(c313_tensor, feed_dict={l_tensor: img_l})
-                img_rgb, _ = decode(img_l, img_313, 1.5)
+                img_rgb, _ = decode(img_l, img_313, T)
                 io.imsave(os.path.join(OUTPUT_DIR, '{0}.jpg').format(i), img_rgb)
+                # io.imsave(os.path.join(out_dir, img_name), img_rgb)
                 # cv2.imwrite(os.path.join(OUTPUT_DIR, '{0}_gt.jpg').format(i), img_bgr)
                 print(i)
+                # print(img_name)
     hf.close()
     print('H5 closed.')
 
