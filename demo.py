@@ -321,7 +321,7 @@ def metrics(gt_ab, pred_313, sess, gt_313_tensor, pred_313_tensor, prior_tensor,
 
     #Prior_Boost 
     #prior_boost: [N, 1, H/4, W/4]
-    prior_boost = utils._prior_boost(gt_313, prior_path=_PRIOR_PATH)
+    prior_boost = utils._prior_boost(gt_313, gamma=0., prior_path=_PRIOR_PATH)
 
     ce_loss, rb_loss = sess.run([ce_loss_tensor, rb_loss_tensor], 
         feed_dict={gt_313_tensor: gt_313, pred_313_tensor: pred_313, prior_tensor: prior_boost})
