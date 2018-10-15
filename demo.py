@@ -20,7 +20,7 @@ _CIFAR_COUNT = 0
 _G_VERSION = 1
 _CKPT_PATH = '/srv/glusterfs/xieya/tf_coco_5/models/model.ckpt-38000'
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
-_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/coco_gt'
+_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/tf_coco_5_38k'
 _PRIOR_PATH = '/srv/glusterfs/xieya/prior/coco_313_soft.npy'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
 _VIDEO_IN_DIR = '/srv/glusterfs/xieya/data/DAVIS/JPEGImages/Full-Resolution/bus'
@@ -546,5 +546,5 @@ if __name__ == "__main__":
     # cifar()
     # colorize_with_language()
     # colorize_video_with_language()
-    # colorize_coco_without_language()
-    save_ground_truth()
+    colorize_coco_without_language()
+    # save_ground_truth()
