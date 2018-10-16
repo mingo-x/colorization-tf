@@ -436,12 +436,13 @@ def colorize_with_language():
                             new_img_cap[0, j] = train_vocab.get(new_words[j], 0)
                         new_img_len[0] = len(new_words)
                         new_img_313 = sess.run(c313_tensor, feed_dict={l_tensor: img_l, cap_tensor: new_img_cap, len_tensor: new_img_len})
-                        new_img_dec, _ = decode(img_l, new_img_313, 2.63)
+                        new_img_dec, new_ab_dec = decode(img_l, new_img_313, 2.63)
                         new_ce_loss, new_rb_loss = metrics(img_ab, new_img_313, sess, gt_313_tensor, pred_313_tensor, prior_tensor, ce_loss_tensor, rb_loss_tensor)
+                        new_auc_score, new_auc_rb_score = _auc(img_ab, new_ab_dec)
 
                         new_word_list = list(new_img_cap[0, :new_img_len[0]])
                         new_img_title = '_'.join(vrev.get(w, 'unk') for w in new_word_list) 
-                        io.imsave(os.path.join(new_dir, '{0}_{1}_{2:.3f}_{3:.3f}.jpg').format(i, new_img_title, new_ce_loss, new_rb_loss), new_img_dec)
+                        io.imsave(os.path.join(new_dir, '{0}_{1}_{2:.3f}_{3:.3f}_{4:.3f}_{5:.3f}.jpg').format(i, new_img_title, new_ce_loss, new_rb_loss, new_auc_score, new_auc_rb_score), new_img_dec)
             finally:
                 hf.close()
                 print('H5 closed.')
