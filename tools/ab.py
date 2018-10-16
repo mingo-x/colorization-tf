@@ -6,7 +6,7 @@ from skimage import io, color
 _OUTPUT_DIR = '/srv/glusterfs/xieya/image/ab'
 
 def draw_ab_space_given_l(l):
-    cell_size = 5
+    cell_size = 10
     canvas = np.zeros((23 * cell_size, 23 * cell_size, 3))
     canvas[:, :, 0].fill(l)
     for i in xrange(23):
@@ -14,7 +14,7 @@ def draw_ab_space_given_l(l):
             a = (i - 11) * 10
             b = (j - 11) * 10
             canvas[i * cell_size: (i + 1) * cell_size, j * cell_size: (j + 1) * cell_size, 1].fill(a)
-            canvas[i * cell_size: (i + 1) * cell_size, j * cell_size: (j + 1) * cell_size, 1].fill(b)
+            canvas[i * cell_size: (i + 1) * cell_size, j * cell_size: (j + 1) * cell_size, 2].fill(b)
 
     canvas = color.lab2rgb(canvas)
     io.imsave(os.path.join(_OUTPUT_DIR, '{}.jpg'.format(l)), canvas)
