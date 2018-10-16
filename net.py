@@ -49,12 +49,12 @@ class Net(object):
         elif self.g_version == 2:
             return self.inference2(data_l)
         elif self.g_version == 3:
-            return self.inference3(data_l)
+            return self.inference3(data_l)   
 
     def inference0(self, data_l):
         output = data_l * 50
         with tf.variable_scope('G'):
-            #conv1
+            # conv1
             conv_num = 1
 
             temp_conv = conv2d('conv_{}'.format(conv_num),output, [3, 3, 1, 64], stride=1, wd=self.weight_decay)
@@ -870,11 +870,10 @@ class Net(object):
         return gen_cost, disc_cost, w_dist, tf.reduce_mean(slopes)
 
     def loss(self, scope, conv8_313, prior_boost_nongray,
-             gt_ab_313, fake_data, is_gan, is_boost):
+             gt_ab_313, fake_data=None, is_gan=False, is_boost=True):
         flat_conv8_313 = tf.reshape(conv8_313, [-1, 313])
         flat_gt_ab_313 = tf.reshape(gt_ab_313, [-1, 313])
         flat_gt_ab_313 = tf.stop_gradient(flat_gt_ab_313)
-        # flat_prior = tf.reshape(prior_boost_nongray, [-1])
         g_loss = tf.nn.softmax_cross_entropy_with_logits_v2(logits=flat_conv8_313, labels=flat_gt_ab_313)
         g_loss = tf.reshape(g_loss, tf.shape(prior_boost_nongray))
         new_loss = g_loss * prior_boost_nongray
@@ -891,7 +890,7 @@ class Net(object):
         # l2_loss = self.weight_decay * tf.add_n(l2_losses)
         wd_loss += l2_loss 
 
-        new_loss  = new_loss + wd_loss
+        new_loss = new_loss + wd_loss
         return new_loss, g_loss, wd_loss
 
         if is_boost:

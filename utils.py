@@ -348,7 +348,7 @@ def preprocess(data, training=True, c313=False, is_gan=False, is_rgb=True, prior
   if training:
     if c313:
     # Upscale.
-      return data_l, gt_ab_313, prior_boost_nongray, data_313_ss
+      return data_l, gt_ab_313, prior_boost_nongray, data_ab_ss
     # return data_l, gt_ab_313, prior_boost_nongray, img_lab
     else:
       return data_l, gt_ab_313, prior_boost_nongray, data_real
@@ -363,31 +363,32 @@ def softmax(x):
 
 
 def decode(data_l, conv8_313, rebalance=1):
-  """
-  Args:
-    data_l   : [1, height, width, 1]
-    conv8_313: [1, height/4, width/4, 313]
-  Returns:
-    img_rgb  : [height, width, 3]
-  """
-  # [-1, 1] to [0, 100]
-  data_l = (data_l + 1) * 50
-  _, height, width, _ = data_l.shape
-  data_l = data_l[0, :, :, :]
-  conv8_313 = conv8_313[0, :, :, :]
-  enc_dir = './resources'
-  conv8_313_rh = conv8_313 * rebalance
-  class8_313_rh = softmax(conv8_313_rh)
+    """
+    Args:
+      data_l   : [1, height, width, 1]
+      conv8_313: [1, height/4, width/4, 313]
+    Returns:
+      img_rgb  : [height, width, 3]
+    """
+    # [-1, 1] to [0, 100]
+    data_l = (data_l + 1) * 50
+    _, height, width, _ = data_l.shape
+    data_l = data_l[0, :, :, :]
+    conv8_313 = conv8_313[0, :, :, :]
+    enc_dir = './resources'
+    conv8_313_rh = conv8_313 * rebalance
+    class8_313_rh = softmax(conv8_313_rh)
 
-  cc = np.load(os.path.join(enc_dir, 'pts_in_hull.npy'))
-  
-  data_ab = np.dot(class8_313_rh, cc)
-  # data_ab = resize(data_ab, (height, width))
-  data_ab = cv2.resize(data_ab, (height, width), interpolation=cv2.INTER_CUBIC)
+    cc = np.load(os.path.join(enc_dir, 'pts_in_hull.npy'))
+    
+    data_ab = np.dot(class8_313_rh, cc)
+    # data_ab = resize(data_ab, (height, width))
+    data_ab_us = cv2.resize(data_ab, (height, width), interpolation=cv2.INTER_CUBIC)
 
-  img_lab = np.concatenate((data_l, data_ab), axis=-1)
-  img_rgb = color.lab2rgb(img_lab)
-  return img_rgb, data_ab
+    img_lab = np.concatenate((data_l, data_ab_us), axis=-1)
+    img_rgb = color.lab2rgb(img_lab)
+    return img_rgb, data_ab
+
 
 def get_data_l(image_path):
   """
@@ -472,4 +473,12 @@ def save_images(X, save_path):
         img[j*h:j*h+h, i*w:i*w+w] = x
 
     imsave(save_path, img)
-    
+  
+
+def is_grayscale(gt_ab):
+    thresh = 5
+    if len(gt_ab.shape) == 4:
+        is_gray = np.sum(np.sum(np.sum(np.abs(gt_ab) > thresh, axis=1), axis=1), axis=1) == 0
+    elif len(gt_ab.shape) == 3:
+        is_gray = np.sum(np.abs(gt_ab) > thresh) == 0
+    return is_gray

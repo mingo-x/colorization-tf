@@ -19,7 +19,7 @@ class DataSet(object):
       image_path
     """
 
-    def __init__(self, common_params=None, dataset_params=None, train=True):
+    def __init__(self, common_params=None, dataset_params=None, train=True, with_ab=False):
         """
         Args:
           common_params: A dict
@@ -35,6 +35,7 @@ class DataSet(object):
             self.with_caption = True if common_params['with_caption'] == '1' else False
 
         self.training = train
+        self.with_ab = with_ab
 
         # record and image_label queue
         self.record_queue = Queue(maxsize=15000)
@@ -50,7 +51,7 @@ class DataSet(object):
             self.train_origs = hf['val_ims']            
             self.train_words = hf['val_words']                                         
             self.train_lengths = hf['val_length'] 
-            self.thread_num = 1
+            self.thread_num = 4
 
         self.record_point = 0
         self.record_number = len(self.train_origs)
@@ -81,12 +82,16 @@ class DataSet(object):
             images = []
             captions = []
             lens = []
-            for _ in range(self.batch_size):
+            count = 0
+            while count < self.batch_size:
                 idx = self.record_queue.get()
                 image = self.train_origs[idx]
                 caption = self.train_words[idx]
                 length = self.train_lengths[idx]
                 image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+                ab = cv2.cvtColor(image, cv2.COLOR_RGB2LAB)[:, :, 1:]
+                if is_grayscale(ab):
+                    continue
                 # Augmentation.
                 mirror = np.random.randint(0, 2)
                 if mirror:
@@ -94,12 +99,15 @@ class DataSet(object):
                 images.append(image)
                 captions.append(caption)
                 lens.append(length)
+                count += 1
             images = np.asarray(images, dtype=np.uint8)
             captions = np.asarray(captions, dtype=np.int32)
             lens = np.asarray(lens, dtype=np.int32)
-            l, gt, prior, _ = preprocess(images, c313=True, prior_path=self.prior_path, mask_gray=(not self.with_caption))
-
-            self.batch_queue.put((l, gt, prior, captions, lens))
+            l, gt, prior, ab = preprocess(images, c313=True, prior_path=self.prior_path, mask_gray=(not self.with_caption))
+            if self.with_ab:
+                self.batch_queue.put((l, gt, prior, captions, lens, ab))
+            else:    
+                self.batch_queue.put((l, gt, prior, captions, lens))
 
     def batch(self):
         """get batch
