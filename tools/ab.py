@@ -23,9 +23,10 @@ def draw_ab_space_given_l(l):
 def draw_ab_space():
     if not os.path.exists(_OUTPUT_DIR):
         os.makedirs(_OUTPUT_DIR)
-        
+
     for l in xrange(0, 101, 10):
         draw_ab_space_given_l(l)
+        print(l)
 
 
 if __name__ == "__main__":
