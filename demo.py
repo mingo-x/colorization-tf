@@ -23,14 +23,14 @@ _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
 _G_VERSION = 1
-_CKPT_PATH = '/srv/glusterfs/xieya/tf_coco_5/models/model.ckpt-38000'
+_CKPT_PATH = '/srv/glusterfs/xieya/vgg_5/models/model.ckpt-69000'
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
-_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/vgg_6_12k'
+_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/vgg_5_69k'
 _PRIOR_PATH = '/srv/glusterfs/xieya/prior/coco_313_soft.npy'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
 _VIDEO_IN_DIR = '/srv/glusterfs/xieya/data/DAVIS/JPEGImages/Full-Resolution/bus'
 _VIDEO_OUT_DIR = '/srv/glusterfs/xieya/video/bus/vgg_4'
-_NEW_CAPTION = False
+_NEW_CAPTION = True
 # T = 2.63
 T = 2.63
 
@@ -660,13 +660,13 @@ if __name__ == "__main__":
     # demo_wgan_rgb()
     # _colorize_high_res_img(_IMG_NAME)
     # cifar()
-    # colorize_with_language()
+    colorize_with_language()
     # colorize_video_with_language()
     # colorize_coco_without_language()
     # save_ground_truth()
     # merge('/srv/glusterfs/xieya/image/color/tf_224_1_476k', 
     #       '/srv/glusterfs/xieya/image/color/tf_coco_5_38k', 
-    #       '/srv/glusterfs/xieya/image/color/vgg_6_12k/original', 
-    #       '/srv/glusterfs/xieya/image/color/vgg_6_12k/new')
-    evaluate(False)
-    print("Model {}.".format(_CKPT_PATH))
+    #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/original', 
+    #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/new')
+    # evaluate(False)
+    # print("Model {}.".format(_CKPT_PATH))
