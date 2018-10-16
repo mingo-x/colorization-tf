@@ -593,6 +593,7 @@ def merge(cic_dir, coco_dir, cap_dir, new_cap_dir):
             img = np.hstack((cic_img, coco_img, cap_img))
             img_name = "{0}_A_{1}_B_{2}_C_{3}.jpg".format(idx, cic_score, coco_score, cap_score)
             cv2.imwrite(os.path.join(_OUTPUT_DIR, img_name), img)
+        print(idx)
 
 
 def evaluate(with_caption):
