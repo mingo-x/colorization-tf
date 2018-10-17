@@ -49,7 +49,6 @@ def _weights_to_image(weights, out_name="", save=True):
         y = int(b / 10) + 11
         canvas[x * cell_size: (x + 1) * cell_size, y * cell_size: (y + 1) * cell_size] = weights[i]
 
-    canvas = color.gray2rgb(canvas)
     if save:
         io.imsave(os.path.join(_OUTPUT_DIR, '{}.jpg'.format(out_name)), canvas)
     else:
@@ -76,6 +75,7 @@ def hist_to_image_with_ab(hist_path):
     hist = np.load(hist_path)
     out_name = os.path.splitext(os.path.split(hist_path)[1])[0]
     alpha = _weights_to_image(hist, save=False)
+    alpha = alpha[:, :, np.newaxis]
     alpha *= 255
     alpha = alpha.astype(np.uint8)
     rgb = draw_ab_space_given_l(0, False)
