@@ -3,6 +3,8 @@ import os
 import numpy as np
 from skimage import io, color
 
+import utils
+
 _OUTPUT_DIR = '/srv/glusterfs/xieya/image/ab'
 
 def draw_ab_space_given_l(l):
@@ -30,5 +32,38 @@ def draw_ab_space():
         print(l)
 
 
+def _weights_to_image(weights, out_name):
+    weights /= np.max(weights)  # Rescaling.
+    grid = np.load('resources/pts_in_hull.npy')
+
+    cell_size = 10
+    canvas = np.zeros((23 * cell_size, 23 * cell_size), dtype=np.float32)  # Grayscale canvas.
+
+    for i in xrange(len(weights)):
+        a, b = grid[i]
+        x = int(a / 10) + 11
+        y = int(b / 10) + 11
+        canvas[x * cell_size: (x + 1) * cell_size, y * cell_size: (y + 1) * cell_size] = weights[i]
+
+    canvas = color.gray2rgb(canvas)
+    io.imsave(os.path.join(_OUTPUT_DIR, '{}.jpg'.format(out_name)), canvas)
+
+
+def hist_to_image(hist_path):
+    hist = np.load(hist_path)
+    out_name = os.path.splitext(os.path.split(hist_path)[1])[0]
+    _weights_to_image(hist, out_name)
+
+
+def prior_to_image(prior_path):
+    prior_name = os.path.splitext(os.path.split(prior_path)[1])[0]
+    prior_factor_0 = utils.PriorFactor(priorFile=prior_path, gamma=0)
+    prior_factor_5 = utils.PriorFactor(priorFile=prior_path, gamma=.5)
+    _weights_to_image(prior_factor_0.prior_factor, prior_name + "_g0")
+    _weights_to_image(prior_factor_5.prior_factor, prior_name + "_g5")
+
+
 if __name__ == "__main__":
-    draw_ab_space()
+    # draw_ab_space()
+    hist_to_image('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_hist.npy')
+    prior_to_image('/srv/glusterfs/xieya/prior/coco_313_soft.npy')

@@ -23,7 +23,7 @@ _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
 _G_VERSION = 1
-_CKPT_PATH = '/srv/glusterfs/xieya/vgg_5/models/model.ckpt-69000'
+_CKPT_PATH = '/srv/glusterfs/xieya/tf_coco_5/models/model.ckpt-38000'
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
 _OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/comparison'
 _PRIOR_PATH = '/srv/glusterfs/xieya/prior/coco_313_soft.npy'
@@ -341,7 +341,6 @@ def cross_entropy_loss(gt_313, conv8_313, prior_boost_nongray):
 
 
 def _auc(gt_ab, pred_ab, prior_factor):
-    # TODO: used pred_ab_ss.
     ab_idx = lookup.encode_points(gt_ab[0])
     prior = prior_factor.get_weights(ab_idx)
 
@@ -596,7 +595,7 @@ def merge(cic_dir, coco_dir, cap_dir, new_cap_dir):
         print(idx)
 
 
-def evaluate(with_caption):
+def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, model_name="", batch_num=300):
     dataset_params = {'path': _COCO_PATH, 'thread_num': 4, 'prior_path': _PRIOR_PATH}
     common_params = {'batch_size': _BATCH_SIZE, 'with_caption': False}  # with_caption -> False: ignore grayscale images.
     dataset = DataSet(common_params, dataset_params, False, True)
@@ -614,7 +613,8 @@ def evaluate(with_caption):
             c313_tensor = autocolor.inference(l_tensor)
         gt_313_tensor = tf.placeholder(tf.float32, (_BATCH_SIZE, _INPUT_SIZE / 4, _INPUT_SIZE / 4, 313))
         prior_tensor = tf.placeholder(tf.float32, (_BATCH_SIZE, _INPUT_SIZE / 4, _INPUT_SIZE / 4, 1))
-        ce_loss_tensor, rb_loss_tensor = cross_entropy_loss(gt_313_tensor, c313_tensor, prior_tensor)
+        if cross_entropy:
+            ce_loss_tensor, rb_loss_tensor = cross_entropy_loss(gt_313_tensor, c313_tensor, prior_tensor)
         saver = tf.train.Saver()
         config = tf.ConfigProto(allow_soft_placement=True)
         config.gpu_options.allow_growth = True
@@ -622,34 +622,67 @@ def evaluate(with_caption):
         with tf.Session(config=config) as sess:
             saver.restore(sess, _CKPT_PATH)
 
-            ce = []
-            rb = []
-            auc_0 = []
-            auc_rb_0 = []
-            auc_rb_5 = []
+            if cross_entropy:
+                ce = []
+                rb = []
+            if auc:
+                auc_0 = []
+                auc_rb_0 = []
+                auc_rb_5 = []
+            if ab_hist:
+                hist = np.zeros((313,), dtype=np.float32)
+                l_hist = np.zeros((101,), dtype=np.float32)
                 
-            for i in xrange(300):
+            for i in xrange(batch_num):
                 img_l, gt_313, prior_boost_nongray, img_cap, img_len, img_ab = dataset.batch()
-                img_313, ce_loss, rb_loss = sess.run([c313_tensor, ce_loss_tensor, rb_loss_tensor], 
-                                                     feed_dict={
-                                                     l_tensor: img_l, 
-                                                     cap_tensor: img_cap, 
-                                                     len_tensor: img_len,
-                                                     gt_313_tensor: gt_313,
-                                                     prior_tensor: prior_boost_nongray})
-                ce.append(ce_loss)
-                rb.append(rb_loss)
-                for j in xrange(_BATCH_SIZE):
-                    _, ab_dec = decode(img_l[j: j + 1], img_313[j: j + 1], T)  # How to set the appropriate temperature?
-                    auc_score_0, auc_rb_score_0 = _auc(img_ab, ab_dec, prior_factor_0)
-                    auc_0.append(auc_score_0)
-                    auc_rb_0.append(auc_rb_score_0)
-                    _, auc_rb_score_5 = _auc(img_ab, ab_dec, prior_factor_5)
-                    auc_rb_5.append(auc_rb_score_5)
+                if cross_entropy:
+                    img_313, ce_loss, rb_loss = sess.run([c313_tensor, ce_loss_tensor, rb_loss_tensor], 
+                                                         feed_dict={
+                                                         l_tensor: img_l, 
+                                                         cap_tensor: img_cap, 
+                                                         len_tensor: img_len,
+                                                         gt_313_tensor: gt_313,
+                                                         prior_tensor: prior_boost_nongray})
+                    ce.append(ce_loss)
+                    rb.append(rb_loss)
+                else:
+                    img_313 = sess.run(c313_tensor, feed_dict={
+                                       l_tensor: img_l, cap_tensor: img_cap, len_tensor: img_len,
+                                       gt_313_tensor: gt_313, prior_tensor: prior_boost_nongray})
+                
+                if auc or ab_hist:
+                    for j in xrange(_BATCH_SIZE):
+                        _, ab_dec = decode(img_l[j: j + 1], img_313[j: j + 1], T)  # How to set the appropriate temperature?
+                        if auc:
+                            auc_score_0, auc_rb_score_0 = _auc(img_ab, ab_dec, prior_factor_0)
+                            auc_0.append(auc_score_0)
+                            auc_rb_0.append(auc_rb_score_0)
+                            _, auc_rb_score_5 = _auc(img_ab, ab_dec, prior_factor_5)
+                            auc_rb_5.append(auc_rb_score_5)
+                        if ab_hist:
+                            ab_idx = lookup.encode_points(ab_dec).flatten()
+                            for idx in xrange(313):
+                                hist[idx] += len(ab_idx[ab_idx == idx])
+                            
+                if ab_hist:
+                    l_idx = ((img_l + 1) * 50).astype(np.int32).flatten()
+                    for idx in xrange(101):
+                        l_hist[idx] += len(l_idx[l_idx == idx])
+                            
                 print(i)
 
-            print("Cross entropy {0:.6f}, rebalanced cross entropy {1:.6f}, auc {2:.6f}, rebalanced auc {3:.6f}, rebalanced auc (g=0.5) {4:.6f}, based on {5} samples".format(
-                  np.mean(ce), np.mean(rb), np.mean(auc_0), np.mean(auc_rb_0), np.mean(auc_rb_5), len(auc_0)))
+            if cross_entropy:
+                print("cross entropy {0:.6f}, rebalanced cross entropy {1:.6f}".format(np.mean(ce), np.mean(rb)))
+            if auc:
+                print("auc {0:.6f}, rebalanced auc {1:.6f}, rebalanced auc (g=0.5) {2:.6f}".format(np.mean(auc_0), np.mean(auc_rb_0), np.mean(auc_rb_5)))
+            if ab_hist:
+                np.save("/srv/glusterfs/xieya/image/ab/{}_hist.npy".format(model_name), hist)
+                np.save("/srv/glusterfs/xieya/image/ab/{}_l_hist.npy".format(model_name), l_hist)
+                print("Hist stats: min {0} @ {5}, max {1} @ {6}, mean {2}, std {3}, median {4}".format(
+                    np.min(hist), np.max(hist), np.mean(hist), np.std(hist), np.median(hist), np.argmin(hist), np.argmax(hist)))
+                print("Luma hist stats: min {0} @ {5}, max {1} @ {6}, mean {2}, std {3}, median {4}".format(
+                    np.min(l_hist), np.max(l_hist), np.mean(l_hist), np.std(l_hist), np.median(l_hist), np.argmin(l_hist), np.argmax(l_hist)))
+            print("Total {}".format(batch_num * _BATCH_SIZE))
 
 
 if __name__ == "__main__":
@@ -665,9 +698,9 @@ if __name__ == "__main__":
     # colorize_video_with_language()
     # colorize_coco_without_language()
     # save_ground_truth()
-    merge('/srv/glusterfs/xieya/image/color/tf_224_1_476k', 
-          '/srv/glusterfs/xieya/image/color/tf_coco_5_38k', 
-          '/srv/glusterfs/xieya/image/color/vgg_5_69k/original', 
-          '/srv/glusterfs/xieya/image/color/vgg_5_69k/new')
-    # evaluate(False)
+    # merge('/srv/glusterfs/xieya/image/color/tf_224_1_476k', 
+    #       '/srv/glusterfs/xieya/image/color/tf_coco_5_38k', 
+    #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/original', 
+    #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/new')
+    evaluate(with_caption=False, cross_entropy=False, auc=False, ab_hist=True, model_name='tf_coco_5_38k', batch_num=600)
     # print("Model {}.".format(_CKPT_PATH))
