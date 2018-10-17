@@ -84,12 +84,14 @@ def hist_to_image_as_alpha(hist_path):
         io.imsave(os.path.join(_OUTPUT_DIR, 'alpha_{0}_{1}.png'.format(out_name, l)), rgba)
 
 
-def hist_to_image_as_mask(hist_path, threshold=0.25):
+def hist_to_image_as_mask(hist_path):
     hist = np.load(hist_path)
+    threshold = np.mean(hist)
     out_name = os.path.splitext(os.path.split(hist_path)[1])[0]
     mask = _weights_to_image(hist, save=False)
     alpha = np.zeros_like(mask, dtype=np.float32)
     alpha[mask > threshold] = 1.
+    alpha = alpha[:, :, np.newaxis]
     # alpha *= 255
     # alpha = alpha.astype(np.uint8)
     for l in xrange(0, 101, 10):
