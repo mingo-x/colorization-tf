@@ -23,7 +23,7 @@ _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
 _G_VERSION = 1
-_CKPT_PATH = '/srv/glusterfs/xieya/tf_coco_5/models/model.ckpt-38000'
+_CKPT_PATH = '/srv/glusterfs/xieya/tf_224_1/models/model.ckpt-476000'
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
 _OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/comparison'
 _PRIOR_PATH = '/srv/glusterfs/xieya/prior/coco_313_soft.npy'
@@ -677,7 +677,7 @@ def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, model_
                 print("auc {0:.6f}, rebalanced auc {1:.6f}, rebalanced auc (g=0.5) {2:.6f}".format(np.mean(auc_0), np.mean(auc_rb_0), np.mean(auc_rb_5)))
             if ab_hist:
                 np.save("/srv/glusterfs/xieya/image/ab/{}_hist.npy".format(model_name), hist)
-                np.save("/srv/glusterfs/xieya/image/ab/{}_l_hist.npy".format(model_name), l_hist)
+                np.save("/srv/glusterfs/xieya/image/ab/l_hist.npy", l_hist)
                 print("Hist stats: min {0} @ {5}, max {1} @ {6}, mean {2}, std {3}, median {4}".format(
                     np.min(hist), np.max(hist), np.mean(hist), np.std(hist), np.median(hist), np.argmin(hist), np.argmax(hist)))
                 print("Luma hist stats: min {0} @ {5}, max {1} @ {6}, mean {2}, std {3}, median {4}".format(
@@ -702,5 +702,5 @@ if __name__ == "__main__":
     #       '/srv/glusterfs/xieya/image/color/tf_coco_5_38k', 
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/original', 
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/new')
-    evaluate(with_caption=False, cross_entropy=False, auc=False, ab_hist=True, model_name='tf_coco_5_38k', batch_num=600)
+    evaluate(with_caption=False, cross_entropy=False, auc=False, ab_hist=True, model_name='tf_224_1', batch_num=600)
     # print("Model {}.".format(_CKPT_PATH))

@@ -38,6 +38,7 @@ def _weights_to_image(weights, out_name):
 
     cell_size = 10
     canvas = np.zeros((23 * cell_size, 23 * cell_size), dtype=np.float32)  # Grayscale canvas.
+    canvas.fill(0.5)
 
     for i in xrange(len(weights)):
         a, b = grid[i]
