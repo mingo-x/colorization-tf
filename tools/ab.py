@@ -86,7 +86,7 @@ def hist_to_image_as_alpha(hist_path):
 
 def hist_to_image_as_mask(hist_path):
     hist = np.load(hist_path)
-    threshold = np.mean(hist)
+    threshold = np.mean(hist) / np.max(hist)
     out_name = os.path.splitext(os.path.split(hist_path)[1])[0]
     mask = _weights_to_image(hist, save=False)
     alpha = np.zeros_like(mask, dtype=np.float32)
