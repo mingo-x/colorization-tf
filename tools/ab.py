@@ -78,9 +78,10 @@ def hist_to_image_with_ab(hist_path):
     alpha = alpha[:, :, np.newaxis]
     # alpha *= 255
     # alpha = alpha.astype(np.uint8)
-    rgb = draw_ab_space_given_l(0, False)
-    rgba = np.concatenate((rgb, alpha), -1)
-    io.imsave(os.path.join(_OUTPUT_DIR, '{}.png'.format(out_name)), rgba)
+    for l in xrange(0, 101, 10):
+        rgb = draw_ab_space_given_l(l, False)
+        rgba = np.concatenate((rgb, alpha), -1)
+        io.imsave(os.path.join(_OUTPUT_DIR, '{0}_{1}.png'.format(out_name, l)), rgba)
 
 
 if __name__ == "__main__":
