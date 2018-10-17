@@ -76,8 +76,8 @@ def hist_to_image_with_ab(hist_path):
     out_name = os.path.splitext(os.path.split(hist_path)[1])[0]
     alpha = _weights_to_image(hist, save=False)
     alpha = alpha[:, :, np.newaxis]
-    alpha *= 255
-    alpha = alpha.astype(np.uint8)
+    # alpha *= 255
+    # alpha = alpha.astype(np.uint8)
     rgb = draw_ab_space_given_l(0, False)
     rgba = np.concatenate((rgb, alpha), -1)
     io.imsave(os.path.join(_OUTPUT_DIR, '{}.png'.format(out_name)), rgba)
