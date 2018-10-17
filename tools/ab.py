@@ -57,10 +57,12 @@ def hist_to_image(hist_path):
 
 def prior_to_image(prior_path):
     prior_name = os.path.splitext(os.path.split(prior_path)[1])[0]
+    distribution = np.load(prior_path)
+    _weights_to_image(distribution, prior_name + "_distribution")
     prior_factor_0 = utils.PriorFactor(priorFile=prior_path, gamma=0)
     prior_factor_5 = utils.PriorFactor(priorFile=prior_path, gamma=.5)
-    _weights_to_image(prior_factor_0.prior_factor, prior_name + "_g0")
-    _weights_to_image(prior_factor_5.prior_factor, prior_name + "_g5")
+    _weights_to_image(prior_factor_0.prior_factor, prior_name + "_weights_g0")
+    _weights_to_image(prior_factor_5.prior_factor, prior_name + "_weights_g5")
 
 
 if __name__ == "__main__":
