@@ -71,7 +71,7 @@ def prior_to_image(prior_path):
     _weights_to_image(prior_factor_5.prior_factor, prior_name + "_weights_g5")
 
 
-def hist_to_image_with_ab(hist_path):
+def hist_to_image_as_alpha(hist_path):
     hist = np.load(hist_path)
     out_name = os.path.splitext(os.path.split(hist_path)[1])[0]
     alpha = _weights_to_image(hist, save=False)
@@ -81,11 +81,25 @@ def hist_to_image_with_ab(hist_path):
     for l in xrange(0, 101, 10):
         rgb = draw_ab_space_given_l(l, False)
         rgba = np.concatenate((rgb, alpha), -1)
-        io.imsave(os.path.join(_OUTPUT_DIR, '{0}_{1}.png'.format(out_name, l)), rgba)
+        io.imsave(os.path.join(_OUTPUT_DIR, 'alpha_{0}_{1}.png'.format(out_name, l)), rgba)
+
+
+def hist_to_image_as_mask(hist_path, threshold=0.25):
+    hist = np.load(hist_path)
+    out_name = os.path.splitext(os.path.split(hist_path)[1])[0]
+    mask = _weights_to_image(hist, save=False)
+    alpha = np.zeros_like(mask, dtype=np.float32)
+    alpha[mask > threshold] = 1.
+    # alpha *= 255
+    # alpha = alpha.astype(np.uint8)
+    for l in xrange(0, 101, 10):
+        rgb = draw_ab_space_given_l(l, False)
+        rgba = np.concatenate((rgb, alpha), -1)
+        io.imsave(os.path.join(_OUTPUT_DIR, 'mask_{0}_{1}.png'.format(out_name, l)), rgba)
 
 
 if __name__ == "__main__":
     # draw_ab_space()
     # hist_to_image('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_hist.npy')
     # prior_to_image('/srv/glusterfs/xieya/prior/coco_313_soft.npy')
-    hist_to_image_with_ab('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_hist.npy')
+    hist_to_image_as_mask('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_hist.npy')
