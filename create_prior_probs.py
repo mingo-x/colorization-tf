@@ -288,7 +288,7 @@ def cal_ab_hist_given_l():
     filename_lists = get_file_list()
     counter = 0
     probs = np.zeros((101, _N_CLASSES), dtype=np.float64)
-    lookup = utils.LookupEncode('resources/pts_in_hull.npy')
+    lookup = LookupEncode('resources/pts_in_hull.npy')
 
     for img_f in filename_lists:
         img_f = img_f.strip()
