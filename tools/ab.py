@@ -35,13 +35,13 @@ def draw_ab_space():
         print(l)
 
 
-def _weights_to_image(weights, out_name="", save=True):
+def _weights_to_image(weights, out_name="", save=True, fill=0.):
     weights /= np.max(weights)  # Rescaling.
     grid = np.load('resources/pts_in_hull.npy')
 
     cell_size = 10
     canvas = np.zeros((23 * cell_size, 23 * cell_size), dtype=np.float32)  # Grayscale canvas.
-    # canvas.fill(0.5)
+    canvas.fill(fill)
 
     for i in xrange(len(weights)):
         a, b = grid[i]
@@ -58,7 +58,7 @@ def _weights_to_image(weights, out_name="", save=True):
 def hist_to_image(hist_path):
     hist = np.load(hist_path)
     out_name = os.path.splitext(os.path.split(hist_path)[1])[0]
-    _weights_to_image(hist, out_name)
+    _weights_to_image(hist, out_name, fill=0.5)
 
 
 def prior_to_image(prior_path):
@@ -79,8 +79,7 @@ def hist_to_image_as_alpha(hist_path):
     # alpha *= 255
     # alpha = alpha.astype(np.uint8)
     for l in xrange(0, 101, 10):
-        rgb = draw_ab_space_given_l(l, False)
-        rgba = np.concatenate((rgb, alpha), -1)
+        rgba = _add_alpha_to_ab_space(alpha, l)
         io.imsave(os.path.join(_OUTPUT_DIR, 'alpha_{0}_{1}.png'.format(out_name, l)), rgba)
 
 
@@ -95,13 +94,66 @@ def hist_to_image_as_mask(hist_path):
     # alpha *= 255
     # alpha = alpha.astype(np.uint8)
     for l in xrange(0, 101, 10):
-        rgb = draw_ab_space_given_l(l, False)
-        rgba = np.concatenate((rgb, alpha), -1)
+        rgba = _add_alpha_to_ab_space(alpha, l)
         io.imsave(os.path.join(_OUTPUT_DIR, 'mask_{0}_{1}.png'.format(out_name, l)), rgba)
 
 
+def _add_alpha_to_ab_space(alpha, l):
+    rgb = draw_ab_space_given_l(l, False)
+    rgba = np.concatenate((rgb, alpha), -1)
+
+    return rgba
+
+
+def hist_of_img_list(img_list):
+    lookup = utils.LookupEncode('resources/pts_in_hull.npy')
+    hist = np.zeros((313,), dtype=np.float32)
+    for img_id in img_list:
+        # img_name = os.path.splitext(os.path.split(img_path)[1])[0]
+        img_path = "/srv/glusterfs/xieya/image/color/tf_coco_5_38k_noeval/{0}.jpg".format(img_id)
+        img_rgb = io.imread(img_path)
+        img_lab = color.rgb2lab(img_rgb)
+        img_ab = img_lab[:, :, 1:]
+        ab_idx = lookup.encode_points(img_ab).flatten()
+        for idx in xrange(313):
+            hist[idx] += len(ab_idx[ab_idx == idx])
+        print(img_id)
+
+    _weights_to_image(hist, "img_list_ab_hist", fill=0.5)
+
+    i_sorted = np.argsort(hist)
+    print(i_sorted[::-1])
+
+
+def compare_pred_with_gt(pred_hist_path, gt_hist_path, diff=1e-3):
+    pred_hist = np.load(pred_hist_path)
+    pred_hist /= np.sum(pred_hist)
+    pred_hist_name = os.path.splitext(os.path.split(pred_hist_path)[1])[0]
+    gt_hist = np.load(gt_hist_path)
+    more_hist = np.zeros_like(gt_hist, dtype=np.float32)
+    more_hist[pred_hist > gt_hist + diff] = 1.
+    more_alpha = _weights_to_image(more_hist, save=False)
+    more_alpha = more_alpha[:, :, np.newaxis]
+    less_hist = np.zeros_like(gt_hist, dtype=np.float32)
+    less_hist[pred_hist + diff < gt_hist] = 1.
+    less_alpha = _weights_to_image(less_hist, save=False)
+    less_alpha = less_alpha[:, :, np.newaxis]
+
+    for l in xrange(0, 101, 10):
+        rgba_more = _add_alpha_to_ab_space(more_alpha, l)
+        rgba_less = _add_alpha_to_ab_space(less_alpha, l)
+        io.imsave(os.path.join(_OUTPUT_DIR, 'comp_more_{0}_{1}.png'.format(pred_hist_name, l)), rgba_more)
+        io.imsave(os.path.join(_OUTPUT_DIR, 'comp_less_{0}_{1}.png'.format(pred_hist_name, l)), rgba_less)
+    
+
 if __name__ == "__main__":
     # draw_ab_space()
-    # hist_to_image('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_hist.npy')
+    hist_to_image('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_c313_hist.npy')
     # prior_to_image('/srv/glusterfs/xieya/prior/coco_313_soft.npy')
-    hist_to_image_as_mask('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_hist.npy')
+    # hist_to_image_as_alpha('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_c313_hist.npy')
+    # hist_to_image_as_mask('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_c313_hist.npy')
+    # redish_img_list = [
+    #     294, 295, 296, 297, 301, 344, 347, 350, 358, 375, 380, 386, 388, 389, 390, 391, 394, 395, 397, 398
+    # ]
+    # hist_of_img_list(redish_img_list)
+    # compare_pred_with_gt('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_hist.npy', '/srv/glusterfs/xieya/prior/coco_313_soft.npy')

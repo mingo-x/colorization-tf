@@ -359,10 +359,10 @@ def preprocess(data, training=True, c313=False, is_gan=False, is_rgb=True, prior
 def softmax(x):
     """Compute softmax values for each sets of scores in x."""
     e_x = np.exp(x - np.expand_dims(np.max(x, axis=-1), axis=-1))
-    return e_x / np.expand_dims(e_x.sum(axis=-1), axis=-1) # only difference
+    return e_x / np.expand_dims(e_x.sum(axis=-1), axis=-1)  # only difference
 
 
-def decode(data_l, conv8_313, rebalance=1):
+def decode(data_l, conv8_313, rebalance=1, return_313=False):
     """
     Args:
       data_l   : [1, height, width, 1]
@@ -387,7 +387,10 @@ def decode(data_l, conv8_313, rebalance=1):
 
     img_lab = np.concatenate((data_l, data_ab_us), axis=-1)
     img_rgb = color.lab2rgb(img_lab)
-    return img_rgb, data_ab
+    if return_313:
+        return img_rgb, data_ab, class8_313_rh
+    else:
+        return img_rgb, data_ab
 
 
 def get_data_l(image_path):
