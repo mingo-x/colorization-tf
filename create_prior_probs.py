@@ -263,18 +263,16 @@ def cal_ab_hist_given_l():
         img_l = img_lab[:, :, 0]
         img_ab = img_lab[:, :, 1:]
         ab_idx = lookup.encode_points(img_ab).flatten()
-        l_idx = 
-        for i in nd_index:
-            i = int(i)
-            probs[i] += 1
+        l_idx = np.round(img_l).flatten().astype(np.int32)
+        for ab in xrange(313):
+            for l in xrange(101):
+                probs[l, ab] += np.sum(np.logical_and(ab_idx == ab, l_idx == l))
 
         if counter % _LOG_FREQ == 0:
             print(counter)
             sys.stdout.flush()
         counter += 1
 
-    # sess.close()
-    # probs = probs / np.sum(probs)
     np.save(out_path, probs)
 
 

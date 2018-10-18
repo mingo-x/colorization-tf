@@ -675,7 +675,7 @@ def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c3
                             c313_hist += prob_313_sum
                         if get_ab_hist_given_l:
                             ab_idx = lookup.encode_points(ab_dec).flatten()
-                            img_l_ss = transform.downscale_local_mean(img_l[j: j + 1], (4, 4, 1))
+                            img_l_ss = transform.downscale_local_mean(img_l[j], (4, 4, 1))
                             l_idx = np.round(img_l_ss).flatten().astype(np.int32)
                             for ab in xrange(313):
                                 for l in xrange(101):
