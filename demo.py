@@ -602,8 +602,9 @@ def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c3
     dataset_params = {'path': _COCO_PATH, 'thread_num': 4, 'prior_path': _PRIOR_PATH}
     common_params = {'batch_size': _BATCH_SIZE, 'with_caption': False}  # with_caption -> False: ignore grayscale images.
     dataset = DataSet(common_params, dataset_params, False, True)
-    prior_factor_0 = utils.PriorFactor(priorFile=_PRIOR_PATH, verbose=True)
-    prior_factor_5 = utils.PriorFactor(gamma=0.5, priorFile=_PRIOR_PATH, verbose=True)
+    if auc:
+        prior_factor_0 = utils.PriorFactor(priorFile=_PRIOR_PATH, verbose=True)
+        prior_factor_5 = utils.PriorFactor(gamma=0.5, priorFile=_PRIOR_PATH, verbose=True)
 
     with tf.device('/gpu:0'):
         l_tensor = tf.placeholder(tf.float32, (_BATCH_SIZE, _INPUT_SIZE, _INPUT_SIZE, 1))

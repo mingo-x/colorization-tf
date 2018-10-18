@@ -73,6 +73,46 @@ class NNEncode():
 
         return pts_enc_nd
 
+class LookupEncode():
+    '''Encode points using lookups'''
+    def __init__(self, grid_path=''):
+        self.cc = np.load(grid_path)
+        self.grid_width = 10
+        self.offset = np.abs(np.amin(self.cc)) + 17 # add to get rid of negative numbers
+        self.x_mult = 300 # differentiate x from y
+        self.labels = {}
+        for idx, (x,y) in enumerate(self.cc):
+            x += self.offset
+            x *= self.x_mult
+            y += self.offset
+            if x+y in self.labels:
+                print('Id collision!!!')
+            self.labels[x+y] = idx
+
+    def encode_points(self, pts_nd):
+        '''Return 3d prior.'''
+        pts_flt = pts_nd.reshape((-1, 2))
+
+        # round AB coordinates to nearest grid tick
+        pgrid = np.round(pts_flt / self.grid_width) * self.grid_width
+
+        # get single number by applying offsets
+        pvals = pgrid + self.offset
+        pvals = pvals[:, 0] * self.x_mult + pvals[:, 1]
+
+        labels = np.zeros(pvals.shape,dtype='int32')
+        labels.fill(-1)
+
+        # lookup in label index and assign values
+        for k in self.labels:
+            labels[pvals == k] = self.labels[k]
+
+        if len(labels[labels == -1]) > 0:
+            print("Point outside of grid!!!")
+            labels[labels == -1] = 0
+
+        return labels.reshape(pts_nd.shape[:-1])
+
 
 def get_index(ab):
     ab = ab[:, np.newaxis, :]
@@ -248,6 +288,7 @@ def cal_ab_hist_given_l():
     filename_lists = get_file_list()
     counter = 0
     probs = np.zeros((101, _N_CLASSES), dtype=np.float64)
+    lookup = utils.LookupEncode('resources/pts_in_hull.npy')
 
     for img_f in filename_lists:
         img_f = img_f.strip()
@@ -261,7 +302,7 @@ def cal_ab_hist_given_l():
         img_lab = color.rgb2lab(img).reshape((-1, 3))
         img_l = img_lab[:, 0]
         img_ab = img_lab[:, 1:]
-        ab_idx = get_index(img_ab)
+        ab_idx = lookup.encode_points(img_ab)
         l_idx = np.round(img_l).astype(np.int32)
         for ab in xrange(313):
             for l in xrange(101):
