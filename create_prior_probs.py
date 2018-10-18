@@ -248,7 +248,6 @@ def cal_ab_hist_given_l():
     filename_lists = get_file_list()
     counter = 0
     probs = np.zeros((101, _N_CLASSES), dtype=np.float64)
-    lookup = utils.LookupEncode('resources/pts_in_hull.npy')
 
     for img_f in filename_lists:
         img_f = img_f.strip()
@@ -262,7 +261,7 @@ def cal_ab_hist_given_l():
         img_lab = color.rgb2lab(img)
         img_l = img_lab[:, :, 0]
         img_ab = img_lab[:, :, 1:]
-        ab_idx = lookup.encode_points(img_ab).flatten()
+        ab_idx = get_index(img_ab).flatten()
         l_idx = np.round(img_l).flatten().astype(np.int32)
         for ab in xrange(313):
             for l in xrange(101):
