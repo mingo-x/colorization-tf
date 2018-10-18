@@ -259,8 +259,8 @@ def cal_ab_hist_given_l():
         if len(img.shape) != 3 or img.shape[2] != 3:
             continue
         img_lab = color.rgb2lab(img).reshape((-1, 3))
-        img_l = img_lab[:, :, 0]
-        img_ab = img_lab[:, :, 1:]
+        img_l = img_lab[:, 0]
+        img_ab = img_lab[:, 1:]
         ab_idx = get_index(img_ab)
         l_idx = np.round(img_l).astype(np.int32)
         for ab in xrange(313):
