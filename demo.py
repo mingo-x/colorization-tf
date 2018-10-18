@@ -23,7 +23,7 @@ _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
 _G_VERSION = 1
-_CKPT_PATH = '/srv/glusterfs/xieya/vgg_5/models/model.ckpt-68000'
+_CKPT_PATH = '/srv/glusterfs/xieya/tf_coco_5/models/model.ckpt-38000'
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
 _OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/vgg_5_68k'
 _PRIOR_PATH = '/srv/glusterfs/xieya/prior/coco_313_soft.npy'
@@ -598,7 +598,7 @@ def merge(cic_dir, coco_dir, cap_dir, new_cap_dir):
         print(idx)
 
 
-def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c313_hist=False, model_name="", batch_num=300):
+def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c313_hist=False, get_ab_hist_given_l=False, model_name="", batch_num=300):
     dataset_params = {'path': _COCO_PATH, 'thread_num': 4, 'prior_path': _PRIOR_PATH}
     common_params = {'batch_size': _BATCH_SIZE, 'with_caption': False}  # with_caption -> False: ignore grayscale images.
     dataset = DataSet(common_params, dataset_params, False, True)
@@ -637,6 +637,8 @@ def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c3
                 l_hist = np.zeros((101,), dtype=np.float32)
             if get_c313_hist:
                 c313_hist = np.zeros((313,), dtype=np.float32)
+            if get_ab_hist_given_l:
+                abl_hist = np.zeros((101, 313), dtype=np.float32)
                 
             for i in xrange(batch_num):
                 img_l, gt_313, prior_boost_nongray, img_cap, img_len, img_ab = dataset.batch()
@@ -655,7 +657,7 @@ def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c3
                                        l_tensor: img_l, cap_tensor: img_cap, len_tensor: img_len,
                                        gt_313_tensor: gt_313, prior_tensor: prior_boost_nongray})
                 
-                if auc or ab_hist or get_c313_hist:
+                if auc or ab_hist or get_c313_hist or get_ab_hist_given_l:
                     for j in xrange(_BATCH_SIZE):
                         _, ab_dec, prob_313 = decode(img_l[j: j + 1], img_313[j: j + 1], T, return_313=True)
                         if auc:
@@ -671,6 +673,12 @@ def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c3
                         if get_c313_hist:
                             prob_313_sum = np.sum(prob_313, axis=(0, 1))
                             c313_hist += prob_313_sum
+                        if get_ab_hist_given_l:
+                            ab_idx = lookup.encode_points(ab_dec).flatten()
+                            l_idx = np.round(img_l[j: j + 1]).flatten().astype(np.int32)
+                            for ab in xrange(313):
+                                for l in xrange(101):
+                                    abl_hist[l, ab] += np.sum(np.logical_and(ab_idx == ab, l_idx == l))
                             
                 if ab_hist:
                     l_idx = ((img_l + 1) * 50).astype(np.int32).flatten()
@@ -694,6 +702,9 @@ def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c3
                 np.save("/srv/glusterfs/xieya/image/ab/{}_c313_hist.npy".format(model_name), c313_hist)
                 print("C313 hist stats: min {0} @ {5}, max {1} @ {6}, mean {2}, std {3}, median {4}".format(
                     np.min(c313_hist), np.max(c313_hist), np.mean(c313_hist), np.std(c313_hist), np.median(c313_hist), np.argmin(c313_hist), np.argmax(c313_hist)))
+            if get_ab_hist_given_l:
+                np.save("/srv/glusterfs/xieya/image/ab/{}_abl_hist.npy".format(model_name), abl_hist)
+                print("Check mean: {0}".format(np.sum(abl_hist) / 313.))
             print("Total {}".format(batch_num * _BATCH_SIZE))
 
 
@@ -706,7 +717,7 @@ if __name__ == "__main__":
     # demo_wgan_rgb()
     # _colorize_high_res_img(_IMG_NAME)
     # cifar()
-    colorize_with_language()
+    # colorize_with_language()
     # colorize_video_with_language()
     # colorize_coco_without_language(evaluate=False)
     # save_ground_truth()
@@ -714,5 +725,5 @@ if __name__ == "__main__":
     #       '/srv/glusterfs/xieya/image/color/tf_coco_5_38k', 
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/original', 
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/new')
-    # evaluate(with_caption=False, cross_entropy=False, auc=False, ab_hist=False, get_c313_hist=True, model_name='tf_coco_5_38k', batch_num=600)
+    evaluate(with_caption=False, cross_entropy=False, auc=False, ab_hist=False, get_c313_hist=False, get_ab_hist_given_l=True, model_name='tf_coco_5_38k', batch_num=10)
     # print("Model {}.".format(_CKPT_PATH))
