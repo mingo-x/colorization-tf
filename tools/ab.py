@@ -11,12 +11,12 @@ def draw_ab_space_given_l(l, save=True):
     cell_size = 10
     canvas = np.zeros((23 * cell_size, 23 * cell_size, 3))
     canvas[:, :, 0].fill(l)
-    for i in xrange(23):
-        for j in xrange(23):
-            a = (i - 11) * 10
-            b = (j - 11) * 10
-            canvas[i * cell_size: (i + 1) * cell_size, j * cell_size: (j + 1) * cell_size, 1].fill(a)
-            canvas[i * cell_size: (i + 1) * cell_size, j * cell_size: (j + 1) * cell_size, 2].fill(b)
+    grid = np.load('resources/pts_in_hull.npy')
+    for a, b in grid:
+        i = int(a / 10) + 11
+        j = int(b / 10) + 11
+        canvas[i * cell_size: (i + 1) * cell_size, j * cell_size: (j + 1) * cell_size, 1].fill(a)
+        canvas[i * cell_size: (i + 1) * cell_size, j * cell_size: (j + 1) * cell_size, 2].fill(b)
 
     canvas = color.lab2rgb(canvas)
     if save:
@@ -147,8 +147,8 @@ def compare_pred_with_gt(pred_hist_path, gt_hist_path, diff=1e-3):
     
 
 if __name__ == "__main__":
-    # draw_ab_space()
-    hist_to_image('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_c313_hist.npy')
+    draw_ab_space()
+    # hist_to_image('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_c313_hist.npy')
     # prior_to_image('/srv/glusterfs/xieya/prior/coco_313_soft.npy')
     # hist_to_image_as_alpha('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_c313_hist.npy')
     # hist_to_image_as_mask('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_c313_hist.npy')
