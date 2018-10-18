@@ -727,5 +727,5 @@ if __name__ == "__main__":
     #       '/srv/glusterfs/xieya/image/color/tf_coco_5_38k', 
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/original', 
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/new')
-    evaluate(with_caption=False, cross_entropy=False, auc=False, ab_hist=False, get_c313_hist=False, get_ab_hist_given_l=True, model_name='tf_coco_5_38k', batch_num=1)
+    evaluate(with_caption=False, cross_entropy=False, auc=False, ab_hist=False, get_c313_hist=False, get_ab_hist_given_l=True, model_name='tf_coco_5_38k', batch_num=600)
     # print("Model {}.".format(_CKPT_PATH))
