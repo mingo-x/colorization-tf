@@ -633,12 +633,12 @@ def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c3
                 auc_rb_0 = []
                 auc_rb_5 = []
             if ab_hist:
-                hist = np.zeros((313,), dtype=np.float32)
-                l_hist = np.zeros((101,), dtype=np.float32)
+                hist = np.zeros((313,), dtype=np.float64)
+                l_hist = np.zeros((101,), dtype=np.float64)
             if get_c313_hist:
-                c313_hist = np.zeros((313,), dtype=np.float32)
+                c313_hist = np.zeros((313,), dtype=np.float64)
             if get_ab_hist_given_l:
-                abl_hist = np.zeros((101, 313), dtype=np.float32)
+                abl_hist = np.zeros((101, 313), dtype=np.float64)
                 
             for i in xrange(batch_num):
                 img_l, gt_313, prior_boost_nongray, img_cap, img_len, img_ab = dataset.batch()
@@ -675,7 +675,8 @@ def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c3
                             c313_hist += prob_313_sum
                         if get_ab_hist_given_l:
                             ab_idx = lookup.encode_points(ab_dec).flatten()
-                            l_idx = np.round(img_l[j: j + 1]).flatten().astype(np.int32)
+                            img_l_ss = transform.downscale_local_mean(img_l[j: j + 1], (4, 4, 1))
+                            l_idx = np.round(img_l_ss).flatten().astype(np.int32)
                             for ab in xrange(313):
                                 for l in xrange(101):
                                     abl_hist[l, ab] += np.sum(np.logical_and(ab_idx == ab, l_idx == l))

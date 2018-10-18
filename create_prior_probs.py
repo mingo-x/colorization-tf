@@ -242,6 +242,42 @@ def merge():
     np.save('/srv/glusterfs/xieya/prior/{}_soft'.format(_N_CLASSES), probs)
 
 
+def cal_ab_hist_given_l():
+    out_path = '/srv/glusterfs/xieya/prior/{0}_ab_{1}.npy'.format(_N_CLASSES, _TASK_ID)
+
+    filename_lists = get_file_list()
+    counter = 0
+    probs = np.zeros((101, _N_CLASSES), dtype=np.float64)
+    lookup = utils.LookupEncode('resources/pts_in_hull.npy')
+
+    for img_f in filename_lists:
+        img_f = img_f.strip()
+        if not os.path.isfile(img_f):
+            print(img_f)
+            continue
+        img = imread(img_f)
+        img = resize(img, (224, 224))
+        if len(img.shape) != 3 or img.shape[2] != 3:
+            continue
+        img_lab = color.rgb2lab(img)
+        img_l = img_lab[:, :, 0]
+        img_ab = img_lab[:, :, 1:]
+        ab_idx = lookup.encode_points(img_ab).flatten()
+        l_idx = 
+        for i in nd_index:
+            i = int(i)
+            probs[i] += 1
+
+        if counter % _LOG_FREQ == 0:
+            print(counter)
+            sys.stdout.flush()
+        counter += 1
+
+    # sess.close()
+    # probs = probs / np.sum(probs)
+    np.save(out_path, probs)
+
+
 if __name__ == "__main__":
     lists_f = open('/srv/glusterfs/xieya/data/imagenet1k_uncompressed/train.txt')
     if _N_CLASSES == 313:
