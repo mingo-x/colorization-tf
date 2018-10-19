@@ -598,7 +598,7 @@ def merge(cic_dir, coco_dir, cap_dir, new_cap_dir):
         print(idx)
 
 
-def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c313_hist=False, get_ab_hist_given_l=False, get_c313_hist_given_l=False, model_name="", batch_num=300):
+def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c313_hist=False, get_ab_hist_given_l=False, get_c313_hist_given_l=False, model_name="", batch_num=300, ab_from_rgb=False):
     dataset_params = {'path': _COCO_PATH, 'thread_num': 4, 'prior_path': _PRIOR_PATH}
     common_params = {'batch_size': _BATCH_SIZE, 'with_caption': False}  # with_caption -> False: ignore grayscale images.
     dataset = DataSet(common_params, dataset_params, False, True)
@@ -662,7 +662,10 @@ def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c3
                 
                 if auc or ab_hist or get_c313_hist or get_ab_hist_given_l or get_c313_hist_given_l:
                     for j in xrange(_BATCH_SIZE):
-                        _, ab_dec, prob_313 = decode(img_l[j: j + 1], img_313[j: j + 1], T, return_313=True)
+                        rgb, ab_dec, prob_313 = decode(img_l[j: j + 1], img_313[j: j + 1], T, return_313=True)
+                        if ab_from_rgb:
+                            rgb_ss = transform.downscale_local_mean(rgb, (4, 4, 1))
+                            ab_dec = color.rgb2lab(rgb_ss)[:, :, 1:]
                         if auc:
                             auc_score_0, auc_rb_score_0 = _auc(img_ab, ab_dec, prior_factor_0)
                             auc_0.append(auc_score_0)
@@ -701,7 +704,7 @@ def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c3
             if auc:
                 print("auc {0:.6f}, rebalanced auc {1:.6f}, rebalanced auc (g=0.5) {2:.6f}".format(np.mean(auc_0), np.mean(auc_rb_0), np.mean(auc_rb_5)))
             if ab_hist:
-                np.save("/srv/glusterfs/xieya/image/ab/{}_hist.npy".format(model_name), hist)
+                np.save("/srv/glusterfs/xieya/image/ab/{0}_{1}_hist.npy".format(model_name, 'rgb' if ab_from_rgb else ''), hist)
                 np.save("/srv/glusterfs/xieya/image/ab/l_hist.npy", l_hist)
                 print("Hist stats: min {0} @ {5}, max {1} @ {6}, mean {2}, std {3}, median {4}".format(
                     np.min(hist), np.max(hist), np.mean(hist), np.std(hist), np.median(hist), np.argmin(hist), np.argmax(hist)))
@@ -712,7 +715,7 @@ def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c3
                 print("C313 hist stats: min {0} @ {5}, max {1} @ {6}, mean {2}, std {3}, median {4}".format(
                     np.min(c313_hist), np.max(c313_hist), np.mean(c313_hist), np.std(c313_hist), np.median(c313_hist), np.argmin(c313_hist), np.argmax(c313_hist)))
             if get_ab_hist_given_l:
-                np.save("/srv/glusterfs/xieya/image/ab/{}_abl_hist.npy".format(model_name), abl_hist)
+                np.save("/srv/glusterfs/xieya/image/ab/{0}_abl_{1}_hist.npy".format(model_name, 'rgb' if ab_from_rgb else ''), abl_hist)
                 print("Check mean: {0}".format(np.sum(abl_hist) / 313.))
             if get_c313_hist_given_l:
                 np.save("/srv/glusterfs/xieya/image/ab/{}_c313l_hist.npy".format(model_name), c313l_hist)
@@ -737,5 +740,5 @@ if __name__ == "__main__":
     #       '/srv/glusterfs/xieya/image/color/tf_coco_5_38k', 
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/original', 
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/new')
-    evaluate(with_caption=False, cross_entropy=False, auc=False, ab_hist=False, get_c313_hist=False, get_ab_hist_given_l=False, get_c313_hist_given_l=True, model_name='tf_coco_5_38k', batch_num=600)
+    evaluate(with_caption=False, cross_entropy=False, auc=True, ab_hist=True, get_c313_hist=False, get_ab_hist_given_l=True, get_c313_hist_given_l=False, model_name='tf_coco_5_38k', batch_num=600, ab_from_rgb=True)
     # print("Model {}.".format(_CKPT_PATH))
