@@ -123,17 +123,34 @@ class Solver(object):
             else:
                 return (new_loss, g_loss, adv_loss, None, None, None, None)
 
+    def lr_decay_on_plateau(self, sess, curr_loss):
+        if curr_loss >= self.prev_loss:
+            self.increasing_count += 1
+            if self.increasing_count == 3:
+                # Decay.
+                old_lr = self.learning_rate_tensor.value()
+                sess.run(self.learning_rate_tensor.assign(old_lr * 0.1))
+                print('Learning rate decayed from {0} to {1}.'.format(old_lr, old_lr * 0.1))
+                self.increasing_count = 0
+        else:
+            self.increasing_count = 0
+
+        self.prev_loss = curr_loss
+
 
     def train_model(self):
         with tf.device('/gpu:' + str(self.device_id)):
             self.global_step = tf.get_variable('global_step', [], initializer=tf.constant_initializer(0), trainable=False)
             
             if self.gan:
-                learning_rate = self.learning_rate
+                self.learning_rate_tensor = self.learning_rate
                 D_learning_rate = self.D_learning_rate
             else:
-                learning_rate = tf.train.exponential_decay(self.learning_rate, self.global_step,
-                                                     self.decay_steps, self.lr_decay, staircase=True)
+                # learning_rate = tf.train.exponential_decay(self.learning_rate, self.global_step,
+                #                                      self.decay_steps, self.lr_decay, staircase=True)
+                self.learning_rate_tensor = tf.get_variable('learning_rate', [], initializer=tf.constant_initializer(self.learning_rate), trainable=False)
+                self.prev_loss = 1e9
+                self.increasing_count = 0
 
             with tf.name_scope('gpu') as scope:
                 self.new_loss, self.total_loss, self.adv_loss, self.D_loss, self.real_score, self.fake_score, self.mixed_norm = self.construct_graph(scope)
@@ -141,10 +158,10 @@ class Solver(object):
                     tf.GraphKeys.SUMMARIES, scope)
 
             self.summaries.append(
-                tf.summary.scalar('learning_rate', learning_rate))
+                tf.summary.scalar('learning_rate', self.learning_rate_tensor))
 
             opt = tf.train.AdamOptimizer(
-                learning_rate=learning_rate, beta1=self.moment, beta2=0.99)
+                learning_rate=self.learning_rate_tensor, beta1=self.moment, beta2=0.99)
             G_vars = tf.trainable_variables(scope='G')
             F_vars = tf.trainable_variables(scope='Film')
             T_vars = tf.trainable_variables(scope='T')
@@ -324,6 +341,7 @@ class Solver(object):
                         summary_writer.add_summary(eval_loss_sum, step)
                         summary_writer.add_summary(eval_loss_rb_sum, step)
                         print('Evaluation at step {0}: loss {1}, rebalanced loss {2}.'.format(step, eval_loss, eval_loss_rb))
+                        lr_decay_on_plateau(sess, eval_loss_rb)
                     summary_writer.add_summary(summary_str, step)
 
                 # Save the model checkpoint periodically.

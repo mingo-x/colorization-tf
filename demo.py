@@ -704,7 +704,7 @@ def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c3
             if auc:
                 print("auc {0:.6f}, rebalanced auc {1:.6f}, rebalanced auc (g=0.5) {2:.6f}".format(np.mean(auc_0), np.mean(auc_rb_0), np.mean(auc_rb_5)))
             if ab_hist:
-                np.save("/srv/glusterfs/xieya/image/ab/{0}_{1}_hist.npy".format(model_name, 'rgb' if ab_from_rgb else ''), hist)
+                np.save("/srv/glusterfs/xieya/image/ab/{0}_{1}hist.npy".format(model_name, 'rgb_' if ab_from_rgb else ''), hist)
                 np.save("/srv/glusterfs/xieya/image/ab/l_hist.npy", l_hist)
                 print("Hist stats: min {0} @ {5}, max {1} @ {6}, mean {2}, std {3}, median {4}".format(
                     np.min(hist), np.max(hist), np.mean(hist), np.std(hist), np.median(hist), np.argmin(hist), np.argmax(hist)))
@@ -715,7 +715,7 @@ def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c3
                 print("C313 hist stats: min {0} @ {5}, max {1} @ {6}, mean {2}, std {3}, median {4}".format(
                     np.min(c313_hist), np.max(c313_hist), np.mean(c313_hist), np.std(c313_hist), np.median(c313_hist), np.argmin(c313_hist), np.argmax(c313_hist)))
             if get_ab_hist_given_l:
-                np.save("/srv/glusterfs/xieya/image/ab/{0}_abl_{1}_hist.npy".format(model_name, 'rgb' if ab_from_rgb else ''), abl_hist)
+                np.save("/srv/glusterfs/xieya/image/ab/{0}_abl_{1}hist.npy".format(model_name, 'rgb_' if ab_from_rgb else ''), abl_hist)
                 print("Check mean: {0}".format(np.sum(abl_hist) / 313.))
             if get_c313_hist_given_l:
                 np.save("/srv/glusterfs/xieya/image/ab/{}_c313l_hist.npy".format(model_name), c313l_hist)
