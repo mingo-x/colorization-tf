@@ -216,7 +216,7 @@ class Solver(object):
                 D_apply_gradient_op = D_opt.apply_gradients(D_grads)
 
             savable_vars = tf.global_variables()
-            savable_vars = [var for var in savable_vars if var.name != 'learning_rate']
+            savable_vars = [var for var in savable_vars if 'learning_rate' not in var.name]
             saver = tf.train.Saver(savable_vars, write_version=tf.train.SaverDef.V2, max_to_keep=5, keep_checkpoint_every_n_hours=1)
             summary_op = tf.summary.merge(self.summaries)
             init = tf.global_variables_initializer()
