@@ -123,10 +123,10 @@ class Solver(object):
             else:
                 return (new_loss, g_loss, adv_loss, None, None, None, None)
 
-    def lr_decay_on_plateau(self, sess, curr_loss):
+    def lr_decay_on_plateau(self, sess, curr_loss, threshold=3):
         if curr_loss >= self.prev_loss:
             self.increasing_count += 1
-            if self.increasing_count == 3:
+            if self.increasing_count == threshold:
                 # Decay.
                 old_lr = self.learning_rate_tensor.value()
                 sess.run(self.learning_rate_tensor.assign(old_lr * 0.1))
@@ -341,7 +341,7 @@ class Solver(object):
                         summary_writer.add_summary(eval_loss_sum, step)
                         summary_writer.add_summary(eval_loss_rb_sum, step)
                         print('Evaluation at step {0}: loss {1}, rebalanced loss {2}.'.format(step, eval_loss, eval_loss_rb))
-                        lr_decay_on_plateau(sess, eval_loss_rb)
+                        lr_decay_on_plateau(sess, eval_loss_rb, 1)
                     summary_writer.add_summary(summary_str, step)
 
                 # Save the model checkpoint periodically.
