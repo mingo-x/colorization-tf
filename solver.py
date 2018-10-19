@@ -17,6 +17,10 @@ import os
 _LOG_FREQ = 10
 
 
+def scalar_summary(tag, value):
+    return tf.Summary(value=[tf.Summary.Value(tag=tag, simple_value=value)])
+
+
 class Solver(object):
 
     def __init__(
@@ -70,6 +74,8 @@ class Solver(object):
             train=train, common_params=common_params, net_params=net_params)
         self.dataset = DataSet(
             common_params=common_params, dataset_params=dataset_params)
+        self.val_dataset = DataSet(
+            common_params=common_params, dataset_params=dataset_params, training=False)
         print("Solver initialization done.")
 
     def construct_graph(self, scope):
@@ -138,7 +144,7 @@ class Solver(object):
                 tf.summary.scalar('learning_rate', learning_rate))
 
             opt = tf.train.AdamOptimizer(
-                learning_rate=learning_rate, beta1=self.moment, beta2=0.9)
+                learning_rate=learning_rate, beta1=self.moment, beta2=0.99)
             G_vars = tf.trainable_variables(scope='G')
             F_vars = tf.trainable_variables(scope='Film')
             T_vars = tf.trainable_variables(scope='T')
@@ -302,23 +308,22 @@ class Solver(object):
                     else:
                         summary_str = sess.run(summary_op, feed_dict={
                             self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray})
-                    #     eval_loss = 0.0
-                    #     eval_loss_rb = 0.0
-                    #     eval_iters = 30
-                    #     for _ in xrange(eval_iters):
-                    #         val_data_l, val_gt_ab_313, val_prior_boost_nongray, val_captions, val_lens = self.val_dataset.batch()
-                    #         loss_value, new_loss_value, img_313s = sess.run([self.total_loss, self.new_loss, self.conv8_313], feed_dict={
-                    #             self.data_l: val_data_l, self.gt_ab_313: val_gt_ab_313, self.prior_boost_nongray: val_prior_boost_nongray,
-                    #             self.captions: val_captions, self.lens: val_lens})
-                    #         eval_loss += loss_value
-                    #         eval_loss_rb += new_loss_value
-                    # eval_loss /= eval_iters
-                    # eval_loss_rb /= eval_iters
-                    # eval_loss_sum = scalar_summary('eval_loss', eval_loss)
-                    # eval_loss_rb_sum = scalar_summary('eval_loss_rb', eval_loss_rb)
-                    # summary_writer.add_summary(eval_loss_sum, step)
-                    # summary_writer.add_summary(eval_loss_rb_sum, step)
-                    # print('Evaluation at step {0}: loss {1}, rebalanced loss {2}.'.format(step, eval_loss, eval_loss_rb))
+                        eval_loss = 0.0
+                        eval_loss_rb = 0.0
+                        eval_iters = 30
+                        for _ in xrange(eval_iters):
+                            val_data_l, val_gt_ab_313, val_prior_boost_nongray, _ = self.val_dataset.batch()
+                            loss_value, new_loss_value = sess.run([self.total_loss, self.new_loss], feed_dict={
+                                self.data_l: val_data_l, self.gt_ab_313: val_gt_ab_313, self.prior_boost_nongray: val_prior_boost_nongray})
+                            eval_loss += loss_value
+                            eval_loss_rb += new_loss_value
+                        eval_loss /= eval_iters
+                        eval_loss_rb /= eval_iters
+                        eval_loss_sum = scalar_summary('eval/loss', eval_loss)
+                        eval_loss_rb_sum = scalar_summary('eval/loss_rb', eval_loss_rb)
+                        summary_writer.add_summary(eval_loss_sum, step)
+                        summary_writer.add_summary(eval_loss_rb_sum, step)
+                        print('Evaluation at step {0}: loss {1}, rebalanced loss {2}.'.format(step, eval_loss, eval_loss_rb))
                     summary_writer.add_summary(summary_str, step)
 
                 # Save the model checkpoint periodically.

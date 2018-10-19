@@ -43,6 +43,12 @@ class DataSet(object):
             self.thread_num2 = int(int(dataset_params['thread_num']) / 2)
             self.c313 = True if dataset_params['c313'] == '1' else False
             self.cond_l = True if dataset_params['cond_l'] == '1' else False
+
+        if not training:
+            self.data_path = '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val.txt'
+            self.thread_num = 2
+            self.thread_num2 = 2
+            
         # record and image_label queue
         self.record_queue = Queue(maxsize=30000)
         self.image_queue = Queue(maxsize=15000)
@@ -57,8 +63,7 @@ class DataSet(object):
 
         for line in input_file:
             line = line.strip()
-            self.record_list.append(os.path.join('/srv/glusterfs/xieya/data/places365_standard', line))
-            print(self.record_list[-1])
+            self.record_list.append(line)
 
         self.record_point = 0
         self.record_number = len(self.record_list)
