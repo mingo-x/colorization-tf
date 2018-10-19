@@ -34,7 +34,7 @@ import sys
 _GRID_PATH = ''
 _LOG_FREQ = 100
 _N_CLASSES = 313
-_TASK_NUM = 100
+_TASK_NUM = 300
 _TASK_ID = os.environ.get('SGE_TASK_ID')
 if _TASK_ID is not None:
     print("Task id: {}".format(_TASK_ID))
@@ -284,6 +284,9 @@ def merge():
 
 def cal_ab_hist_given_l():
     out_path = '/srv/glusterfs/xieya/prior/{0}_ab_{1}.npy'.format(_N_CLASSES, _TASK_ID)
+    if os.path.isfile(out_path):
+        print('Done.')
+        return
 
     filename_lists = get_file_list()
     counter = 0
@@ -316,6 +319,24 @@ def cal_ab_hist_given_l():
     np.save(out_path, probs)
 
 
+def merge_abl():
+    print("Merging...")
+    probs = np.zeros((101, _N_CLASSES), dtype=np.float64)
+    path_pattern = '/srv/glusterfs/xieya/prior/{0}_ab_{1}.npy'
+    for i in xrange(_TASK_NUM):
+        file_path = path_pattern.format(_N_CLASSES, i)
+        if not os.path.exists(file_path):
+            print("{} missing, skipped.".format(file_path))
+            continue
+        p = np.load(file_path)
+        probs += p
+        print(i)
+    probs_nonzero = probs[probs > 0]
+    print(np.mean(probs_nonzero), np.min(probs_nonzero), np.max(probs_nonzero), np.median(probs_nonzero), np.std(probs_nonzero))
+    probs = probs / np.sum(probs)
+    np.save('/srv/glusterfs/xieya/prior/{}_ab_1'.format(_N_CLASSES), probs)
+
+
 if __name__ == "__main__":
     lists_f = open('/srv/glusterfs/xieya/data/imagenet1k_uncompressed/train.txt')
     if _N_CLASSES == 313:
@@ -329,8 +350,9 @@ if __name__ == "__main__":
     print("Imagenet.")
     # cal_prob()
     # cal_prob_soft()
-    cal_ab_hist_given_l()
+    # cal_ab_hist_given_l()
     # print("Coco.")
     # cal_prob_coco()
     # cal_prob_coco_soft()
     # merge()
+    merge_abl()

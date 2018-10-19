@@ -297,11 +297,28 @@ class Solver(object):
 
                 if step % 100 < self.g_repeat:
                     if self.gan:
-                        summary_str = sess.run(summary_op, feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, 
-                            self.data_real: data_real, self.data_l_ss: data_l_ss})
+                        summary_str = sess.run(summary_op, feed_dict={self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray, 
+                                                                      self.data_real: data_real, self.data_l_ss: data_l_ss})
                     else:
                         summary_str = sess.run(summary_op, feed_dict={
                             self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray})
+                    #     eval_loss = 0.0
+                    #     eval_loss_rb = 0.0
+                    #     eval_iters = 30
+                    #     for _ in xrange(eval_iters):
+                    #         val_data_l, val_gt_ab_313, val_prior_boost_nongray, val_captions, val_lens = self.val_dataset.batch()
+                    #         loss_value, new_loss_value, img_313s = sess.run([self.total_loss, self.new_loss, self.conv8_313], feed_dict={
+                    #             self.data_l: val_data_l, self.gt_ab_313: val_gt_ab_313, self.prior_boost_nongray: val_prior_boost_nongray,
+                    #             self.captions: val_captions, self.lens: val_lens})
+                    #         eval_loss += loss_value
+                    #         eval_loss_rb += new_loss_value
+                    # eval_loss /= eval_iters
+                    # eval_loss_rb /= eval_iters
+                    # eval_loss_sum = scalar_summary('eval_loss', eval_loss)
+                    # eval_loss_rb_sum = scalar_summary('eval_loss_rb', eval_loss_rb)
+                    # summary_writer.add_summary(eval_loss_sum, step)
+                    # summary_writer.add_summary(eval_loss_rb_sum, step)
+                    # print('Evaluation at step {0}: loss {1}, rebalanced loss {2}.'.format(step, eval_loss, eval_loss_rb))
                     summary_writer.add_summary(summary_str, step)
 
                 # Save the model checkpoint periodically.
@@ -309,4 +326,3 @@ class Solver(object):
                     checkpoint_path = os.path.join(
                         self.train_dir, 'model.ckpt')
                     saver.save(sess, checkpoint_path, global_step=step)
-                

@@ -598,7 +598,7 @@ def merge(cic_dir, coco_dir, cap_dir, new_cap_dir):
         print(idx)
 
 
-def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c313_hist=False, get_ab_hist_given_l=False, model_name="", batch_num=300):
+def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c313_hist=False, get_ab_hist_given_l=False, get_c313_hist_given_l=False, model_name="", batch_num=300):
     dataset_params = {'path': _COCO_PATH, 'thread_num': 4, 'prior_path': _PRIOR_PATH}
     common_params = {'batch_size': _BATCH_SIZE, 'with_caption': False}  # with_caption -> False: ignore grayscale images.
     dataset = DataSet(common_params, dataset_params, False, True)
@@ -640,6 +640,8 @@ def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c3
                 c313_hist = np.zeros((313,), dtype=np.float64)
             if get_ab_hist_given_l:
                 abl_hist = np.zeros((101, 313), dtype=np.float64)
+            if get_c313_hist_given_l:
+                c313l_hist = np.zeros((101, 313), dtype=np.float64)
                 
             for i in xrange(batch_num):
                 img_l, gt_313, prior_boost_nongray, img_cap, img_len, img_ab = dataset.batch()
@@ -658,7 +660,7 @@ def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c3
                                        l_tensor: img_l, cap_tensor: img_cap, len_tensor: img_len,
                                        gt_313_tensor: gt_313, prior_tensor: prior_boost_nongray})
                 
-                if auc or ab_hist or get_c313_hist or get_ab_hist_given_l:
+                if auc or ab_hist or get_c313_hist or get_ab_hist_given_l or get_c313_hist_given_l:
                     for j in xrange(_BATCH_SIZE):
                         _, ab_dec, prob_313 = decode(img_l[j: j + 1], img_313[j: j + 1], T, return_313=True)
                         if auc:
@@ -681,6 +683,11 @@ def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c3
                             for ab in xrange(313):
                                 for l in xrange(101):
                                     abl_hist[l, ab] += np.sum(np.logical_and(ab_idx == ab, l_idx == l))
+                        if get_c313_hist_given_l:
+                            img_l_ss = transform.downscale_local_mean((img_l[j] + 1) * 50, (4, 4, 1))
+                            l_idx = np.round(img_l_ss[:, :, 0]).astype(np.int32)
+                            for l in xrange(101):
+                                c313l_hist[l] += np.sum(prob_313[l_idx == l], axis=0)
                             
                 if ab_hist:
                     l_idx = ((img_l + 1) * 50).astype(np.int32).flatten()
@@ -707,6 +714,9 @@ def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c3
             if get_ab_hist_given_l:
                 np.save("/srv/glusterfs/xieya/image/ab/{}_abl_hist.npy".format(model_name), abl_hist)
                 print("Check mean: {0}".format(np.sum(abl_hist) / 313.))
+            if get_c313_hist_given_l:
+                np.save("/srv/glusterfs/xieya/image/ab/{}_c313l_hist.npy".format(model_name), c313l_hist)
+                print("Check mean: {0}".format(np.sum(c313l_hist) / 313.))
             print("Total {}".format(batch_num * _BATCH_SIZE))
 
 
@@ -727,5 +737,5 @@ if __name__ == "__main__":
     #       '/srv/glusterfs/xieya/image/color/tf_coco_5_38k', 
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/original', 
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/new')
-    evaluate(with_caption=False, cross_entropy=False, auc=False, ab_hist=False, get_c313_hist=False, get_ab_hist_given_l=True, model_name='tf_coco_5_38k', batch_num=600)
+    evaluate(with_caption=False, cross_entropy=False, auc=False, ab_hist=False, get_c313_hist=False, get_ab_hist_given_l=False, get_c313_hist_given_l=True, model_name='tf_coco_5_38k', batch_num=600)
     # print("Model {}.".format(_CKPT_PATH))

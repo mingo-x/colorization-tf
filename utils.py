@@ -193,7 +193,7 @@ class LookupEncode():
 # ***************************
 class PriorFactor():
     ''' Class handles prior factor '''
-    def __init__(self,alpha=1.0,gamma=0,verbose=False,priorFile=''):
+    def __init__(self, alpha=1.0, gamma=0, verbose=False, priorFile=''):
         # INPUTS
         #   alpha           integer     prior correction factor, 0 to ignore prior, 1 to divide by prior, alpha to divide by prior**alpha
         #   gamma           integer     percentage to mix in uniform prior with empirical prior
@@ -209,15 +209,16 @@ class PriorFactor():
 
         # define uniform probability
         self.uni_probs = np.zeros_like(self.prior_probs)
-        self.uni_probs[self.prior_probs!=0] = 1.
-        self.uni_probs = self.uni_probs/np.sum(self.uni_probs)
+        self.uni_probs[self.prior_probs != 0] = 1.
+        self.uni_probs = self.uni_probs / np.sum(self.uni_probs)
 
         # convex combination of empirical prior and uniform distribution       
-        self.prior_mix = (1-self.gamma)*self.prior_probs + self.gamma*self.uni_probs
+        self.prior_mix = (1 - self.gamma) * self.prior_probs + self.gamma * self.uni_probs
 
         # set prior factor
         self.prior_factor = self.prior_mix**-self.alpha
-        self.prior_factor = self.prior_factor/np.sum(self.prior_probs*self.prior_factor) # re-normalize
+        self.prior_factor[self.prior_factor == np.inf] = 0.  # mask out unused classes
+        self.prior_factor = self.prior_factor / np.sum(self.prior_probs * self.prior_factor)  # re-normalize
 
         # implied empirical prior
         # self.implied_prior = self.prior_probs*self.prior_factor
@@ -228,132 +229,141 @@ class PriorFactor():
 
     def print_correction_stats(self):
         print 'Prior factor correction:'
-        print '  (alpha,gamma) = (%.2f, %.2f)'%(self.alpha,self.gamma)
-        print '  (min,max,mean,med,exp,std) = (%.3f, %.3f, %.3f, %.3f, %.3f, %.3f)'%(
-          np.min(self.prior_factor),np.max(self.prior_factor),np.mean(self.prior_factor),np.median(self.prior_factor),np.sum(self.prior_factor*self.prior_probs), np.std(self.prior_factor))
+        print '  (alpha,gamma) = (%.2f, %.2f)' % (self.alpha, self.gamma)
+        print '(min,max,mean,med,exp,std) = (%.3f, %.3f, %.3f, %.3f, %.3f, %.3f)' % (
+            np.min(self.prior_factor),
+            np.max(self.prior_factor),
+            np.mean(self.prior_factor),
+            np.median(self.prior_factor),
+            np.sum(self.prior_factor * self.prior_probs),
+            np.std(self.prior_factor))    
 
-    def forward(self, data_ab_quant,axis=1):
-        data_ab_maxind = np.argmax(data_ab_quant,axis=axis)
+    def forward_condl(self, gt_313, l):
+        shape = l.shape
+        ab_idx = np.argmax(gt_313, axis=3).flatten()
+        l_idx = np.round(l).flatten().astype(np.int32)
+        corr_factor = self.prior_factor[l_idx, ab_idx]
+        corr_factor = corr_factor.reshape(shape)
+        return corr_factor      
+
+    def forward(self, data_ab_quant, axis=1):
+        data_ab_maxind = np.argmax(data_ab_quant, axis=axis)
         corr_factor = self.prior_factor[data_ab_maxind]
-        if(axis==0):
-            return corr_factor[na(),:]
-        elif(axis==1):
-            return corr_factor[:,na(),:]
-        elif(axis==2):
-            return corr_factor[:,:,na(),:]
-        elif(axis==3):
-            return corr_factor[:,:,:,na()]
+        if(axis == 0):
+            return corr_factor[na(), :]
+        elif(axis == 1):
+            return corr_factor[:, na(), :]
+        elif(axis == 2):
+            return corr_factor[:, :, na(), :]
+        elif(axis == 3):
+            return corr_factor[:, :, :, na()]
 
     def get_weights(self, ab_idx):
         return self.prior_factor[ab_idx]
 
-def _prior_boost(gt_ab_313, gamma=0.5, alpha=1.0, prior_path='./resources/prior_probs_smoothed.npy'):
-  '''
-  Args:
-    gt_ab_313: (N, H, W, 313)
-  Returns:
-    prior_boost: (N, H, W, 1)
-  '''
-  gamma = gamma
-  alpha = alpha
 
-  pc = PriorFactor(alpha, gamma, priorFile=prior_path)
+def _prior_boost(gt_ab_313, gamma=0.5, alpha=1.0, prior_path='./resources/prior_probs_smoothed.npy', cond_l=False, luma=None):
+    '''
+    Args:
+      gt_ab_313: (N, H, W, 313)
+    Returns:
+      prior_boost: (N, H, W, 1)
+    '''
+    gamma = gamma
+    alpha = alpha
 
-  gt_ab_313 = np.transpose(gt_ab_313, (0, 3, 1, 2))
-  prior_boost = pc.forward(gt_ab_313, axis=1)
+    pc = PriorFactor(alpha, gamma, priorFile=prior_path)
 
-  prior_boost = np.transpose(prior_boost, (0, 2, 3, 1))
-  return prior_boost
+    if cond_l:
+        prior_boost = pc.forward_condl(gt_ab_313, luma)
+    else:
+        gt_ab_313 = np.transpose(gt_ab_313, (0, 3, 1, 2))
+        prior_boost = pc.forward(gt_ab_313, axis=1)
+
+        prior_boost = np.transpose(prior_boost, (0, 2, 3, 1))
+
+    return prior_boost
 
 
 def get_prior(data_ab):
-  gt_ab_313 = _nnencode(data_ab)
-  prior = _prior_boost(gt_ab_313, gamma=0.)
-  # Non-gray mask?
-  # thresh = 5
-  # nongray_mask = (np.sum(np.sum(np.sum(np.abs(data_ab) > thresh, axis=1), axis=1), axis=1) > 0)[:, np.newaxis, np.newaxis, np.newaxis]
-  # Subsampling?
-  return prior
+    gt_ab_313 = _nnencode(data_ab)
+    prior = _prior_boost(gt_ab_313, gamma=0.)
+    # Non-gray mask?
+    # thresh = 5
+    # nongray_mask = (np.sum(np.sum(np.sum(np.abs(data_ab) > thresh, axis=1), axis=1), axis=1) > 0)[:, np.newaxis, np.newaxis, np.newaxis]
+    # Subsampling?
+    return prior
 
 
-def preprocess(data, training=True, c313=False, is_gan=False, is_rgb=True, prior_path='./resources/prior_probs_smoothed.npy', mask_gray=True):
-  '''Preprocess
-  Args: 
-    data: RGB batch (N * H * W * 3)
-  Return:
-    data_l: L channel batch (N * H * W * 1)
-    gt_ab_313: ab discrete channel batch (N * H/4 * W/4 * 313)
-    prior_boost_nongray: (N * H/4 * W/4 * 1) 
-  '''
-  warnings.filterwarnings("ignore")
-  N = data.shape[0]
-  H = data.shape[1]
-  W = data.shape[2]
+def preprocess(data, training=True, c313=False, is_gan=False, is_rgb=True, prior_path='./resources/prior_probs_smoothed.npy', mask_gray=True, cond_l=False):
+    '''Preprocess
+    Args: 
+      data: RGB batch (N * H * W * 3)
+    Return:
+      data_l: L channel batch (N * H * W * 1)
+      gt_ab_313: ab discrete channel batch (N * H/4 * W/4 * 313)
+      prior_boost_nongray: (N * H/4 * W/4 * 1) 
+    '''
+    warnings.filterwarnings("ignore")
+    N = data.shape[0]
+    H = data.shape[1]
+    W = data.shape[2]
 
-  #rgb2lab
-  img_lab = color.rgb2lab(data)
+    # rgb2lab
+    img_lab = color.rgb2lab(data)
 
-  #slice
-  #l: [0, 100]
-  img_l = img_lab[:, :, :, 0:1]
-  #ab: [-110, 110]
-  data_ab = img_lab[:, :, :, 1:]
+    # slice
+    # l: [0, 100]
+    img_l = img_lab[:, :, :, 0:1]
+    # ab: [-110, 110]
+    data_ab = img_lab[:, :, :, 1:]
 
-  if is_gan:
-    if is_rgb:
-      data = data.astype(np.float32)
-      data /= 255.
-      data -= 0.5
-      data *= 2.
-      # print(np.min(data), np.max(data))
-      return data
+    if is_gan:
+        if is_rgb:
+            data = data.astype(np.float32)
+            data /= 255.
+            data -= 0.5
+            data *= 2.
+            # print(np.min(data), np.max(data))
+            return data
+        else:
+            data_ab /= 110.
+            # print(np.min(data), np.max(data))
+            return data_ab
+
+    data_l_ss = downscale_local_mean(img_l, (1, 4, 4, 1))
+    # scale img_l to [-1, 1]
+    data_l = (img_l - 50.) / 50.
+    
+    # subsample 1/4  (N * H/4 * W/4 * 2)
+    # data_ab_ss = data_ab[:, ::4, ::4, :]
+
+    data_ab_ss = downscale_local_mean(data_ab, (1, 4, 4, 1))
+
+    # NonGrayMask {N, 1, 1, 1}
+    thresh = 5
+    if mask_gray:
+        nongray_mask = (np.sum(np.sum(np.sum(np.abs(data_ab_ss) > thresh, axis=1), axis=1), axis=1) > 0)[:, np.newaxis, np.newaxis, np.newaxis]
+
+    # NNEncoder
+    # gt_ab_313: [N, H/4, W/4, 313]
+    gt_ab_313 = _nnencode(data_ab_ss)
+
+    # Prior_Boost 
+    # prior_boost: [N, 1, H/4, W/4]
+    prior_boost = _prior_boost(gt_ab_313, prior_path=prior_path, cond_l=cond_l, luma=data_l_ss)
+
+    # Eltwise
+    # prior_boost_nongray: [N, 1, H/4, W/4]
+    if mask_gray:
+        prior_boost_nongray = prior_boost * nongray_mask
     else:
-      data_ab /= 110.
-      # print(np.min(data), np.max(data))
-      return data_ab
+        prior_boost_nongray = prior_boost
 
-  #scale img_l to [-1, 1]
-  data_l = (img_l - 50.) / 50.
-  data_l_ss = downscale_local_mean(data_l, (1, 4, 4, 1))
-  #subsample 1/4  (N * H/4 * W/4 * 2)
-  # data_ab_ss = data_ab[:, ::4, ::4, :]
-
-  data_ab_ss = downscale_local_mean(data_ab, (1, 4, 4, 1))
-
-  #NonGrayMask {N, 1, 1, 1}
-  thresh = 5
-  if mask_gray:
-    nongray_mask = (np.sum(np.sum(np.sum(np.abs(data_ab_ss) > thresh, axis=1), axis=1), axis=1) > 0)[:, np.newaxis, np.newaxis, np.newaxis]
-
-  #NNEncoder
-  #gt_ab_313: [N, H/4, W/4, 313]
-  gt_ab_313 = _nnencode(data_ab_ss)
-
-  if c313:
-    data_313_ss = np.concatenate((data_l_ss, gt_ab_313), axis=-1)
-  else:
-    data_real = np.concatenate((data_l_ss, data_ab_ss / 110.), axis=-1)
-
-  #Prior_Boost 
-  #prior_boost: [N, 1, H/4, W/4]
-  prior_boost = _prior_boost(gt_ab_313, prior_path=prior_path)
-
-  #Eltwise
-  #prior_boost_nongray: [N, 1, H/4, W/4]
-  if mask_gray:
-    prior_boost_nongray = prior_boost * nongray_mask
-  else:
-    prior_boost_nongray = prior_boost
-
-  if training:
-    if c313:
-    # Upscale.
-      return data_l, gt_ab_313, prior_boost_nongray, data_ab_ss
-    # return data_l, gt_ab_313, prior_boost_nongray, img_lab
+    if training:
+        return data_l, gt_ab_313, prior_boost_nongray, data_ab_ss
     else:
-      return data_l, gt_ab_313, prior_boost_nongray, data_real
-  else:
-    return data_l, data_ab
+        return data_l, data_ab
 
 
 def softmax(x):

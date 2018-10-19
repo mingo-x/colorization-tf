@@ -27,10 +27,14 @@ for key in net_params:
 
 if common_params['is_gan'] == '1':
     solver = Solver_GAN(True, common_params, solver_params, net_params, dataset_params)
+    print('GAN solver.')
 elif common_params['is_coco'] == '1':
     solver = Solver_Language(True, common_params, solver_params, net_params, dataset_params)
+    print('Language solver.')
 elif len(str(common_params['gpus']).split(',')) == 1:
     solver = Solver(True, common_params, solver_params, net_params, dataset_params)
+    print('Normal solver.')
 else:
     solver = SolverMultigpu(True, common_params, solver_params, net_params, dataset_params)
+    print('Multigpu solver.')
 solver.train_model()

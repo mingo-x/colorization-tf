@@ -7,31 +7,47 @@ import utils
 
 _OUTPUT_DIR = '/srv/glusterfs/xieya/image/ab'
 
-def draw_ab_space_given_l(l, save=True):
+
+def draw_ab_space_given_l(l, save=True, weights=None, name=''):
     cell_size = 10
     canvas = np.zeros((23 * cell_size, 23 * cell_size, 3))
-    canvas[:, :, 0].fill(l)
+    if l < 30:
+        canvas[:, :, 0].fill(100)
+    else:
+        canvas[:, :, 0].fill(0)
+
     grid = np.load('resources/pts_in_hull.npy')
-    for a, b in grid:
+    for i in xrange(313):
+        if weights is not None and weights[i] < 1e-8:
+            continue
+        a, b = grid[i]
         i = int(a / 10) + 11
         j = int(b / 10) + 11
+        canvas[i * cell_size: (i + 1) * cell_size, j * cell_size: (j + 1) * cell_size, 0] = l
         canvas[i * cell_size: (i + 1) * cell_size, j * cell_size: (j + 1) * cell_size, 1].fill(a)
         canvas[i * cell_size: (i + 1) * cell_size, j * cell_size: (j + 1) * cell_size, 2].fill(b)
 
     canvas = color.lab2rgb(canvas)
     if save:
-        io.imsave(os.path.join(_OUTPUT_DIR, '{}.jpg'.format(l)), canvas)
+        io.imsave(os.path.join(_OUTPUT_DIR, '{0}_{1}.jpg'.format(name, l)), canvas)
     else:
         return canvas
 
 
-def draw_ab_space():
+def draw_ab_space(weights_path=None):
     if not os.path.exists(_OUTPUT_DIR):
         os.makedirs(_OUTPUT_DIR)
         print('Created dir {}.'.format(_OUTPUT_DIR))
 
+    if weights_path is None:
+        weights = None
+        name = ''
+    else:
+        weights = np.load(weights_path)
+        name = os.path.splitext(os.path.split(weights_path)[1])[0]
+
     for l in xrange(0, 101, 10):
-        draw_ab_space_given_l(l)
+        draw_ab_space_given_l(l, weights=weights, name=name)
         print(l)
 
 
@@ -44,6 +60,8 @@ def _weights_to_image(weights, out_name="", save=True, fill=0.):
     canvas.fill(fill)
 
     for i in xrange(len(weights)):
+        if weights[i] < 1e-8:
+            continue
         a, b = grid[i]
         x = int(a / 10) + 11
         y = int(b / 10) + 11
@@ -59,6 +77,34 @@ def hist_to_image(hist_path):
     hist = np.load(hist_path)
     out_name = os.path.splitext(os.path.split(hist_path)[1])[0]
     _weights_to_image(hist, out_name, fill=0.5)
+
+
+def abl_hists_to_image(hist_path):
+    hists = np.load(hist_path)
+    out_name = os.path.splitext(os.path.split(hist_path)[1])[0]
+    for l in xrange(0, 101, 10):
+        hist = np.sum(hists[max(0, l - 5): min(101, l + 5)], axis=0)
+        hist /= np.sum(hist)
+        # _weights_to_image(hist, out_name + "_{}".format(l), fill=0.5)
+        cell_size = 10
+        canvas = np.zeros((23 * cell_size, 23 * cell_size, 3))
+        if l < 30:
+            canvas[:, :, 0].fill(100)
+        else:
+            canvas[:, :, 0].fill(0)
+        grid = np.load('resources/pts_in_hull.npy')
+        for c in xrange(313):
+            if hist[c] < 1e-8:
+                continue
+            a, b = grid[c]
+            i = int(a / 10) + 11
+            j = int(b / 10) + 11
+            canvas[i * cell_size: (i + 1) * cell_size, j * cell_size: (j + 1) * cell_size, 0] = l
+            canvas[i * cell_size: (i + 1) * cell_size, j * cell_size: (j + 1) * cell_size, 1].fill(a)
+            canvas[i * cell_size: (i + 1) * cell_size, j * cell_size: (j + 1) * cell_size, 2].fill(b)
+
+        canvas = color.lab2rgb(canvas)
+        io.imsave(os.path.join(_OUTPUT_DIR, '{0}_{1}.jpg'.format(out_name, l)), canvas)
 
 
 def prior_to_image(prior_path):
@@ -146,8 +192,21 @@ def compare_pred_with_gt(pred_hist_path, gt_hist_path, diff=1e-3):
         io.imsave(os.path.join(_OUTPUT_DIR, 'comp_less_{0}_{1}.png'.format(pred_hist_name, l)), rgba_less)
     
 
+def merge():
+    dir_path = '/srv/glusterfs/xieya/image/ab'
+    patterns = ['313_ab_{}.jpg', 'tf_coco_5_38k_abl_hist_{}.jpg', 'tf_coco_5_38k_c313l_hist_{}.jpg']
+    for l in xrange(0, 101, 10):
+        imgs = []
+        for p in patterns:
+            img_path = os.path.join(dir_path, p.format(l))
+            imgs.append(io.imread(img_path))
+        imgs = np.asarray(imgs)
+        canvas = np.hstack(imgs)
+        io.imsave(os.path.join(dir_path, 'hist_comp_{}.jpg').format(l), canvas)
+
+
 if __name__ == "__main__":
-    draw_ab_space()
+    # draw_ab_space('/srv/glusterfs/xieya/prior/coco_313_soft.npy')
     # hist_to_image('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_c313_hist.npy')
     # prior_to_image('/srv/glusterfs/xieya/prior/coco_313_soft.npy')
     # hist_to_image_as_alpha('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_c313_hist.npy')
@@ -157,3 +216,5 @@ if __name__ == "__main__":
     # ]
     # hist_of_img_list(redish_img_list)
     # compare_pred_with_gt('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_hist.npy', '/srv/glusterfs/xieya/prior/coco_313_soft.npy')
+    # abl_hists_to_image('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_c313l_hist.npy')
+    merge()
