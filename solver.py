@@ -344,7 +344,7 @@ class Solver(object):
                         summary_writer.add_summary(eval_loss_sum, step)
                         summary_writer.add_summary(eval_loss_rb_sum, step)
                         print('Evaluation at step {0}: loss {1}, rebalanced loss {2}.'.format(step, eval_loss, eval_loss_rb))
-                        lr_decay_on_plateau(sess, eval_loss_rb, 1)
+                        self.lr_decay_on_plateau(sess, eval_loss_rb, 1)
                     summary_writer.add_summary(summary_str, step)
 
                 # Save the model checkpoint periodically.
