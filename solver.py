@@ -226,6 +226,7 @@ class Solver(object):
             print("Session configured.")
 
             if self.ckpt is not None:
+                sess.run(self.learning_rate_tensor.initializer)
                 if self.restore_opt:
                     saver.restore(sess, self.ckpt)
                 else:
