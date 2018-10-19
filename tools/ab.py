@@ -216,5 +216,5 @@ if __name__ == "__main__":
     # ]
     # hist_of_img_list(redish_img_list)
     # compare_pred_with_gt('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_hist.npy', '/srv/glusterfs/xieya/prior/coco_313_soft.npy')
-    # abl_hists_to_image('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_c313l_hist.npy')
-    merge()
+    abl_hists_to_image('/srv/glusterfs/xieya/prior/313_ab_1.npy')
+    # merge()
