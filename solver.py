@@ -130,7 +130,7 @@ class Solver(object):
                 # Decay.
                 old_lr = self.learning_rate_tensor.value()
                 sess.run(self.learning_rate_tensor.assign(old_lr * 0.1))
-                print('Learning rate decayed from {0} to {1}.'.format(old_lr, old_lr * 0.1))
+                print('Learning rate decayed from to {0}.'.format(old_lr.eval(sess)))
                 self.increasing_count = 0
         else:
             self.increasing_count = 0
@@ -344,7 +344,7 @@ class Solver(object):
                         summary_writer.add_summary(eval_loss_sum, step)
                         summary_writer.add_summary(eval_loss_rb_sum, step)
                         print('Evaluation at step {0}: loss {1}, rebalanced loss {2}.'.format(step, eval_loss, eval_loss_rb))
-                        self.lr_decay_on_plateau(sess, eval_loss_rb, 1)
+                        self.lr_decay_on_plateau(sess, eval_loss_rb, 3)
                     summary_writer.add_summary(summary_str, step)
 
                 # Save the model checkpoint periodically.
