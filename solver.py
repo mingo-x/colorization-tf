@@ -215,7 +215,7 @@ class Solver(object):
                 D_grads = D_opt.compute_gradients(self.D_loss, var_list=D_vars)
                 D_apply_gradient_op = D_opt.apply_gradients(D_grads)
 
-            saver = tf.train.Saver(write_version=tf.train.SaverDef.V2)
+            saver = tf.train.Saver(write_version=tf.train.SaverDef.V2, max_to_keep=5, keep_checkpoint_every_n_hours=1)
             summary_op = tf.summary.merge(self.summaries)
             init = tf.global_variables_initializer()
             config = tf.ConfigProto(allow_soft_placement=True)
