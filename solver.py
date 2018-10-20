@@ -130,7 +130,7 @@ class Solver(object):
                 # Decay.
                 old_lr = self.learning_rate_tensor.value()
                 sess.run(self.learning_rate_tensor.assign(old_lr * 0.1))
-                print('Learning rate decayed from to {0}.'.format(old_lr.eval(sess)))
+                print('Learning rate decayed to {0}.'.format(old_lr.eval(session=sess) * 0.1))
                 self.increasing_count = 0
         else:
             self.increasing_count = 0
