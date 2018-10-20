@@ -85,7 +85,6 @@ def abl_hists_to_image(hist_path):
     for l in xrange(0, 101, 10):
         hist = np.sum(hists[max(0, l - 5): min(101, l + 5)], axis=0)
         hist /= np.sum(hist)
-        # _weights_to_image(hist, out_name + "_{}".format(l), fill=0.5)
         cell_size = 10
         canvas = np.zeros((23 * cell_size, 23 * cell_size, 3))
         if l < 30:
@@ -105,6 +104,8 @@ def abl_hists_to_image(hist_path):
 
         canvas = color.lab2rgb(canvas)
         io.imsave(os.path.join(_OUTPUT_DIR, '{0}_{1}.jpg'.format(out_name, l)), canvas)
+
+        _weights_to_image(hist, out_name + "_heatmap_{}".format(l), fill=0.5)
 
 
 def prior_to_image(prior_path):
