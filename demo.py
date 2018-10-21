@@ -12,7 +12,7 @@ from sklearn.metrics import auc
 import cv2
 
 from data import DataSet
-from data_coco import DataSetCOCO
+from data_coco import DataSet as DataSetCOCO
 import utils
 
 _AUC_THRESHOLD = 150
