@@ -19,7 +19,7 @@ def draw_ab_space_given_l(l, save=True, weights=None, name=''):
 
     grid = np.load('resources/pts_in_hull.npy')
     for i in xrange(313):
-        if weights is not None and weights[i] < 1e-8:
+        if weights is not None and weights[i] <= 0:
             continue
         a, b = grid[i]
         i = int(a / 10) + 11
@@ -52,7 +52,7 @@ def draw_ab_space(weights_path=None):
         print(l)
 
 
-def _weights_to_image(weights, out_name="", save=True, fill=0.):
+def _weights_to_image(weights, out_name="", save=True, fill=0., rescale=False):
     weights /= np.sum(weights)  # Rescaling.
     grid = np.load('resources/pts_in_hull.npy')
 
@@ -61,7 +61,7 @@ def _weights_to_image(weights, out_name="", save=True, fill=0.):
     canvas.fill(fill)
 
     for i in xrange(len(weights)):
-        if weights[i] < 1e-8:
+        if weights[i] <= 0:
             continue
         a, b = grid[i]
         x = int(a / 10) + 11
@@ -69,6 +69,7 @@ def _weights_to_image(weights, out_name="", save=True, fill=0.):
         canvas[x * cell_size: (x + 1) * cell_size, y * cell_size: (y + 1) * cell_size] = weights[i]
 
     if save:
+        plt.imsave(os.path.join(_OUTPUT_DIR, '{}_rs.jpg'.format(out_name)), canvas)
         plt.imsave(os.path.join(_OUTPUT_DIR, '{}.jpg'.format(out_name)), canvas, vmin=0, vmax=1)
     else:
         return canvas
@@ -94,7 +95,7 @@ def abl_hists_to_image(hist_path):
             canvas[:, :, 0].fill(0)
         grid = np.load('resources/pts_in_hull.npy')
         for c in xrange(313):
-            if hist[c] < 1e-8:
+            if hist[c] <= 0:
                 continue
             a, b = grid[c]
             i = int(a / 10) + 11
@@ -209,7 +210,7 @@ def merge(out_name):
 
 if __name__ == "__main__":
     # draw_ab_space('/srv/glusterfs/xieya/prior/313_ab_1.npy')
-    hist_to_image('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_hist.npy')
+    hist_to_image('/srv/glusterfs/xieya/image/ab/tf_224_1_476k_ab_hist.npy')
     # prior_to_image('/srv/glusterfs/xieya/prior/coco_313_soft.npy')
     # hist_to_image_as_alpha('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_c313_hist.npy')
     # hist_to_image_as_mask('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_c313_hist.npy')
@@ -218,5 +219,5 @@ if __name__ == "__main__":
     # ]
     # hist_of_img_list(redish_img_list)
     # compare_pred_with_gt('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_hist.npy', '/srv/glusterfs/xieya/prior/coco_313_soft.npy')
-    # abl_hists_to_image('/srv/glusterfs/xieya/prior/coco_313_abl_soft_bin1.npy')
+    abl_hists_to_image('/srv/glusterfs/xieya/image/ab/tf_224_1_476k_abl_hist.npy')
     # merge('coco_color_comp')
