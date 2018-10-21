@@ -186,9 +186,9 @@ def cal_prob_soft(cond_l=False):
         print('Conditioning on luma.')
 
     out_path = '/srv/glusterfs/xieya/prior/{0}_{2}_soft_{1}.npy'.format(_N_CLASSES, _TASK_ID, 'ab' if cond_l else '')
-    # if os.path.isfile(out_path):
-        # print('Done.')
-        # return
+    if os.path.isfile(out_path):
+        print('Done.')
+        return
 
     filename_lists = get_file_list()
     counter = 0
@@ -342,7 +342,7 @@ def cal_ab_hist_given_l():
 def merge_abl():
     print("Merging...")
     probs = np.zeros((101, _N_CLASSES), dtype=np.float64)
-    path_pattern = '/srv/glusterfs/xieya/prior/coco_{0}_abl_{1}.npy'
+    path_pattern = '/srv/glusterfs/xieya/prior/{0}_ab_soft_{1}.npy'
     for i in xrange(_TASK_NUM):
         file_path = path_pattern.format(_N_CLASSES, i)
         if not os.path.exists(file_path):
@@ -354,7 +354,7 @@ def merge_abl():
     probs_nonzero = probs[probs > 0]
     print(np.mean(probs_nonzero), np.min(probs_nonzero), np.max(probs_nonzero), np.median(probs_nonzero), np.std(probs_nonzero))
     probs = probs / np.sum(probs)
-    np.save('/srv/glusterfs/xieya/prior/coco_{}_abl_1'.format(_N_CLASSES), probs)
+    np.save('/srv/glusterfs/xieya/prior/{}_abl_soft_bin1'.format(_N_CLASSES), probs)
 
 
 if __name__ == "__main__":
@@ -367,12 +367,12 @@ if __name__ == "__main__":
     points = points.astype(np.float64)
     points = points[None, :, :]
     print("Number of classes: {}.".format(_N_CLASSES))
-    # print("Imagenet.")
+    print("Imagenet.")
     # cal_prob()
     # cal_prob_soft(True)
     # cal_ab_hist_given_l()
-    print("Coco.")
+    # print("Coco.")
     # cal_prob_coco()
-    cal_prob_coco_soft(True)
+    # cal_prob_coco_soft(True)
     # merge()
-    # merge_abl()
+    merge_abl()

@@ -24,9 +24,9 @@ _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
 _G_VERSION = 1
-_CKPT_PATH = '/srv/glusterfs/xieya/tf_224_1/models/model.ckpt-476000'
+_CKPT_PATH = '/srv/glusterfs/xieya/tf_224_3/models/model.ckpt-24000'
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
-_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/tf_224_3_76k'
+_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/tf_224_3_24k'
 #_PRIOR_PATH = '/srv/glusterfs/xieya/prior/coco_313_soft.npy'
 _PRIOR_PATH = 'resources/prior_probs_smoothed.npy'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
@@ -66,7 +66,7 @@ def _get_model(input_tensor):
 def _colorize_single_img(img_name, model, input_tensor, sess):
     img_path = os.path.join(IMG_DIR, img_name)
     img = cv2.imread(img_path)
-    # img = _resize(img)
+    img = _resize(img)
     img_rs = cv2.resize(img, (_INPUT_SIZE, _INPUT_SIZE))
     if len(img.shape) == 3:
         img_l = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -732,7 +732,7 @@ def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c3
 if __name__ == "__main__":
     subprocess.check_call(['mkdir', '-p', _OUTPUT_DIR])
     lookup = utils.LookupEncode('resources/pts_in_hull.npy')
-    # main()
+    main()
     # places365()
     # demo_wgan_ab()
     # demo_wgan_rgb()
@@ -746,5 +746,5 @@ if __name__ == "__main__":
     #       '/srv/glusterfs/xieya/image/color/tf_coco_5_38k', 
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/original', 
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/new')
-    evaluate(with_caption=False, cross_entropy=True, auc=True, ab_hist=True, get_c313_hist=True, get_ab_hist_given_l=True, get_c313_hist_given_l=True, model_name='tf_224_1_476k', batch_num=600, ab_from_rgb=True, is_coco=False)
+    # evaluate(with_caption=False, cross_entropy=True, auc=True, ab_hist=True, get_c313_hist=True, get_ab_hist_given_l=True, get_c313_hist_given_l=True, model_name='tf_224_1_476k', batch_num=600, ab_from_rgb=True, is_coco=False)
     # print("Model {}.".format(_CKPT_PATH))
