@@ -111,11 +111,11 @@ def abl_hists_to_image(hist_path):
 def prior_to_image(prior_path):
     prior_name = os.path.splitext(os.path.split(prior_path)[1])[0]
     distribution = np.load(prior_path)
-    _weights_to_image(distribution, prior_name + "_distribution")
+    _weights_to_image(distribution, prior_name + "_distribution", fill=0.5)
     prior_factor_0 = utils.PriorFactor(priorFile=prior_path, gamma=0)
     prior_factor_5 = utils.PriorFactor(priorFile=prior_path, gamma=.5)
-    _weights_to_image(prior_factor_0.prior_factor, prior_name + "_weights_g0")
-    _weights_to_image(prior_factor_5.prior_factor, prior_name + "_weights_g5")
+    _weights_to_image(prior_factor_0.prior_factor, prior_name + "_weights_g0", fill=.5)
+    _weights_to_image(prior_factor_5.prior_factor, prior_name + "_weights_g5", fill=.5)
 
 
 def hist_to_image_as_alpha(hist_path):
@@ -207,9 +207,9 @@ def merge(out_name):
 
 
 if __name__ == "__main__":
-    # draw_ab_space('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_rgb_hist.npy')
+    # draw_ab_space('/srv/glusterfs/xieya/prior/coco_313_soft.npy')
     # hist_to_image('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_c313_hist.npy')
-    # prior_to_image('/srv/glusterfs/xieya/prior/coco_313_soft.npy')
+    prior_to_image('./resources/prior_probs_smoothed.npy')
     # hist_to_image_as_alpha('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_c313_hist.npy')
     # hist_to_image_as_mask('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_c313_hist.npy')
     # redish_img_list = [
@@ -218,4 +218,4 @@ if __name__ == "__main__":
     # hist_of_img_list(redish_img_list)
     # compare_pred_with_gt('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_hist.npy', '/srv/glusterfs/xieya/prior/coco_313_soft.npy')
     # abl_hists_to_image('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_abl_hist.npy')
-    merge('heatmap_comp')
+    # merge('heatmap_comp')
