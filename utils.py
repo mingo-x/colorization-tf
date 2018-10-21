@@ -230,13 +230,14 @@ class PriorFactor():
     def print_correction_stats(self):
         print 'Prior factor correction:'
         print '  (alpha,gamma) = (%.2f, %.2f)' % (self.alpha, self.gamma)
+        non_zero = self.prior_factor[self.prior_factor > 0]
         print '(min,max,mean,med,exp,std) = (%.3f, %.3f, %.3f, %.3f, %.3f, %.3f)' % (
-            np.min(self.prior_factor),
-            np.max(self.prior_factor),
-            np.mean(self.prior_factor),
-            np.median(self.prior_factor),
+            np.min(non_zero),
+            np.max(non_zero),
+            np.mean(non_zero),
+            np.median(non_zero),
             np.sum(self.prior_factor * self.prior_probs),
-            np.std(self.prior_factor))    
+            np.std(non_zero))    
 
     def forward_condl(self, gt_313, l):
         shape = l.shape
