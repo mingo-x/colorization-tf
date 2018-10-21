@@ -11,7 +11,8 @@ from skimage import io, color, transform
 from sklearn.metrics import auc
 import cv2
 
-from data_coco import DataSet
+from data import DataSet
+from data_coco import DataSetCOCO
 import utils
 
 _AUC_THRESHOLD = 150
@@ -599,10 +600,16 @@ def merge(cic_dir, coco_dir, cap_dir, new_cap_dir):
         print(idx)
 
 
-def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c313_hist=False, get_ab_hist_given_l=False, get_c313_hist_given_l=False, model_name="", batch_num=300, ab_from_rgb=False):
-    dataset_params = {'path': _COCO_PATH, 'thread_num': 4, 'prior_path': _PRIOR_PATH}
-    common_params = {'batch_size': _BATCH_SIZE, 'with_caption': False}  # with_caption -> False: ignore grayscale images.
-    dataset = DataSet(common_params, dataset_params, False, True)
+def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c313_hist=False, get_ab_hist_given_l=False, get_c313_hist_given_l=False, model_name="", batch_num=300, ab_from_rgb=False, is_coco=True):
+    if is_coco:
+        dataset_params = {'path': _COCO_PATH, 'thread_num': 4, 'prior_path': _PRIOR_PATH}
+        common_params = {'batch_size': _BATCH_SIZE, 'with_caption': False}  # with_caption -> False: ignore grayscale images.
+        dataset = DataSetCOCO(common_params, dataset_params, False, True)
+    else:
+        dataset_params = {'path': '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val.txt', 'thread_num': 8, 'c313': '1', 'cond_l': '0'}
+        common_params = {'image_size': _INPUT_SIZE, 'batch_size': _BATCH_SIZE, 'is_gan': '0', 'is_rgb': '0'}
+        dataset = DataSet(common_params, dataset_params, True)
+
     if auc:
         prior_factor_0 = utils.PriorFactor(priorFile=_PRIOR_PATH, verbose=True)
         prior_factor_5 = utils.PriorFactor(gamma=0.5, priorFile=_PRIOR_PATH, verbose=True)
@@ -645,21 +652,19 @@ def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c3
                 c313l_hist = np.zeros((101, 313), dtype=np.float64)
                 
             for i in xrange(batch_num):
-                img_l, gt_313, prior_boost_nongray, img_cap, img_len, img_ab = dataset.batch()
+                if is_coco:
+                    img_l, gt_313, prior_boost_nongray, img_cap, img_len, img_ab = dataset.batch()
+                    feed_dict = {l_tensor: img_l, cap_tensor: img_cap, len_tensor: img_len, gt_313_tensor: gt_313, prior_tensor: prior_boost_nongray}
+                else:
+                    img_l, gt_313, prior_boost_nongray, img_ab = dataset.batch()
+                    feed_dict = {l_tensor: img_l, gt_313_tensor: gt_313, prior_tensor: prior_boost_nongray}
+
                 if cross_entropy:
-                    img_313, ce_loss, rb_loss = sess.run([c313_tensor, ce_loss_tensor, rb_loss_tensor], 
-                                                         feed_dict={
-                                                         l_tensor: img_l, 
-                                                         cap_tensor: img_cap, 
-                                                         len_tensor: img_len,
-                                                         gt_313_tensor: gt_313,
-                                                         prior_tensor: prior_boost_nongray})
+                    img_313, ce_loss, rb_loss = sess.run([c313_tensor, ce_loss_tensor, rb_loss_tensor], feed_dict=feed_dict)
                     ce.append(ce_loss)
                     rb.append(rb_loss)
                 else:
-                    img_313 = sess.run(c313_tensor, feed_dict={
-                                       l_tensor: img_l, cap_tensor: img_cap, len_tensor: img_len,
-                                       gt_313_tensor: gt_313, prior_tensor: prior_boost_nongray})
+                    img_313 = sess.run(c313_tensor, feed_dict=feed_dict)
                 
                 if auc or ab_hist or get_c313_hist or get_ab_hist_given_l or get_c313_hist_given_l:
                     for j in xrange(_BATCH_SIZE):
@@ -741,5 +746,5 @@ if __name__ == "__main__":
     #       '/srv/glusterfs/xieya/image/color/tf_coco_5_38k', 
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/original', 
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/new')
-    evaluate(with_caption=False, cross_entropy=False, auc=True, ab_hist=True, get_c313_hist=True, get_ab_hist_given_l=True, get_c313_hist_given_l=True, model_name='tf_224_1_476k', batch_num=600, ab_from_rgb=True)
+    evaluate(with_caption=False, cross_entropy=True, auc=True, ab_hist=True, get_c313_hist=True, get_ab_hist_given_l=True, get_c313_hist_given_l=True, model_name='tf_224_1_476k', batch_num=600, ab_from_rgb=True, is_coco=False)
     # print("Model {}.".format(_CKPT_PATH))
