@@ -193,9 +193,9 @@ def compare_pred_with_gt(pred_hist_path, gt_hist_path, diff=1e-3):
         io.imsave(os.path.join(_OUTPUT_DIR, 'comp_less_{0}_{1}.png'.format(pred_hist_name, l)), rgba_less)
     
 
-def merge():
+def merge(out_name):
     dir_path = '/srv/glusterfs/xieya/image/ab'
-    patterns = ['313_ab_{}.jpg', 'tf_coco_5_38k_abl_rgb_hist_{}.jpg', 'tf_coco_5_38k_abl_hist_{}.jpg', 'tf_coco_5_38k_c313l_hist_{}.jpg']
+    patterns = ['313_ab_1_heatmap_{}.jpg', 'tf_coco_5_38k_abl_rgb_hist_heatmap_{}.jpg', 'tf_coco_5_38k_abl_hist_heatmap_{}.jpg']
     for l in xrange(0, 101, 10):
         imgs = []
         for p in patterns:
@@ -203,7 +203,7 @@ def merge():
             imgs.append(io.imread(img_path))
         imgs = np.asarray(imgs)
         canvas = np.hstack(imgs)
-        io.imsave(os.path.join(dir_path, 'hist_comp_{}.jpg').format(l), canvas)
+        io.imsave(os.path.join(dir_path, '{0}_{1}.jpg'.format(out_name, l)), canvas)
 
 
 if __name__ == "__main__":
@@ -217,5 +217,5 @@ if __name__ == "__main__":
     # ]
     # hist_of_img_list(redish_img_list)
     # compare_pred_with_gt('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_hist.npy', '/srv/glusterfs/xieya/prior/coco_313_soft.npy')
-    # abl_hists_to_image('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_abl_rgb_hist.npy')
-    merge()
+    # abl_hists_to_image('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_abl_hist.npy')
+    merge('heatmap_comp')
