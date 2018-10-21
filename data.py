@@ -43,6 +43,7 @@ class DataSet(object):
             self.thread_num2 = int(int(dataset_params['thread_num']) / 2)
             self.c313 = True if dataset_params['c313'] == '1' else False
             self.cond_l = True if dataset_params['cond_l'] == '1' else False
+            self.gamma = float(dataset_params['gamma'])
 
         if not training:
             self.data_path = '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val.txt'
@@ -142,7 +143,8 @@ class DataSet(object):
                 images.append(image)
             images = np.asarray(images, dtype=np.uint8)
 
-            self.batch_queue.put(preprocess(images, c313=self.c313, is_gan=self.is_gan, is_rgb=self.is_rgb, cond_l=self.cond_l, prior_path=self.prior_path))
+            self.batch_queue.put(preprocess(images, c313=self.c313, is_gan=self.is_gan, 
+                is_rgb=self.is_rgb, cond_l=self.cond_l, prior_path=self.prior_path, gamma=self.gamma))
 
     def batch(self):
         """get batch
