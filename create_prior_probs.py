@@ -270,17 +270,23 @@ def cal_prob_coco_soft(cond_l=False):
         img_bgr = train_origs[i]
         img_rgb = img_bgr[:, :, ::-1]
         img_lab = color.rgb2lab(img_rgb)
-        img_ab = img_lab[:, :, 1:]
-        img_ab = img_ab.reshape((-1, 2))
+        img_lab = img_lab.reshape((-1, 3))
+        img_ab = img_lab[:, 1:]
         img_313 = nnenc.encode_points_mtx_nd(img_ab, axis=1)  # [H*W, 313]
-        probs += np.sum(img_313, axis=0)
+        if cond_l:
+            img_l = img_lab[:, 0]
+            l_idx = np.round(img_l).astype(np.int32)
+            for l in xrange(101):
+                probs[l] += np.sum(img_313[l_idx == l], axis=0)
+        else:
+            probs += np.sum(img_313, axis=0)
 
         if counter % _LOG_FREQ == 0:
             print(counter)
             sys.stdout.flush()
         counter += 1
 
-    np.save('/srv/glusterfs/xieya/prior/coco_{0}_onehot_soft_{1}'.format(_N_CLASSES, _TASK_ID), probs)
+    np.save('/srv/glusterfs/xieya/prior/coco_{0}_{2}_soft_{1}'.format(_N_CLASSES, _TASK_ID, 'abl' if cond_l else ''), probs)
 
 
 def merge():
