@@ -130,7 +130,7 @@ class Solver(object):
                 # Decay.
                 old_lr = self.learning_rate_tensor.value()
                 sess.run(self.learning_rate_tensor.assign(old_lr * 0.1))
-                print('Learning rate decayed to {0}.'.format(old_lr.eval(session=sess) * 0.1))
+                print('Learning rate decayed to {0}.'.format(old_lr.eval(session=sess)))
                 self.increasing_count = 0
         else:
             self.increasing_count = 0
@@ -146,11 +146,11 @@ class Solver(object):
                 self.learning_rate_tensor = self.learning_rate
                 D_learning_rate = self.D_learning_rate
             else:
-                # learning_rate = tf.train.exponential_decay(self.learning_rate, self.global_step,
-                #                                      self.decay_steps, self.lr_decay, staircase=True)
-                self.learning_rate_tensor = tf.get_variable('learning_rate', [], initializer=tf.constant_initializer(self.learning_rate), trainable=False)
-                self.prev_loss = 1e9
-                self.increasing_count = 0
+                self.learning_rate_tensor = tf.train.exponential_decay(self.learning_rate, self.global_step,
+                                                                       self.decay_steps, self.lr_decay, staircase=True)
+                # self.learning_rate_tensor = tf.get_variable('learning_rate', [], initializer=tf.constant_initializer(self.learning_rate), trainable=False)
+                # self.prev_loss = 1e9
+                # self.increasing_count = 0
 
             with tf.name_scope('gpu') as scope:
                 self.new_loss, self.total_loss, self.adv_loss, self.D_loss, self.real_score, self.fake_score, self.mixed_norm = self.construct_graph(scope)
@@ -216,7 +216,7 @@ class Solver(object):
                 D_apply_gradient_op = D_opt.apply_gradients(D_grads)
 
             savable_vars = tf.global_variables()
-            savable_vars = [var for var in savable_vars if 'learning_rate' not in var.name]
+            # savable_vars = [var for var in savable_vars if 'learning_rate' not in var.name]
             saver = tf.train.Saver(savable_vars, write_version=tf.train.SaverDef.V2, max_to_keep=5, keep_checkpoint_every_n_hours=1)
             summary_op = tf.summary.merge(self.summaries)
             init = tf.global_variables_initializer()
@@ -226,7 +226,7 @@ class Solver(object):
             print("Session configured.")
 
             if self.ckpt is not None:
-                sess.run(self.learning_rate_tensor.initializer)
+                # sess.run(self.learning_rate_tensor.initializer)
                 if self.restore_opt:
                     saver.restore(sess, self.ckpt)
                 else:
@@ -344,7 +344,7 @@ class Solver(object):
                         summary_writer.add_summary(eval_loss_sum, step)
                         summary_writer.add_summary(eval_loss_rb_sum, step)
                         print('Evaluation at step {0}: loss {1}, rebalanced loss {2}.'.format(step, eval_loss, eval_loss_rb))
-                        self.lr_decay_on_plateau(sess, eval_loss_rb, 3)
+                        # self.lr_decay_on_plateau(sess, eval_loss_rb, 3)
                     summary_writer.add_summary(summary_str, step)
 
                 # Save the model checkpoint periodically.
