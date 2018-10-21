@@ -1,5 +1,6 @@
 import os
 
+import matplotlib.pyplot as plt
 import numpy as np
 from skimage import io, color
 
@@ -68,7 +69,7 @@ def _weights_to_image(weights, out_name="", save=True, fill=0.):
         canvas[x * cell_size: (x + 1) * cell_size, y * cell_size: (y + 1) * cell_size] = weights[i]
 
     if save:
-        io.imsave(os.path.join(_OUTPUT_DIR, '{}.jpg'.format(out_name)), canvas)
+        plt.imsave(os.path.join(_OUTPUT_DIR, '{}.jpg'.format(out_name)), canvas)
     else:
         return canvas
 
