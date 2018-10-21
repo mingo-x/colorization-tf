@@ -606,7 +606,8 @@ def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c3
         common_params = {'batch_size': _BATCH_SIZE, 'with_caption': False}  # with_caption -> False: ignore grayscale images.
         dataset = DataSetCOCO(common_params, dataset_params, False, True)
     else:
-        dataset_params = {'path': '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val.txt', 'thread_num': 8, 'c313': '1', 'cond_l': '0'}
+        dataset_params = {'path': '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val.txt', 'thread_num': 8, 
+                          'c313': '1', 'cond_l': '0', 'gamma': '0.5'}
         common_params = {'image_size': _INPUT_SIZE, 'batch_size': _BATCH_SIZE, 'is_gan': '0', 'is_rgb': '0'}
         dataset = DataSet(common_params, dataset_params, True)
 
