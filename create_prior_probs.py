@@ -181,8 +181,11 @@ def cal_prob():
     np.save(out_path, probs)
 
 
-def cal_prob_soft():
-    out_path = '/srv/glusterfs/xieya/prior/{0}_onehot_{1}_soft.npy'.format(_N_CLASSES, _TASK_ID)
+def cal_prob_soft(cond_l=False):
+    if cond_l:
+        print('Conditioning on luma.')
+
+    out_path = '/srv/glusterfs/xieya/prior/{0}_{2}_soft_{1}.npy'.format(_N_CLASSES, _TASK_ID, 'ab' if cond_l else '')
     # if os.path.isfile(out_path):
         # print('Done.')
         # return
@@ -190,7 +193,10 @@ def cal_prob_soft():
     filename_lists = get_file_list()
     counter = 0
     nnenc = NNEncode(10, 5.0, km_filepath='./resources/pts_in_hull.npy')
-    probs = np.zeros((_N_CLASSES), dtype=np.float64)
+    if cond_l:
+        probs = np.zeros((101, _N_CLASSES), dtype=np.float64)    
+    else:
+        probs = np.zeros((_N_CLASSES), dtype=np.float64)
 
     for img_f in filename_lists:
         img_f = img_f.strip()
@@ -205,7 +211,13 @@ def cal_prob_soft():
         img_lab = img_lab.reshape((-1, 3))
         img_ab = img_lab[:, 1:]
         img_313 = nnenc.encode_points_mtx_nd(img_ab, axis=1)  # [H*W, 313]
-        probs += np.sum(img_313, axis=0)
+        if cond_l:
+            img_l = img_lab[:, 0]
+            l_idx = np.round(img_l).astype(np.int32)
+            for l in xrange(101):
+                probs[l] += np.sum(img_313[l_idx == l], axis=0)
+        else:
+            probs += np.sum(img_313, axis=0)
 
         if counter % _LOG_FREQ == 0:
             print(counter)
@@ -242,12 +254,15 @@ def cal_prob_coco():
     np.save('/srv/glusterfs/xieya/prior/coco_{0}_onehot_{1}'.format(_N_CLASSES, _TASK_ID), probs)
 
 
-def cal_prob_coco_soft():
+def cal_prob_coco_soft(cond_l=False):
     hf = h5py.File('/srv/glusterfs/xieya/data/coco_colors.h5', 'r')
     train_origs = hf['train_ims']  # BGR format
     counter = 0
     nnenc = NNEncode(10, 5.0, km_filepath='./resources/pts_in_hull.npy')
-    probs = np.zeros((_N_CLASSES), dtype=np.float64)
+    if cond_l:
+        probs = np.zeros((101, _N_CLASSES), dtype=np.float64)
+    else:
+        probs = np.zeros((_N_CLASSES), dtype=np.float64)
 
     for i in xrange(len(train_origs)):
         if i % _TASK_NUM != _TASK_ID:
@@ -257,7 +272,6 @@ def cal_prob_coco_soft():
         img_lab = color.rgb2lab(img_rgb)
         img_ab = img_lab[:, :, 1:]
         img_ab = img_ab.reshape((-1, 2))
-        print(np.min(img_ab), np.max(img_ab))
         img_313 = nnenc.encode_points_mtx_nd(img_ab, axis=1)  # [H*W, 313]
         probs += np.sum(img_313, axis=0)
 
@@ -349,10 +363,10 @@ if __name__ == "__main__":
     print("Number of classes: {}.".format(_N_CLASSES))
     print("Imagenet.")
     # cal_prob()
-    # cal_prob_soft()
+    cal_prob_soft(True)
     # cal_ab_hist_given_l()
     # print("Coco.")
     # cal_prob_coco()
     # cal_prob_coco_soft()
     # merge()
-    merge_abl()
+    # merge_abl()
