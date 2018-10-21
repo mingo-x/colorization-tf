@@ -53,7 +53,7 @@ def draw_ab_space(weights_path=None):
 
 
 def _weights_to_image(weights, out_name="", save=True, fill=0.):
-    weights /= np.max(weights)  # Rescaling.
+    weights /= np.sum(weights)  # Rescaling.
     grid = np.load('resources/pts_in_hull.npy')
 
     cell_size = 10
@@ -69,7 +69,7 @@ def _weights_to_image(weights, out_name="", save=True, fill=0.):
         canvas[x * cell_size: (x + 1) * cell_size, y * cell_size: (y + 1) * cell_size] = weights[i]
 
     if save:
-        plt.imsave(os.path.join(_OUTPUT_DIR, '{}.jpg'.format(out_name)), canvas)
+        plt.imsave(os.path.join(_OUTPUT_DIR, '{}.jpg'.format(out_name)), canvas, vmin=0, vmax=1)
     else:
         return canvas
 
