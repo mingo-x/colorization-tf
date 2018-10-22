@@ -27,7 +27,7 @@ _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
 _G_VERSION = 1
-_CKPT_PATH = '/srv/glusterfs/xieya/tf_224_6/models/model.ckpt-32000'
+_CKPT_PATH = '/srv/glusterfs/xieya/tf_224_6/models/model.ckpt-37000'
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
 _OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/tmp'
 #_PRIOR_PATH = '/srv/glusterfs/xieya/prior/coco_313_soft.npy'
@@ -786,7 +786,7 @@ def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c3
 if __name__ == "__main__":
     subprocess.check_call(['mkdir', '-p', _OUTPUT_DIR])
     lookup = utils.LookupEncode('resources/pts_in_hull.npy')
-    main()
+    # main()
     # places365()
     # demo_wgan_ab()
     # demo_wgan_rgb()
@@ -802,3 +802,4 @@ if __name__ == "__main__":
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/new')
     # evaluate(with_caption=False, cross_entropy=False, auc=True, ab_hist=True, get_c313_hist=False, get_ab_hist_given_l=True, get_c313_hist_given_l=False, model_name='tf_224_1_476k', batch_num=600, ab_from_rgb=False, is_coco=False)
     # print("Model {}.".format(_CKPT_PATH))
+    compare_c313_pixelwise()
