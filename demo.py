@@ -99,8 +99,9 @@ def _colorize_single_img(img_name, model, input_tensor, sess):
     io.imsave(os.path.join(_OUTPUT_DIR, os.path.split(img_name)[1]), img_rgb)
     # img_rgb[0: 5, 219: 224] = 1
     # img_rgb[219: 224, 0: 5] = 1
-    a = np.mean(c313[0: 5, 219: 224], axis=(0, 1))
-    b = np.mean(c313[219: 224, 0: 5], axis=(0, 1))
+    print(c313.shape)
+    a = np.mean(c313[0: 5, 219: 224, :], axis=(0, 1))
+    b = np.mean(c313[219: 224, 0: 5, :], axis=(0, 1))
     print(_cosine(a, b))
 
     # io.imsave(os.path.join(_OUTPUT_DIR, "test"+os.path.split(img_name)[1]), img_rgb)
