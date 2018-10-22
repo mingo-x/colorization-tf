@@ -82,7 +82,7 @@ def compare_c313_pixelwise():
     img_path = os.path.join(IMG_DIR, img_name)
     img = cv2.imread(img_path)
     img = _resize(img)
-    img_rs = transform.downscale_local_mean(img_lab, (4, 4, 1))
+    img_rs = transform.downscale_local_mean(img, (4, 4, 1))
     if len(img.shape) == 3:
         img_l = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         img_l = img_l[None, :, :, None]
