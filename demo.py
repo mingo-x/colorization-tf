@@ -69,6 +69,52 @@ def _get_model(input_tensor):
 def _cosine(a, b):
     return np.dot(a, b) / np.sqrt(np.dot(a, a) * np.dot(b, b))
 
+def compare_c313_pixelwise():
+    input_tensor = tf.placeholder(
+        tf.float32, shape=(1, _INPUT_SIZE, _INPUT_SIZE, 1))
+    model = _get_model(input_tensor)
+    saver = tf.train.Saver()
+    sess = tf.Session()
+    saver.restore(sess, _CKPT_PATH)
+
+    img_name = 'ILSVRC2012_val_00049923.JPEG'
+
+    img_path = os.path.join(IMG_DIR, img_name)
+    img = cv2.imread(img_path)
+    img = _resize(img)
+    img_rs = transform.downscale_local_mean(img_lab, (4, 4, 1))
+    if len(img.shape) == 3:
+        img_l = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        img_l = img_l[None, :, :, None]
+        img_l_rs = cv2.cvtColor(img_rs, cv2.COLOR_BGR2GRAY)
+        img_l_rs = img_l_rs[None, :, :, None]
+    else:
+        img_l = img[None, :, :, None]
+        img_l_rs = img_rs[None, :, :, None]
+
+    img_l = (img_l.astype(dtype=np.float32)) / 255.0 * 2 - 1
+    img_l_rs = (img_l_rs.astype(dtype=np.float32)) / 255.0 * 2 - 1
+    img_313_rs = sess.run(model, feed_dict={input_tensor: img_l_rs})
+    # img_l_rs_rs = np.zeros((1, 56, 56, 1))
+    img_rgb, _, c313_rb, c313 = decode(img_l_rs, img_313_rs, T, return_313=True)
+    io.imsave(os.path.join(_OUTPUT_DIR, os.path.split(img_name)[1]), img_rgb)
+    img_rgb_ss = transform.downscale_local_mean(img_rgb, (4, 4, 1))
+    a_color = img_rgb_ss[1, 54, :]
+    b_color = img_rgb_ss[55, 0, :]
+    a = c313[1, 54, :]
+    b = c313[55, 0, :]
+    a_rb = c313_rb[1, 54, :]
+    b_rb = c313_rb[55, 0, :]
+    print(_cosine(a, b), _cosine(a_rb, b_rb))
+    plt.plot(a, c=a_color)
+    plt.plot(b, c=b_color)
+    plt.savefig(os.path.join(_OUTPUT_DIR, 'plot.jpg'))
+    plt.plot(a_rb, c=a_color)
+    plt.plot(b_rb, c=b_color)
+    plt.savefig(os.path.join(_OUTPUT_DIR, 'plot_rb.jpg'))
+    # io.imsave(os.path.join(_OUTPUT_DIR, "test"+os.path.split(img_name)[1]), img_rgb)
+
+
 def _colorize_single_img(img_name, model, input_tensor, sess):
     img_path = os.path.join(IMG_DIR, img_name)
     img = cv2.imread(img_path)
@@ -98,17 +144,8 @@ def _colorize_single_img(img_name, model, input_tensor, sess):
     img_l_rs = (img_l_rs.astype(dtype=np.float32)) / 255.0 * 2 - 1
     img_313_rs = sess.run(model, feed_dict={input_tensor: img_l_rs})
     # img_l_rs_rs = np.zeros((1, 56, 56, 1))
-    img_rgb, _, c313 = decode(img_l_rs, img_313_rs, T, return_313=True)
+    img_rgb, _ = decode(img_l_rs, img_313_rs, T)
     io.imsave(os.path.join(_OUTPUT_DIR, os.path.split(img_name)[1]), img_rgb)
-    # img_rgb[0: 5, 219: 224] = 1
-    # img_rgb[219: 224, 0: 5] = 1
-    a = c313[1, 54, :]
-    b = c313[55, 0, :]
-    print(_cosine(a, b))
-    plt.plot(a)
-    plt.plot(b)
-    plt.savefig('plot.jpg')
-    # io.imsave(os.path.join(_OUTPUT_DIR, "test"+os.path.split(img_name)[1]), img_rgb)
 
 
 def _colorize_ab_canvas(model, input_tensor, sess):
@@ -258,9 +295,9 @@ def main():
     
     sess = tf.Session()
     saver.restore(sess, _CKPT_PATH)
-    img_list = ['ILSVRC2012_val_00049923.JPEG']
-    #for img_name in os.listdir(IMG_DIR):
-    for img_name in img_list:
+    # img_list = ['ILSVRC2012_val_00049923.JPEG']
+    for img_name in os.listdir(IMG_DIR):
+    # for img_name in img_list:
         if img_name.endswith('.jpg') or img_name.endswith('.JPEG'):
             print(img_name)
             _colorize_single_img(img_name, model, input_tensor, sess)
