@@ -24,9 +24,9 @@ _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
 _G_VERSION = 1
-_CKPT_PATH = '/srv/glusterfs/xieya/tf_224_6/models/model.ckpt-14000'
+_CKPT_PATH = '/srv/glusterfs/xieya/tf_224_6/models/model.ckpt-32000'
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
-_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/tf_224_6_14k'
+_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/tmp'
 #_PRIOR_PATH = '/srv/glusterfs/xieya/prior/coco_313_soft.npy'
 _PRIOR_PATH = 'resources/prior_probs_smoothed.npy'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
@@ -94,6 +94,9 @@ def _colorize_single_img(img_name, model, input_tensor, sess):
     # img_l_rs_rs = np.zeros((1, 56, 56, 1))
     img_rgb, _ = decode(img_l_rs, img_313_rs, T)
     io.imsave(os.path.join(_OUTPUT_DIR, os.path.split(img_name)[1]), img_rgb)
+    img_rgb[0: 5, 219: 224] = 1
+    img_rgb[219: 224, 0: 5] = 1
+    io.imsave(os.path.join(_OUTPUT_DIR, "test"+os.path.split(img_name)[1]), img_rgb)
 
 
 def _colorize_ab_canvas(model, input_tensor, sess):
@@ -243,8 +246,9 @@ def main():
     
     sess = tf.Session()
     saver.restore(sess, _CKPT_PATH)
-
-    for img_name in os.listdir(IMG_DIR):
+    img_list = ['ILSVRC2012_val_00049923.JPEG']
+    #for img_name in os.listdir(IMG_DIR):
+    for img_name in img_list:
         if img_name.endswith('.jpg') or img_name.endswith('.JPEG'):
             print(img_name)
             _colorize_single_img(img_name, model, input_tensor, sess)
