@@ -78,41 +78,38 @@ def compare_c313_pixelwise():
     saver.restore(sess, _CKPT_PATH)
 
     img_name = 'ILSVRC2012_val_00049923.JPEG'
+    img_prefix = os.path.splitext(img_name)[0]
+    pos_a = [1, 54]
+    pos_b = [55, 0]
 
     img_path = os.path.join(IMG_DIR, img_name)
     img = cv2.imread(img_path)
     img = _resize(img)
     img_rs = cv2.resize(img, (_INPUT_SIZE, _INPUT_SIZE))
     if len(img.shape) == 3:
-        img_l = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        img_l = img_l[None, :, :, None]
         img_l_rs = cv2.cvtColor(img_rs, cv2.COLOR_BGR2GRAY)
         img_l_rs = img_l_rs[None, :, :, None]
     else:
-        img_l = img[None, :, :, None]
         img_l_rs = img_rs[None, :, :, None]
 
-    img_l = (img_l.astype(dtype=np.float32)) / 255.0 * 2 - 1
     img_l_rs = (img_l_rs.astype(dtype=np.float32)) / 255.0 * 2 - 1
+    img_l_rs_rs = transform.downscale_local_mean(img_l_rs, (1, 4, 4, 1))
     img_313_rs = sess.run(model, feed_dict={input_tensor: img_l_rs})
-    # img_l_rs_rs = np.zeros((1, 56, 56, 1))
-    img_rgb, _, c313_rb, c313 = decode(img_l_rs, img_313_rs, T, return_313=True)
+    img_rgb, _, c313_rb, c313 = decode(img_l_rs_rs, img_313_rs, T, return_313=True)
     io.imsave(os.path.join(_OUTPUT_DIR, os.path.split(img_name)[1]), img_rgb)
-    img_rgb_ss = transform.downscale_local_mean(img_rgb, (4, 4, 1))
-    a_color = img_rgb_ss[1, 54, :]
-    b_color = img_rgb_ss[55, 0, :]
-    a = c313[1, 54, :]
-    b = c313[55, 0, :]
-    a_rb = c313_rb[1, 54, :]
-    b_rb = c313_rb[55, 0, :]
+    a_color = img_rgb[pos_a]
+    b_color = img_rgb[pos_b]
+    a = c313[pos_a]
+    b = c313[pos_b]
+    a_rb = c313_rb[pos_a]
+    b_rb = c313_rb[pos_b]
     print(_cosine(a, b), _cosine(a_rb, b_rb))
     plt.plot(a, c=a_color)
     plt.plot(b, c=b_color)
-    plt.savefig(os.path.join(_OUTPUT_DIR, 'plot.jpg'))
+    plt.savefig(os.path.join(_OUTPUT_DIR, '{0}.jpg'.format(img_prefix)))
     plt.plot(a_rb, c=a_color)
     plt.plot(b_rb, c=b_color)
-    plt.savefig(os.path.join(_OUTPUT_DIR, 'plot_rb.jpg'))
-    # io.imsave(os.path.join(_OUTPUT_DIR, "test"+os.path.split(img_name)[1]), img_rgb)
+    plt.savefig(os.path.join(_OUTPUT_DIR, '{0}_rb.jpg'.format(img_prefix)))
 
 
 def _colorize_single_img(img_name, model, input_tensor, sess):
