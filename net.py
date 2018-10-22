@@ -846,7 +846,6 @@ class Net(object):
 
         return tf.reshape(output, [-1])
 
-
     def GAN_loss(self, real_data, fake_data):
         disc_real = self.GAN_D(real_data)
         disc_fake = self.GAN_D(fake_data)
@@ -857,14 +856,14 @@ class Net(object):
 
         alpha = tf.random_uniform(
             shape=[self.batch_size, 1, 1, 1], 
-                    minval=0.,
-                    maxval=1.
+            minval=0.,
+            maxval=1.
         )
         differences = fake_data - real_data
-        interpolates = real_data + (alpha*differences)
+        interpolates = real_data + (alpha * differences)
         gradients = tf.gradients(self.GAN_D(interpolates), [interpolates])[0]
         slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1, 2, 3]))
-        gradient_penalty = tf.reduce_mean((slopes-1.)**2)
+        gradient_penalty = tf.reduce_mean((slopes - 1.)**2)
         disc_cost += 10. * gradient_penalty
 
         return gen_cost, disc_cost, w_dist, tf.reduce_mean(slopes)
@@ -875,10 +874,14 @@ class Net(object):
         flat_gt_ab_313 = tf.reshape(gt_ab_313, [-1, 313])
         flat_gt_ab_313 = tf.stop_gradient(flat_gt_ab_313)
         g_loss = tf.nn.softmax_cross_entropy_with_logits_v2(logits=flat_conv8_313, labels=flat_gt_ab_313)
+
+        dl2c = tf.gradients(g_loss, conv8_313)
+        dl2c = tf.stop_gradient(dl2c)
+
         g_loss = tf.reshape(g_loss, tf.shape(prior_boost_nongray))
-        new_loss = g_loss * prior_boost_nongray
+        rb_loss = g_loss * prior_boost_nongray
         g_loss = tf.reduce_mean(g_loss)
-        new_loss = tf.reduce_sum(new_loss) / tf.reduce_sum(prior_boost_nongray)
+        rb_loss = tf.reduce_sum(rb_loss) / tf.reduce_sum(prior_boost_nongray)
 
         wd_loss = tf.add_n(tf.get_collection('losses', scope=scope))
         l2_loss = tf.get_variable('regularization', (), initializer=tf.zeros_initializer, dtype=tf.float32)
@@ -890,8 +893,9 @@ class Net(object):
         # l2_loss = self.weight_decay * tf.add_n(l2_losses)
         wd_loss += l2_loss 
 
-        new_loss = new_loss + wd_loss
-        return new_loss, g_loss, wd_loss
+        new_loss = tf.reduce_sum(dl2c * conv8_313 * prior_boost_nongray) + wd_loss
+
+        return new_loss, g_loss, wd_loss, rb_loss
 
         if is_boost:
             #

@@ -215,7 +215,7 @@ def compare_pred_with_gt_conl(pred_hist_path, gt_hist_path, diff=1e-3):
 
 def merge(out_name):
     dir_path = '/srv/glusterfs/xieya/image/ab'
-    patterns = ['coco_313_abl_soft_bin1_{}.jpg', 'tf_coco_5_38k_abl_rgb_hist_{}.jpg', 'tf_coco_5_38k_abl_hist_{}.jpg']
+    patterns = ['313_ab_1_heatmap_{}.jpg', 'tf_224_1_476k_abl_rgb_hist_heatmap_{}.jpg', 'tf_224_1_476k_abl_hist_heatmap_{}.jpg']
     for l in xrange(0, 101, 10):
         imgs = []
         for p in patterns:
@@ -228,7 +228,7 @@ def merge(out_name):
 
 if __name__ == "__main__":
     # draw_ab_space('/srv/glusterfs/xieya/prior/313_ab_1.npy')
-    hist_to_image('/srv/glusterfs/xieya/image/ab/tf_224_1_476k_ab_hist.npy')
+    hist_to_image('/srv/glusterfs/xieya/image/ab/tf_224_1_476k_hist.npy')
     # prior_to_image('/srv/glusterfs/xieya/prior/coco_313_soft.npy')
     # hist_to_image_as_alpha('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_c313_hist.npy')
     # hist_to_image_as_mask('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_c313_hist.npy')
@@ -237,6 +237,6 @@ if __name__ == "__main__":
     # ]
     # hist_of_img_list(redish_img_list)
     # compare_pred_with_gt('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_hist.npy', '/srv/glusterfs/xieya/prior/coco_313_soft.npy')
-    compare_pred_with_gt_conl('/srv/glusterfs/xieya/image/ab/tf_224_1_476k_abl_rgb_hist.npy', '/srv/glusterfs/xieya/prior/313_ab_1.npy')
+    # compare_pred_with_gt_conl('/srv/glusterfs/xieya/image/ab/tf_224_1_476k_abl_rgb_hist.npy', '/srv/glusterfs/xieya/prior/313_ab_1.npy')
     # abl_hists_to_image('/srv/glusterfs/xieya/image/ab/tf_224_1_476k_abl_hist.npy')
-    # merge('coco_color_comp')
+    merge('img_heatmap_comp')

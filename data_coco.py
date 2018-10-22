@@ -19,7 +19,7 @@ class DataSet(object):
       image_path
     """
 
-    def __init__(self, common_params=None, dataset_params=None, train=True, with_ab=False):
+    def __init__(self, common_params=None, dataset_params=None, train=True, with_ab=False, shuffle=True):
         """
         Args:
           common_params: A dict
@@ -55,7 +55,10 @@ class DataSet(object):
 
         self.record_point = 0
         self.record_number = len(self.train_origs)
-        self.idx = np.random.permutation(self.record_number)
+        self.shuffle = shuffle
+        self.idx = [i for i in xrange(self.record_number)]
+        self.idx = np.asarray(self.idx)
+        # self.idx = np.random.permutation(self.record_number)
 
         t_record_producer = Process(target=self.record_producer)
         t_record_producer.daemon = True
@@ -71,7 +74,8 @@ class DataSet(object):
         """
         while True:
             if self.record_point % self.record_number == 0:
-                self.idx = np.random.permutation(self.record_number)
+                if shuffle:
+                    self.idx = np.random.permutation(self.record_number)
                 self.record_point = 0
             i = self.idx[self.record_point]
             self.record_queue.put(i)

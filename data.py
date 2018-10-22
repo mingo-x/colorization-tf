@@ -25,7 +25,7 @@ class DataSet(object):
       image_path
     """
 
-    def __init__(self, common_params=None, dataset_params=None, training=True):
+    def __init__(self, common_params=None, dataset_params=None, training=True, shuffle=True):
         """
         Args:
           common_params: A dict
@@ -68,6 +68,7 @@ class DataSet(object):
 
         self.record_point = 0
         self.record_number = len(self.record_list)
+        self.shuffle = shuffle
 
         self.num_batch_per_epoch = int(self.record_number / self.batch_size)
 
@@ -90,7 +91,8 @@ class DataSet(object):
         """
         while True:
             if self.record_point % self.record_number == 0:
-                random.shuffle(self.record_list)
+                if self.shuffle:
+                    random.shuffle(self.record_list)
                 self.record_point = 0
             self.record_queue.put(self.record_list[self.record_point])
             self.record_point += 1

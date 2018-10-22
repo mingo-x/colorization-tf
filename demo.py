@@ -24,9 +24,9 @@ _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
 _G_VERSION = 1
-_CKPT_PATH = '/srv/glusterfs/xieya/tf_224_4/models/model.ckpt-49000'
+_CKPT_PATH = '/srv/glusterfs/xieya/tf_224_6/models/model.ckpt-14000'
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
-_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/tf_224_4_49k'
+_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/tf_224_6_14k'
 #_PRIOR_PATH = '/srv/glusterfs/xieya/prior/coco_313_soft.npy'
 _PRIOR_PATH = 'resources/prior_probs_smoothed.npy'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
@@ -604,12 +604,12 @@ def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c3
     if is_coco:
         dataset_params = {'path': _COCO_PATH, 'thread_num': 4, 'prior_path': _PRIOR_PATH}
         common_params = {'batch_size': _BATCH_SIZE, 'with_caption': False}  # with_caption -> False: ignore grayscale images.
-        dataset = DataSetCOCO(common_params, dataset_params, False, True)
+        dataset = DataSetCOCO(common_params, dataset_params, False, True, False)  # No shuffle, same validation set.
     else:
         dataset_params = {'path': '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val.txt', 'thread_num': 8, 
                           'c313': '1', 'cond_l': '0', 'gamma': '0.5'}
         common_params = {'image_size': _INPUT_SIZE, 'batch_size': _BATCH_SIZE, 'is_gan': '0', 'is_rgb': '0'}
-        dataset = DataSet(common_params, dataset_params, True)
+        dataset = DataSet(common_params, dataset_params, True, False)  # No shuffle.
 
     if auc:
         prior_factor_0 = utils.PriorFactor(priorFile=_PRIOR_PATH, verbose=True)
