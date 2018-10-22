@@ -193,6 +193,24 @@ def compare_pred_with_gt(pred_hist_path, gt_hist_path, diff=1e-3):
         rgba_less = _add_alpha_to_ab_space(less_alpha, l)
         io.imsave(os.path.join(_OUTPUT_DIR, 'comp_more_{0}_{1}.png'.format(pred_hist_name, l)), rgba_more)
         io.imsave(os.path.join(_OUTPUT_DIR, 'comp_less_{0}_{1}.png'.format(pred_hist_name, l)), rgba_less)
+
+
+def compare_pred_with_gt_conl(pred_hist_path, gt_hist_path, diff=1e-3):
+    hists = np.load(pred_hist_path)
+    pred_hist_name = os.path.splitext(os.path.split(pred_hist_path)[1])[0]
+    gt_hists = np.load(gt_hist_path)
+
+    for l in xrange(0, 101, 10):
+        hist = np.sum(hists[max(0, l - 5): min(101, l + 5)], axis=0)
+        hist /= np.sum(hist)
+        gt_hist = np.sum(gt_hists[max(0, l - 5): min(101, l + 5)], axis=0)
+        gt_hist /= np.sum(gt_hist)
+        more_hist = np.zeros_like(gt_hist, dtype=np.float32)
+        more_hist[hist > gt_hist + diff] = 1.
+        less_hist = np.zeros_like(gt_hist, dtype=np.float32)
+        less_hist[hist + diff < gt_hist] = 1.
+        draw_ab_space_given_l(l, weights=more_hist, name='comp_l_more_{0}_{1}.jpg'.format(pred_hist_name, l))
+        draw_ab_space_given_l(l, weights=less_hist, name='comp_l_less_{0}_{1}.jpg'.format(pred_hist_name, l))
     
 
 def merge(out_name):
@@ -219,5 +237,6 @@ if __name__ == "__main__":
     # ]
     # hist_of_img_list(redish_img_list)
     # compare_pred_with_gt('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_hist.npy', '/srv/glusterfs/xieya/prior/coco_313_soft.npy')
-    abl_hists_to_image('/srv/glusterfs/xieya/image/ab/tf_224_1_476k_abl_hist.npy')
+    compare_pred_with_gt_conl('/srv/glusterfs/xieya/image/ab/tf_224_1_476k_abl_rgb_hist.npy', '/srv/glusterfs/xieya/prior/313_ab_1.npy')
+    # abl_hists_to_image('/srv/glusterfs/xieya/image/ab/tf_224_1_476k_abl_hist.npy')
     # merge('coco_color_comp')
