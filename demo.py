@@ -2,6 +2,8 @@ import random
 import subprocess
 
 import h5py
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 import pickle
@@ -100,7 +102,7 @@ def _colorize_single_img(img_name, model, input_tensor, sess):
     io.imsave(os.path.join(_OUTPUT_DIR, os.path.split(img_name)[1]), img_rgb)
     # img_rgb[0: 5, 219: 224] = 1
     # img_rgb[219: 224, 0: 5] = 1
-    a = c313[0, 55, :]
+    a = c313[1, 54, :]
     b = c313[55, 0, :]
     print(_cosine(a, b))
     plt.plot(a)
