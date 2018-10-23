@@ -79,8 +79,7 @@ def compare_c313_pixelwise():
 
     img_name = 'ILSVRC2012_val_00049923.JPEG'
     img_prefix = os.path.splitext(img_name)[0]
-    pos_a = (1, 54)
-    pos_b = (55, 0)
+    pos = [(1, 54), (55, 0)]
 
     img_path = os.path.join(IMG_DIR, img_name)
     img = cv2.imread(img_path)
@@ -97,18 +96,16 @@ def compare_c313_pixelwise():
     img_313_rs = sess.run(model, feed_dict={input_tensor: img_l_rs})
     img_rgb, _, c313_rb, c313 = decode(img_l_rs_rs, img_313_rs, T, return_313=True)
     io.imsave(os.path.join(_OUTPUT_DIR, os.path.split(img_name)[1]), img_rgb)
-    a_color = img_rgb[pos_a]
-    b_color = img_rgb[pos_b]
-    a = c313[pos_a]
-    b = c313[pos_b]
-    a_rb = c313_rb[pos_a]
-    b_rb = c313_rb[pos_b]
-    print(_cosine(a, b), _cosine(a_rb, b_rb))
-    plt.plot(a, c=a_color)
-    plt.plot(b, c=b_color)
+    for p in pos:
+        color = img_rgb[p]
+        x = c313[p]
+        plt.plot(x, c=color)
     plt.savefig(os.path.join(_OUTPUT_DIR, '{0}.jpg'.format(img_prefix)))
-    plt.plot(a_rb, c=a_color)
-    plt.plot(b_rb, c=b_color)
+    plt.clf()
+    for p in pos:
+        color = img_rgb[p]
+        x_rb = c313_rb[p]
+        plt.plot(x_rb, c=color)
     plt.savefig(os.path.join(_OUTPUT_DIR, '{0}_rb.jpg'.format(img_prefix)))
 
 
