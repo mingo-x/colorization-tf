@@ -98,14 +98,17 @@ class Solver_Language(object):
                 self.biases = None
                 if self.ckpt is None and self.init_ckpt is not None:
                     # Restore gamma and beta of BN.
-                    self.biases = []
-                    for i in xrange(8):
+                    self.biases = [None] * 8
+                    caption_layer = [8]
+                    print('Blocks with language guidance:')
+                    for i in caption_layer:
+                        print(i)
                         gamma = tf.get_variable('gamma{}'.format(i + 1), (self.net.in_dims[i], ), dtype=tf.float32, trainable=False)
                         beta = tf.get_variable('beta{}'.format(i + 1), (self.net.in_dims[i], ), dtype=tf.float32, trainable=False)
                         bn_saver = tf.train.Saver({'G/bn_{}/gamma'.format(i + 1): gamma, 'G/bn_{}/beta'.format(i + 1): beta})
                         bn_saver.restore(sess, self.init_ckpt)
                         bias = tf.concat((gamma, beta), axis=-1)
-                        self.biases.append(sess.run(bias))
+                        self.biases[i](sess.run(bias))
                 kernel = None
                 if self.kernel_zero:
                     kernel = tf.zeros_initializer(dtype=tf.float32)
@@ -115,7 +118,7 @@ class Solver_Language(object):
                 self.conv8_313 = self.net.inference(self.data_l)
             # self.colorized_ab = self.net.conv313_to_ab(conv8_313)
 
-            new_loss, g_loss, wd_loss = self.net.loss(
+            new_loss, g_loss, wd_loss, rb_loss = self.net.loss(
                 scope, self.conv8_313, self.prior_boost_nongray,
                 self.gt_ab_313, None, self.gan,
                 self.prior_boost)
@@ -123,9 +126,11 @@ class Solver_Language(object):
             tf.summary.scalar('new_loss', new_loss)
             tf.summary.scalar('total_loss', g_loss)
             tf.summary.scalar('weight_loss', wd_loss)
+            tf.summary.scalar('rb_loss', rb_loss)
+
             print('Graph constructed.')
 
-            return new_loss, g_loss, wd_loss
+            return new_loss, g_loss, wd_loss, rb_loss
 
     def train_model(self):
         with tf.device('/gpu:' + str(self.device_id)):
@@ -142,7 +147,7 @@ class Solver_Language(object):
             print("Session configured.")
 
             with tf.name_scope('gpu') as scope:
-                self.new_loss, self.total_loss, self.wd_loss = self.construct_graph(scope, sess)
+                self.new_loss, self.total_loss, self.wd_loss, self.rb_loss = self.construct_graph(scope, sess)
                 self.summaries = tf.get_collection(
                     tf.GraphKeys.SUMMARIES, scope)
 
@@ -200,13 +205,13 @@ class Solver_Language(object):
                     examples_per_sec = num_examples_per_step / duration
                     sec_per_batch = duration / (self.num_gpus * _LOG_FREQ)
 
-                    loss_value, new_loss_value, wd_loss_value = sess.run([self.total_loss, self.new_loss, self.wd_loss], feed_dict={
+                    loss_value, new_loss_value, rb_loss_value = sess.run([self.total_loss, self.new_loss, self.rb_loss], feed_dict={
                         self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray,
                         self.captions: captions, self.lens: lens})
-                    format_str = ('%s: step %d, G loss = %.2f, new loss = %.2f, w loss = %.3f (%.1f examples/sec; %.3f '
+                    format_str = ('%s: step %d, G loss = %.2f, new loss = %.2f, rb loss = %.3f (%.1f examples/sec; %.3f '
                                   'sec/batch)')
                     print (format_str % (datetime.now(),
-                                         step, loss_value, new_loss_value, wd_loss_value,
+                                         step, loss_value, new_loss_value, rb_loss_value,
                                          examples_per_sec, sec_per_batch))
                     start_time = time.time()
 
@@ -226,11 +231,11 @@ class Solver_Language(object):
                     eval_iters = 25
                     for _ in xrange(eval_iters):
                         val_data_l, val_gt_ab_313, val_prior_boost_nongray, val_captions, val_lens = self.val_dataset.batch()
-                        loss_value, new_loss_value, img_313s = sess.run([self.total_loss, self.new_loss, self.conv8_313], feed_dict={
+                        loss_value, rb_loss_value, img_313s = sess.run([self.total_loss, self.rb_loss, self.conv8_313], feed_dict={
                             self.data_l: val_data_l, self.gt_ab_313: val_gt_ab_313, self.prior_boost_nongray: val_prior_boost_nongray,
                             self.captions: val_captions, self.lens: val_lens})
                         eval_loss += loss_value
-                        eval_loss_rb += new_loss_value
+                        eval_loss_rb += rb_loss_value
                     eval_loss /= eval_iters
                     eval_loss_rb /= eval_iters
                     eval_loss_sum = scalar_summary('eval_loss', eval_loss)

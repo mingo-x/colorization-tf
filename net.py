@@ -579,15 +579,18 @@ class Net(object):
             gammas = []
             betas = []
             for i in range(8):
-                if biases is None:
-                    initializer = tf.zeros_initializer(dtype=tf.float32)
+                if biases is not None and biases[i] is None:
+                    gammas.append(None)
+                    betas.append(None)
                 else:
-                    initializer = tf.constant_initializer(biases[i], dtype=tf.float32)
-
-                dense = Linear('dense_{}'.format(i), caption_feature, self.in_dims[i] * 2, initializer, kernel_initializer)
-                gamma, beta = tf.split(dense, 2, axis=-1)
-                gammas.append(gamma)
-                betas.append(beta)
+                    if biases is None:
+                        initializer = tf.zeros_initializer(dtype=tf.float32)
+                    else:
+                        initializer = tf.constant_initializer(biases[i], dtype=tf.float32)
+                    dense = Linear('dense_{}'.format(i), caption_feature, self.in_dims[i] * 2, initializer, kernel_initializer)
+                    gamma, beta = tf.split(dense, 2, axis=-1)
+                    gammas.append(gamma)
+                    betas.append(beta)
 
         with tf.variable_scope('G'):
             # conv1
@@ -597,8 +600,11 @@ class Net(object):
             conv_num += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 64, 64], stride=2, relu=False, wd=self.weight_decay)
             conv_num += 1
-            temp_conv = bn('bn_1', temp_conv, train=self.train)
-            temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
+            if gammas[block_idx] is None:
+                temp_conv = batch_norm('bn_1', temp_conv, train=self.train)
+            else:
+                temp_conv = bn('bn_1', temp_conv, train=self.train)
+                temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
             temp_conv = tf.nn.relu(temp_conv)
             
             # conv2
@@ -607,8 +613,11 @@ class Net(object):
             conv_num += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 128, 128], stride=2, relu=False, wd=self.weight_decay)
             conv_num += 1
-            temp_conv = bn('bn_2', temp_conv, train=self.train)
-            temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
+            if gammas[block_idx] is None:
+                temp_conv = batch_norm('bn_2', temp_conv, train=self.train)
+            else:
+                temp_conv = bn('bn_2', temp_conv, train=self.train)
+                temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
             temp_conv = tf.nn.relu(temp_conv)
 
             # conv3
@@ -619,8 +628,11 @@ class Net(object):
             conv_num += 1    
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 256], stride=2, relu=False, wd=self.weight_decay)
             conv_num += 1
-            temp_conv = bn('bn_3', temp_conv, train=self.train)
-            temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
+            if gammas[block_idx] is None:
+                temp_conv = batch_norm('bn_3', temp_conv, train=self.train)
+            else:
+                temp_conv = bn('bn_3', temp_conv, train=self.train)
+                temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
             temp_conv = tf.nn.relu(temp_conv)
 
             # conv4
@@ -631,8 +643,11 @@ class Net(object):
             conv_num += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, relu=False, wd=self.weight_decay)
             conv_num += 1
-            temp_conv = bn('bn_4', temp_conv, train=self.train)
-            temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
+            if gammas[block_idx] is None:
+                temp_conv = batch_norm('bn_4', temp_conv, train=self.train)
+            else:
+                temp_conv = bn('bn_4', temp_conv, train=self.train)
+                temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
             temp_conv = tf.nn.relu(temp_conv)
 
             # conv5
@@ -643,8 +658,11 @@ class Net(object):
             conv_num += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, relu=False, dilation=2, wd=self.weight_decay)
             conv_num += 1
-            temp_conv = bn('bn_5', temp_conv, train=self.train)
-            temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
+            if gammas[block_idx] is None:
+                temp_conv = batch_norm('bn_5', temp_conv, train=self.train)
+            else:
+                temp_conv = bn('bn_5', temp_conv, train=self.train)
+                temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
             temp_conv = tf.nn.relu(temp_conv)
 
             # conv6
@@ -654,9 +672,12 @@ class Net(object):
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
             conv_num += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, relu=False, dilation=2, wd=self.weight_decay)
-            conv_num += 1    
-            temp_conv = bn('bn_6', temp_conv, train=self.train)    
-            temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
+            conv_num += 1  
+            if gammas[block_idx] is None:
+                temp_conv = batch_norm('bn_6', temp_conv, train=self.train)
+            else:  
+                temp_conv = bn('bn_6', temp_conv, train=self.train)    
+                temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
             temp_conv = tf.nn.relu(temp_conv)
 
             # conv7
@@ -667,8 +688,11 @@ class Net(object):
             conv_num += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, relu=False, wd=self.weight_decay)
             conv_num += 1
-            temp_conv = bn('bn_7', temp_conv, train=self.train)
-            temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
+            if gammas[block_idx] is None:
+                temp_conv = batch_norm('bn_7', temp_conv, train=self.train)
+            else:
+                temp_conv = bn('bn_7', temp_conv, train=self.train)
+                temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
             temp_conv = tf.nn.relu(temp_conv)
 
             # conv8
@@ -679,8 +703,11 @@ class Net(object):
             conv_num += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 256], stride=1, relu=False, wd=self.weight_decay)
             conv_num += 1
-            temp_conv = bn('bn_8', temp_conv, train=self.train)
-            temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
+            if gammas[block_idx] is None:
+                temp_conv = batch_norm('bn_8', temp_conv, train=self.train)
+            else:
+                temp_conv = bn('bn_8', temp_conv, train=self.train)
+                temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
             temp_conv = tf.nn.relu(temp_conv)
 
             # Unary prediction
@@ -1313,22 +1340,20 @@ class Net(object):
             hidden = tf.concat((state_fw.h, state_bw.h), 1)
             return hidden
 
-    def sample_by_caption(self, captions, lens, l_ss, c313, grid_tensor):
+    def sample_by_caption(self, captions, lens, l_ss, color_emb, grid_tensor):
         with tf.variable_scope('Sampler', reuse=tf.AUTO_REUSE):
             cap_emb = self.caption_encoding(captions, lens)
             shape = tf.shape(l_ss)
+            out_dim = tf.shape(color_emb)[-1]
             cap_emb_expand = cap_emb[:, tf.newaxis, tf.newaxis, :]
             cap_emb_expand = tf.tile(cap_emb_expand, (1, shape[1], shape[2], 1))  # NxHxWx512
             emb = tf.concat((cap_emb_expand, l_ss), axis=-1)  # NxHxWx513
             conv_1 = conv2d('conv_1', emb, [3, 3, 513, 512], stride=1, wd=self.weight_decay)
-            transform_matrix = conv2d('conv_2', conv_1, [3, 3, 512, 313], stride=1, wd=self.weight_decay)
-            c313 = tf.stop_gradient(c313)
-            prob = tf.nn.softmax(c313, axis=-1)
-            sampled = prob * transform_matrix
-            sampled = sampled / tf.reduce_sum(sampled, axis=-1, keepdims=True)
-              
-            sampled = tf.reshape(sampled, (-1, 313))
-            data_ab = tf.matmul(sampled, grid_tensor)  # [N*H*W/16, 2]
+            conv_2 = conv2d('conv_2', conv_1, [3, 3, 512, 256], stride=1, wd=self.weight_decay)
+            gamma = conv2d('conv_3', conv_2, [3, 3, 256, 313], stride=1, wd=self.weight_decay, relu=False)
+            color_emb = tf.stop_gradient(color_emb)
+            new_color_emb = color_emb * gamma
+            new_color_emb = tf.
             data_ab = tf.reshape(data_ab, (shape[0], shape[1], shape[2], 2))  # [N, H/4, W/4, 2]
             return data_ab
 
