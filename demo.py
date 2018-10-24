@@ -64,6 +64,8 @@ def _resize(image):
 def _get_model(input_tensor):
     autocolor = Net(train=False, g_version=_G_VERSION)
     conv8_313 = autocolor.inference(input_tensor)
+    if len(conv8_313) == 2:
+        conv8_313 = conv8_313[0]
     return conv8_313
 
 
