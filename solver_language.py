@@ -99,10 +99,10 @@ class Solver_Language(object):
                 if self.ckpt is None and self.init_ckpt is not None:
                     # Restore gamma and beta of BN.
                     self.biases = [None] * 8
-                    caption_layer = [8]
+                    caption_layer = [7]
                     print('Blocks with language guidance:')
                     for i in caption_layer:
-                        print(i)
+                        print(i + 1)
                         gamma = tf.get_variable('gamma{}'.format(i + 1), (self.net.in_dims[i], ), dtype=tf.float32, trainable=False)
                         beta = tf.get_variable('beta{}'.format(i + 1), (self.net.in_dims[i], ), dtype=tf.float32, trainable=False)
                         bn_saver = tf.train.Saver({'G/bn_{}/gamma'.format(i + 1): gamma, 'G/bn_{}/beta'.format(i + 1): beta})
