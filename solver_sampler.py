@@ -205,11 +205,11 @@ class Solver_Sampler(object):
                     print('Evaluation at step {0}: total loss {1}, huber loss {2}.'.format(step, eval_total_loss, eval_huber_loss))
 
                     # Save sample image
-                    img_ab = pred_abs[0: 1]
+                    img_ab_ss = pred_abs[0]
                     print('1')
-                    # img_ab = cv2.resize(img_ab_ss, (224, 224), interpolation=cv2.INTER_CUBIC)
+                    img_ab = cv2.resize(img_ab_ss, (224, 224), interpolation=cv2.INTER_CUBIC)
                     print('11')
-                    img_l = val_data_l_ss[0: 1]
+                    img_l = val_data_l_ss[0]
                     print('111')
                     img_l += 1
                     img_l *= 50
