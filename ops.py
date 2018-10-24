@@ -112,27 +112,28 @@ def ResidualBlock(name, input_dim, output_dim, filter_size, inputs, resample=Non
 
 
 def conv2d(scope, input, kernel_size, stride=1, dilation=1, relu=True, wd=nilboy_weight_decay, sigmoid=False, same=True):
-  # name = scope
-  with tf.variable_scope(scope) as scope:
-    kernel = variable_with_weight_decay('weights', 
-                                    shape=kernel_size,
-                                    stddev=5e-2,
-                                    wd=wd)
-    if dilation == 1:
-      conv = tf.nn.conv2d(input, kernel, [1, stride, stride, 1], padding='SAME' if same else 'VALID')
-    else:
-      conv = tf.nn.atrous_conv2d(input, kernel, dilation, padding='SAME')
-    biases = variable('biases', kernel_size[3:], tf.constant_initializer(0.0))
-    bias = tf.nn.bias_add(conv, biases)
-    if relu:
-      conv1 = tf.nn.relu(bias)
-    elif sigmoid:
-      conv1 = tf.nn.sigmoid(bias)
-    else:
-      conv1 = bias
-  return conv1
-  # padding = 'same' if same else 'valid'
-  # return tf.layers.conv2d(input, kernel_size[-1], kernel_size[0], stride, padding, )
+    # name = scope
+    with tf.variable_scope(scope) as scope:
+        kernel = variable_with_weight_decay('weights', 
+                                            shape=kernel_size,
+                                            stddev=5e-2,
+                                            wd=wd)
+        if dilation == 1:
+            conv = tf.nn.conv2d(input, kernel, [1, stride, stride, 1], padding='SAME' if same else 'VALID')
+        else:
+            conv = tf.nn.atrous_conv2d(input, kernel, dilation, padding='SAME')
+        biases = variable('biases', kernel_size[3:], tf.constant_initializer(0.0))
+        bias = tf.nn.bias_add(conv, biases)
+        if relu:
+            conv1 = tf.nn.relu(bias)
+        elif sigmoid:
+            conv1 = tf.nn.sigmoid(bias)
+        else:
+            conv1 = bias
+        return conv1
+    # padding = 'same' if same else 'valid'
+    # return tf.layers.conv2d(input, kernel_size[-1], kernel_size[0], stride, padding, )
+
 
 def deconv2d(scope, input, kernel_size, stride=1, relu=True, wd=nilboy_weight_decay):
   """convolutional layer

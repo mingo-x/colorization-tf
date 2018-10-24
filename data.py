@@ -44,6 +44,7 @@ class DataSet(object):
             self.c313 = True if dataset_params['c313'] == '1' else False
             self.cond_l = True if dataset_params['cond_l'] == '1' else False
             self.gamma = float(dataset_params['gamma'])
+            print('Gamma in prior smoothing: {}.'.format(self.gamma))
 
         if not training:
             self.data_path = '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val.txt'

@@ -33,6 +33,7 @@ class DataSet(object):
         if common_params:
             self.batch_size = int(common_params['batch_size'])
             self.with_caption = True if common_params['with_caption'] == '1' else False
+            self.sampler = True if common_params['sampler'] == '1' else False
 
         self.training = train
         self.with_ab = with_ab
@@ -74,7 +75,7 @@ class DataSet(object):
         """
         while True:
             if self.record_point % self.record_number == 0:
-                if shuffle:
+                if self.shuffle:
                     self.idx = np.random.permutation(self.record_number)
                 self.record_point = 0
             i = self.idx[self.record_point]
@@ -107,7 +108,7 @@ class DataSet(object):
             images = np.asarray(images, dtype=np.uint8)
             captions = np.asarray(captions, dtype=np.int32)
             lens = np.asarray(lens, dtype=np.int32)
-            l, gt, prior, ab = preprocess(images, c313=True, prior_path=self.prior_path, mask_gray=(not self.with_caption))
+            l, gt, prior, ab = preprocess(images, c313=True, prior_path=self.prior_path, mask_gray=(not self.with_caption), sampler=self.sampler)
             if self.with_ab:
                 self.batch_queue.put((l, gt, prior, captions, lens, ab))
             else:    

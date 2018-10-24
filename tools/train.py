@@ -5,6 +5,7 @@ from solver import Solver
 from solver_language import Solver_Language
 from solver_gan import Solver_GAN
 from solver_multigpu import SolverMultigpu
+from solver_sampler import Solver_Sampler
 from utils import process_config
 
 parser = OptionParser()
@@ -31,6 +32,9 @@ if common_params['is_gan'] == '1':
 elif common_params['is_coco'] == '1':
     solver = Solver_Language(True, common_params, solver_params, net_params, dataset_params)
     print('Language solver.')
+elif common_params['sampler'] == '1':
+    solver = Solver_Sampler(True, common_params, solver_params, net_params, dataset_params)
+    print('Sampler solver.')
 elif len(str(common_params['gpus']).split(',')) == 1:
     solver = Solver(True, common_params, solver_params, net_params, dataset_params)
     print('Normal solver.')

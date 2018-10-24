@@ -52,7 +52,7 @@ def draw_ab_space(weights_path=None):
         print(l)
 
 
-def _weights_to_image(weights, out_name="", save=True, fill=0., rescale=False):
+def weights_to_image(weights, out_name="", save=True, fill=0., out_dir=None):
     weights /= np.sum(weights)  # Rescaling.
     grid = np.load('resources/pts_in_hull.npy')
 
@@ -69,8 +69,10 @@ def _weights_to_image(weights, out_name="", save=True, fill=0., rescale=False):
         canvas[x * cell_size: (x + 1) * cell_size, y * cell_size: (y + 1) * cell_size] = weights[i]
 
     if save:
-        plt.imsave(os.path.join(_OUTPUT_DIR, '{}_rs.jpg'.format(out_name)), canvas)
-        plt.imsave(os.path.join(_OUTPUT_DIR, '{}.jpg'.format(out_name)), canvas, vmin=0, vmax=1)
+        if out_dir is None:
+            out_dir = _OUTPUT_DIR
+        plt.imsave(os.path.join(out_dir, '{}_rs.png'.format(out_name)), canvas)
+        plt.imsave(os.path.join(out_dir, '{}.png'.format(out_name)), canvas, vmin=0, vmax=1)
     else:
         return canvas
 
@@ -78,7 +80,7 @@ def _weights_to_image(weights, out_name="", save=True, fill=0., rescale=False):
 def hist_to_image(hist_path):
     hist = np.load(hist_path)
     out_name = os.path.splitext(os.path.split(hist_path)[1])[0]
-    _weights_to_image(hist, out_name, fill=0.5)
+    weights_to_image(hist, out_name, fill=0.5)
 
 
 def abl_hists_to_image(hist_path):
@@ -107,23 +109,23 @@ def abl_hists_to_image(hist_path):
         canvas = color.lab2rgb(canvas)
         io.imsave(os.path.join(_OUTPUT_DIR, '{0}_{1}.jpg'.format(out_name, l)), canvas)
 
-        _weights_to_image(hist, out_name + "_heatmap_{}".format(l), fill=0.5)
+        weights_to_image(hist, out_name + "_heatmap_{}".format(l), fill=0.5)
 
 
 def prior_to_image(prior_path):
     prior_name = os.path.splitext(os.path.split(prior_path)[1])[0]
     distribution = np.load(prior_path)
-    _weights_to_image(distribution, prior_name + "_distribution", fill=0.5)
+    weights_to_image(distribution, prior_name + "_distribution", fill=0.5)
     prior_factor_0 = utils.PriorFactor(priorFile=prior_path, gamma=0)
     prior_factor_5 = utils.PriorFactor(priorFile=prior_path, gamma=.5)
-    _weights_to_image(prior_factor_0.prior_factor, prior_name + "_weights_g0", fill=.5)
-    _weights_to_image(prior_factor_5.prior_factor, prior_name + "_weights_g5", fill=.5)
+    weights_to_image(prior_factor_0.prior_factor, prior_name + "_weights_g0", fill=.5)
+    weights_to_image(prior_factor_5.prior_factor, prior_name + "_weights_g5", fill=.5)
 
 
 def hist_to_image_as_alpha(hist_path):
     hist = np.load(hist_path)
     out_name = os.path.splitext(os.path.split(hist_path)[1])[0]
-    alpha = _weights_to_image(hist, save=False)
+    alpha = weights_to_image(hist, save=False)
     alpha = alpha[:, :, np.newaxis]
     # alpha *= 255
     # alpha = alpha.astype(np.uint8)
@@ -136,7 +138,7 @@ def hist_to_image_as_mask(hist_path):
     hist = np.load(hist_path)
     threshold = np.mean(hist) / np.max(hist)
     out_name = os.path.splitext(os.path.split(hist_path)[1])[0]
-    mask = _weights_to_image(hist, save=False)
+    mask = weights_to_image(hist, save=False)
     alpha = np.zeros_like(mask, dtype=np.float32)
     alpha[mask > threshold] = 1.
     alpha = alpha[:, :, np.newaxis]
@@ -168,7 +170,7 @@ def hist_of_img_list(img_list):
             hist[idx] += len(ab_idx[ab_idx == idx])
         print(img_id)
 
-    _weights_to_image(hist, "img_list_ab_hist", fill=0.5)
+    weights_to_image(hist, "img_list_ab_hist", fill=0.5)
 
     i_sorted = np.argsort(hist)
     print(i_sorted[::-1])
@@ -181,11 +183,11 @@ def compare_pred_with_gt(pred_hist_path, gt_hist_path, diff=1e-3):
     gt_hist = np.load(gt_hist_path)
     more_hist = np.zeros_like(gt_hist, dtype=np.float32)
     more_hist[pred_hist > gt_hist + diff] = 1.
-    more_alpha = _weights_to_image(more_hist, save=False)
+    more_alpha = weights_to_image(more_hist, save=False)
     more_alpha = more_alpha[:, :, np.newaxis]
     less_hist = np.zeros_like(gt_hist, dtype=np.float32)
     less_hist[pred_hist + diff < gt_hist] = 1.
-    less_alpha = _weights_to_image(less_hist, save=False)
+    less_alpha = weights_to_image(less_hist, save=False)
     less_alpha = less_alpha[:, :, np.newaxis]
 
     for l in xrange(0, 101, 10):
@@ -228,7 +230,7 @@ def merge(out_name):
 
 if __name__ == "__main__":
     # draw_ab_space('/srv/glusterfs/xieya/prior/313_ab_1.npy')
-    hist_to_image('/srv/glusterfs/xieya/image/ab/tf_224_1_476k_hist.npy')
+    hist_to_image('/srv/glusterfs/xieya/image/ab/tf_224_1_476k_c313_hist.npy')
     # prior_to_image('/srv/glusterfs/xieya/prior/coco_313_soft.npy')
     # hist_to_image_as_alpha('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_c313_hist.npy')
     # hist_to_image_as_mask('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_c313_hist.npy')
@@ -237,6 +239,6 @@ if __name__ == "__main__":
     # ]
     # hist_of_img_list(redish_img_list)
     # compare_pred_with_gt('/srv/glusterfs/xieya/image/ab/tf_coco_5_38k_hist.npy', '/srv/glusterfs/xieya/prior/coco_313_soft.npy')
-    # compare_pred_with_gt_conl('/srv/glusterfs/xieya/image/ab/tf_224_1_476k_abl_rgb_hist.npy', '/srv/glusterfs/xieya/prior/313_ab_1.npy')
-    # abl_hists_to_image('/srv/glusterfs/xieya/image/ab/tf_224_1_476k_abl_hist.npy')
-    merge('img_heatmap_comp')
+    # compare_pred_with_gt_conl('/srv/glusterfs/xieya/image/ab/tf_224_1_476k_abl_rgb_hist.npy', '/srv/glusterfs/xieya/prior/val_313_abl_soft_bin1.npy')
+    # abl_hists_to_image('/srv/glusterfs/xieya/image/ab/tf_224_1_476k_c313l_hist.npy')
+    # merge('img_heatmap_comp')

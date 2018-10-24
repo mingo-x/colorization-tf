@@ -11,7 +11,6 @@ import pickle
 
 
 class Net(object):
-
     def __init__(self, train=True, g_version=0, batch_size=1, common_params=None, net_params=None):
         self.train = train
         self.weight_decay = 0.0
@@ -57,24 +56,24 @@ class Net(object):
             # conv1
             conv_num = 1
 
-            temp_conv = conv2d('conv_{}'.format(conv_num),output, [3, 3, 1, 64], stride=1, wd=self.weight_decay)
+            temp_conv = conv2d('conv_{}'.format(conv_num), output, [3, 3, 1, 64], stride=1, wd=self.weight_decay)
             conv_num += 1
 
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 64, 64], stride=2, wd=self.weight_decay)
             conv_num += 1
 
-            #self.nilboy = temp_conv
+            # self.nilboy = temp_conv
 
-            temp_conv = batch_norm('bn_1'.format(conv_num), temp_conv,train=self.train)
-            #conv2
+            temp_conv = batch_norm('bn_1'.format(conv_num), temp_conv, train=self.train)
+            # conv2
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 64, 128], stride=1, wd=self.weight_decay)
             conv_num += 1
             
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 128, 128], stride=2, wd=self.weight_decay)
             conv_num += 1
 
-            temp_conv = batch_norm('bn_2'.format(conv_num), temp_conv,train=self.train)
-            #conv3
+            temp_conv = batch_norm('bn_2'.format(conv_num), temp_conv, train=self.train)
+            # conv3
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 128, 256], stride=1, wd=self.weight_decay)
             conv_num += 1
             
@@ -85,20 +84,19 @@ class Net(object):
             conv_num += 1
 
             temp_conv = batch_norm('bn_3', temp_conv, train=self.train)
-            #conv4
+            # conv4
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 512], stride=1, wd=self.weight_decay)
             conv_num += 1
             
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, wd=self.weight_decay)
             conv_num += 1
 
-            
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, wd=self.weight_decay)
             conv_num += 1
 
-            temp_conv = batch_norm('bn_4', temp_conv,train=self.train)
+            temp_conv = batch_norm('bn_4', temp_conv, train=self.train)
 
-            #conv5
+            # conv5
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
             conv_num += 1    
 
@@ -108,8 +106,8 @@ class Net(object):
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
             conv_num += 1
 
-            temp_conv = batch_norm('bn_5', temp_conv,train=self.train)
-            #conv6
+            temp_conv = batch_norm('bn_5', temp_conv, train=self.train)
+            # conv6
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
             conv_num += 1    
 
@@ -119,8 +117,8 @@ class Net(object):
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
             conv_num += 1    
 
-            temp_conv = batch_norm('bn_6', temp_conv,train=self.train)    
-            #conv7
+            temp_conv = batch_norm('bn_6', temp_conv, train=self.train)    
+            # conv7
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, wd=self.weight_decay)
             conv_num += 1
 
@@ -130,8 +128,8 @@ class Net(object):
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, wd=self.weight_decay)
             conv_num += 1
 
-            temp_conv = batch_norm('bn_7', temp_conv,train=self.train)
-            #conv8
+            temp_conv = batch_norm('bn_7', temp_conv, train=self.train)
+            # conv8
             temp_conv = deconv2d('conv_{}'.format(conv_num), temp_conv, [4, 4, 512, 256], stride=2, wd=self.weight_decay)
             conv_num += 1    
 
@@ -141,7 +139,7 @@ class Net(object):
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 256], stride=1, wd=self.weight_decay)
             conv_num += 1
 
-            #Unary prediction
+            # Unary prediction
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [1, 1, 256, 313], stride=1, relu=False, wd=self.weight_decay)
             conv_num += 1
 
@@ -157,7 +155,7 @@ class Net(object):
             temp_conv = conv2d('conv_{}'.format(conv_num), data_l, [3, 3, 1, 64], stride=1, wd=self.weight_decay)
             conv_num += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 64, 64], stride=2, relu=False, wd=self.weight_decay)
-            temp_conv = batch_norm('bn_{}'.format(batch_num), temp_conv,train=self.train)
+            temp_conv = batch_norm('bn_{}'.format(batch_num), temp_conv, train=self.train)
             temp_conv = tf.nn.relu(temp_conv)
             conv_num += 1
             batch_num += 1
@@ -257,18 +255,17 @@ class Net(object):
             conv_num += 1
             batch_num += 1   
 
-            #Unary prediction
+            # Unary prediction
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [1, 1, 256, 313], stride=1, relu=False, wd=self.weight_decay)
             conv_num += 1
 
         conv8_313 = temp_conv
         return conv8_313
 
-
     def inference2(self, data_l):
         ''' U-net'''
         with tf.variable_scope('G'):
-            #conv1
+            # conv1
             conv_num = 1
             batch_num = 1
 
@@ -442,7 +439,7 @@ class Net(object):
 
             # 176x176
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 64, 64], stride=2, relu=False, wd=self.weight_decay)
-            temp_conv = batch_norm('bn_{}'.format(batch_num), temp_conv,train=self.train)
+            temp_conv = batch_norm('bn_{}'.format(batch_num), temp_conv, train=self.train)
             temp_conv = tf.nn.leaky_relu(temp_conv)
             conv_num += 1
             batch_num += 1
@@ -568,7 +565,7 @@ class Net(object):
             conv_num += 1
             batch_num += 1   
 
-            #Unary prediction
+            # Unary prediction
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [1, 1, 256, 313], stride=1, relu=False, wd=self.weight_decay)
             conv_num += 1
 
@@ -817,16 +814,16 @@ class Net(object):
             if noise is None:
                 noise = tf.random_normal([self.batch_size, 128])
 
-            output = Linear('dense1', noise, 4*4*8*dim)
-            output = tf.reshape(output, [-1, 4, 4, 8*dim])
+            output = Linear('dense1', noise, 4 * 4 * 8 * dim)
+            output = tf.reshape(output, [-1, 4, 4, 8 * dim])
 
-            output = ResidualBlock('Generator.Res1', 8*dim, 8*dim, 3, output, resample='up', train=self.train)
-            output = ResidualBlock('Generator.Res2', 8*dim, 4*dim, 3, output, resample='up', train=self.train)
-            output = ResidualBlock('Generator.Res3', 4*dim, 2*dim, 3, output, resample='up', train=self.train)
-            output = ResidualBlock('Generator.Res4', 2*dim, 1*dim, 3, output, resample='up', train=self.train)
+            output = ResidualBlock('Generator.Res1', 8 * dim, 8 * dim, 3, output, resample='up', train=self.train)
+            output = ResidualBlock('Generator.Res2', 8 * dim, 4 * dim, 3, output, resample='up', train=self.train)
+            output = ResidualBlock('Generator.Res3', 4 * dim, 2 * dim, 3, output, resample='up', train=self.train)
+            output = ResidualBlock('Generator.Res4', 2 * dim, 1 * dim, 3, output, resample='up', train=self.train)
             output = Normalize('Generator.OutputN', output, train=self.train)
             output = tf.nn.relu(output)
-            output = conv2d('Generator.Output', output, [3, 3, 1*dim, self.output_dim], relu=False, wd=self.weight_decay)
+            output = conv2d('Generator.Output', output, [3, 3, 1 * dim, self.output_dim], relu=False, wd=self.weight_decay)
             output = tf.tanh(output)
 
         return output
@@ -837,10 +834,10 @@ class Net(object):
             output = inputs
             output = conv2d('Discriminator.Input', output, [3, 3, self.output_dim, dim], relu=False, wd=self.weight_decay)
 
-            output = ResidualBlock('Discriminator.Res1', dim, 2*dim, 3, output, resample='down', train=self.train)
-            output = ResidualBlock('Discriminator.Res2', 2*dim, 4*dim, 3, output, resample='down', train=self.train)
-            output = ResidualBlock('Discriminator.Res3', 4*dim, 8*dim, 3, output, resample='down', train=self.train)
-            output = ResidualBlock('Discriminator.Res4', 8*dim, 8*dim, 3, output, resample='down', train=self.train)
+            output = ResidualBlock('Discriminator.Res1', dim, 2 * dim, 3, output, resample='down', train=self.train)
+            output = ResidualBlock('Discriminator.Res2', 2 * dim, 4 * dim, 3, output, resample='down', train=self.train)
+            output = ResidualBlock('Discriminator.Res3', 4 * dim, 8 * dim, 3, output, resample='down', train=self.train)
+            output = ResidualBlock('Discriminator.Res4', 8 * dim, 8 * dim, 3, output, resample='down', train=self.train)
 
             output = Linear('Discriminator.Output', output, 1)
 
@@ -917,7 +914,6 @@ class Net(object):
         else:
             return new_loss, g_loss, None
 
-
     def discriminator(self, data_313, reuse=False):
         '''
         Args:
@@ -951,16 +947,16 @@ class Net(object):
                 conv_2 = tf.nn.leaky_relu(bn_1)
                 # 11x11x256
                 conv_num += 1
-                conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [4, 4, 128, 256], stride=2, relu=False, wd=None);
+                conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [4, 4, 128, 256], stride=2, relu=False, wd=None)
                 bn_2 = batch_norm('bn_2', conv_3, train=self.train)
                 conv_3 = tf.nn.leaky_relu(bn_2)
                 # 11x11x1
                 conv_num += 1
-                conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [4, 4, 256, 1], stride=1, relu=False, wd=None, sigmoid=True);
+                conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [4, 4, 256, 1], stride=1, relu=False, wd=None, sigmoid=True)
                 
                 discriminator = conv_4
             elif self.version == 3:
-                self.downscale = (176. * 176.) /(11. * 11.)
+                self.downscale = (176. * 176.) / (11. * 11.)
                 # 176x176x64
                 conv_num = 1
                 conv_1 = conv2d('d_conv_{}'.format(conv_num), data_313, [4, 4, 3, 64], stride=1, relu=False, wd=None, leaky=True)
@@ -971,26 +967,26 @@ class Net(object):
                 conv_2 = tf.nn.leaky_relu(bn_1)
                 # 44x44x128
                 conv_num += 1
-                conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [4, 4, 64, 128], stride=2, relu=False, wd=None);
+                conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [4, 4, 64, 128], stride=2, relu=False, wd=None)
                 bn_2 = batch_norm('bn_2', conv_3, train=self.train)
                 conv_3 = tf.nn.leaky_relu(bn_2)
                 # 22x22x128
                 conv_num += 1
-                conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [3, 3, 128, 128], stride=2, relu=False, wd=None);
+                conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [3, 3, 128, 128], stride=2, relu=False, wd=None)
                 bn_3 = batch_norm('bn_3', conv_4, train=self.train)
                 conv_4 = tf.nn.leaky_relu(bn_3)
                 # 11x11x256
                 conv_num += 1
-                conv_5 = conv2d('d_conv_{}'.format(conv_num), conv_4, [3, 3, 128, 256], stride=2, relu=False, wd=None);
+                conv_5 = conv2d('d_conv_{}'.format(conv_num), conv_4, [3, 3, 128, 256], stride=2, relu=False, wd=None)
                 bn_4 = batch_norm('bn_4', conv_5, train=self.train)
                 conv_5 = tf.nn.leaky_relu(bn_4)
                 # 11x11x1
                 conv_num += 1
-                conv_6 = conv2d('d_conv_{}'.format(conv_num), conv_5, [3, 3, 256, 1], stride=1, relu=False, wd=None, sigmoid=True);
+                conv_6 = conv2d('d_conv_{}'.format(conv_num), conv_5, [3, 3, 256, 1], stride=1, relu=False, wd=None, sigmoid=True)
                 
                 discriminator = conv_6
             elif self.version == 5:
-                self.downscale = (176. * 176.) /(11. * 11.)
+                self.downscale = (176. * 176.) / (11. * 11.)
                 # 176x176x64
                 conv_num = 1
                 conv_1 = conv2d('d_conv_{}'.format(conv_num), data_313, [4, 4, 3, 64], stride=1, relu=False, wd=None, leaky=True)
@@ -1001,22 +997,22 @@ class Net(object):
                 conv_2 = tf.nn.leaky_relu(bn_1)
                 # 44x44x64
                 conv_num += 1
-                conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [4, 4, 64, 64], stride=2, relu=False, wd=None);
+                conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [4, 4, 64, 64], stride=2, relu=False, wd=None)
                 bn_2 = batch_norm('bn_2', conv_3, train=self.train)
                 conv_3 = tf.nn.leaky_relu(bn_2)
                 # 22x22x128
                 conv_num += 1
-                conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [3, 3, 64, 128], stride=2, relu=False, wd=None);
+                conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [3, 3, 64, 128], stride=2, relu=False, wd=None)
                 bn_3 = batch_norm('bn_3', conv_4, train=self.train)
                 conv_4 = tf.nn.leaky_relu(bn_3)
                 # 11x11x128
                 conv_num += 1
-                conv_5 = conv2d('d_conv_{}'.format(conv_num), conv_4, [3, 3, 128, 128], stride=2, relu=False, wd=None);
+                conv_5 = conv2d('d_conv_{}'.format(conv_num), conv_4, [3, 3, 128, 128], stride=2, relu=False, wd=None)
                 bn_4 = batch_norm('bn_4', conv_5, train=self.train)
                 conv_5 = tf.nn.leaky_relu(bn_4)
                 # 11x11x1
                 conv_num += 1
-                conv_6 = conv2d('d_conv_{}'.format(conv_num), conv_5, [3, 3, 128, 1], stride=1, relu=False, wd=None, sigmoid=True);
+                conv_6 = conv2d('d_conv_{}'.format(conv_num), conv_5, [3, 3, 128, 1], stride=1, relu=False, wd=None, sigmoid=True)
                 
                 discriminator = conv_6
             elif self.version == 4:
@@ -1030,12 +1026,12 @@ class Net(object):
                 conv_2 = tf.nn.leaky_relu(bn_1)
                 # 11x11x32
                 conv_num += 1
-                conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [4, 4, 64, 32], stride=2, relu=False, wd=None);
+                conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [4, 4, 64, 32], stride=2, relu=False, wd=None)
                 bn_2 = batch_norm('bn_2', conv_3, train=self.train)
                 conv_3 = tf.nn.leaky_relu(bn_2)
                 # 11x11x1
                 conv_num += 1
-                conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [4, 4, 32, 1], stride=1, relu=False, wd=None, sigmoid=True);
+                conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [4, 4, 32, 1], stride=1, relu=False, wd=None, sigmoid=True)
                 
                 discriminator = conv_4
             elif self.version == 6:
@@ -1071,16 +1067,16 @@ class Net(object):
                 conv_2 = conv2d('d_conv_{}'.format(conv_num), conv_1, [3, 3, 64, 128], stride=2, wd=None)
                 # 22x22x256
                 conv_num += 1
-                conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [3, 3, 128, 256], stride=2, wd=None);
+                conv_3 = conv2d('d_conv_{}'.format(conv_num), conv_2, [3, 3, 128, 256], stride=2, wd=None)
                 # 11x11x512
                 conv_num += 1
-                conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [3, 3, 256, 512], stride=2, wd=None);
+                conv_4 = conv2d('d_conv_{}'.format(conv_num), conv_3, [3, 3, 256, 512], stride=2, wd=None)
                 # 5x5x512
                 conv_num += 1
-                conv_5 = conv2d('d_conv_{}'.format(conv_num), conv_4, [3, 3, 512, 512], stride=2, wd=None, same=False);
+                conv_5 = conv2d('d_conv_{}'.format(conv_num), conv_4, [3, 3, 512, 512], stride=2, wd=None, same=False)
                 # 2x2x512
                 conv_num += 1
-                conv_6 = conv2d('d_conv_{}'.format(conv_num), conv_5, [3, 3, 512, 512], stride=2, wd=None, same=False);
+                conv_6 = conv2d('d_conv_{}'.format(conv_num), conv_5, [3, 3, 512, 512], stride=2, wd=None, same=False)
 
                 flatten = tf.layers.flatten(conv_6)
                 discriminator = Linear('dense', flatten, 1)
@@ -1099,24 +1095,24 @@ class Net(object):
                 conv_5 = conv2d('d_conv_{}'.format(conv_num), conv_4, [3, 3, 64, 128], stride=2, wd=None)
                 # 44x44
                 conv_num += 1
-                conv_6 = conv2d('d_conv_{}'.format(conv_num), conv_5, [3, 3, 128, 128], stride=1, wd=None);
+                conv_6 = conv2d('d_conv_{}'.format(conv_num), conv_5, [3, 3, 128, 128], stride=1, wd=None)
                 conv_num += 1
-                conv_7 = conv2d('d_conv_{}'.format(conv_num), conv_6, [3, 3, 128, 256], stride=2, wd=None);
+                conv_7 = conv2d('d_conv_{}'.format(conv_num), conv_6, [3, 3, 128, 256], stride=2, wd=None)
                 # 22x22
                 conv_num += 1
-                conv_8 = conv2d('d_conv_{}'.format(conv_num), conv_7, [3, 3, 256, 256], stride=1, wd=None);
+                conv_8 = conv2d('d_conv_{}'.format(conv_num), conv_7, [3, 3, 256, 256], stride=1, wd=None)
                 conv_num += 1
-                conv_9 = conv2d('d_conv_{}'.format(conv_num), conv_8, [3, 3, 256, 512], stride=2, wd=None);
+                conv_9 = conv2d('d_conv_{}'.format(conv_num), conv_8, [3, 3, 256, 512], stride=2, wd=None)
                 # 11x11
                 conv_num += 1
-                conv_10 = conv2d('d_conv_{}'.format(conv_num), conv_9, [3, 3, 512, 512], stride=1, wd=None);
+                conv_10 = conv2d('d_conv_{}'.format(conv_num), conv_9, [3, 3, 512, 512], stride=1, wd=None)
                 conv_num += 1
-                conv_11 = conv2d('d_conv_{}'.format(conv_num), conv_10, [3, 3, 512, 512], stride=2, wd=None, same=False);
+                conv_11 = conv2d('d_conv_{}'.format(conv_num), conv_10, [3, 3, 512, 512], stride=2, wd=None, same=False)
                 # 5x5
                 conv_num += 1
-                conv_12 = conv2d('d_conv_{}'.format(conv_num), conv_11, [3, 3, 512, 512], stride=1, wd=None);
+                conv_12 = conv2d('d_conv_{}'.format(conv_num), conv_11, [3, 3, 512, 512], stride=1, wd=None)
                 conv_num += 1
-                conv_13 = conv2d('d_conv_{}'.format(conv_num), conv_12, [3, 3, 512, 512], stride=2, wd=None, same=False);
+                conv_13 = conv2d('d_conv_{}'.format(conv_num), conv_12, [3, 3, 512, 512], stride=2, wd=None, same=False)
                 # 2x2
                 flatten = tf.layers.flatten(conv_13)
                 discriminator = tf.layers.dense(flatten, 1, kernel_initializer=tf.contrib.layers.variance_scaling_initializer(factor=1.0, mode='FAN_AVG', uniform=True, dtype=tf.float32))
@@ -1255,7 +1251,6 @@ class Net(object):
 
         return discriminator
 
-
     def discriminator_loss(self, real_data, fake_data):
         # original_loss = -0.9 * tf.log(original + self.eps) - 0.1 * tf.log(1. - original + self.eps)  # Label smoothing.
         # colorized_loss = -tf.log(1 - colorized + self.eps)
@@ -1280,7 +1275,7 @@ class Net(object):
             dtype=fake_data.dtype
         )
         differences = fake_data - real_data
-        interpolates = real_data + (alpha*differences) 
+        interpolates = real_data + (alpha * differences) 
         gradients = tf.gradients(self.discriminator(interpolates, reuse=tf.AUTO_REUSE), [interpolates])[0]
         slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), axis=[1, 2, 3]))
         gradient_penalty = tf.reduce_mean((slopes - self.k)**2)
@@ -1317,3 +1312,31 @@ class Net(object):
             _, (state_fw, state_bw) = tf.nn.bidirectional_dynamic_rnn(lstm_fw, lstm_bw, encoded_captions, sequence_length=lens, dtype='float32')
             hidden = tf.concat((state_fw.h, state_bw.h), 1)
             return hidden
+
+    def sample_by_caption(self, captions, lens, l_ss, c313, grid_tensor):
+        with tf.variable_scope('Sampler', reuse=tf.AUTO_REUSE):
+            cap_emb = self.caption_encoding(captions, lens)
+            shape = tf.shape(l_ss)
+            cap_emb_expand = cap_emb[:, tf.newaxis, tf.newaxis, :]
+            cap_emb_expand = tf.tile(cap_emb_expand, (1, shape[1], shape[2], 1))  # NxHxWx512
+            emb = tf.concat((cap_emb_expand, l_ss), axis=-1)  # NxHxWx513
+            conv_1 = conv2d('conv_1', emb, [3, 3, 513, 512], stride=1, wd=self.weight_decay)
+            transform_matrix = conv2d('conv_2', conv_1, [3, 3, 512, 313], stride=1, wd=self.weight_decay)
+            c313 = tf.stop_gradient(c313)
+            prob = tf.nn.softmax(c313, axis=-1)
+            sampled = prob * transform_matrix
+            sampled = sampled / tf.reduce_sum(sampled, axis=-1, keepdims=True)
+              
+            sampled = tf.reshape(sampled, (-1, 313))
+            data_ab = tf.matmul(sampled, grid_tensor)  # [N*H*W/16, 2]
+            data_ab = tf.reshape(data_ab, (shape[0], shape[1], shape[2], 2))  # [N, H/4, W/4, 2]
+            return data_ab
+
+    def sample_loss(self, scope, gt_ab, pred_ab, prior):
+        huber_loss = tf.losses.huber_loss(gt_ab, pred_ab, weights=prior)
+        wd_loss = tf.get_variable('wd_loss', (), initializer=tf.zeros_initializer, dtype=tf.float32)
+        for var in tf.trainable_variables(scope='Sampler'):
+            if 'weights' in var.name:
+                wd_loss = wd_loss + tf.nn.l2_loss(var)
+        wd_loss = wd_loss * self.weight_decay
+        return huber_loss, huber_loss + wd_loss, wd_loss

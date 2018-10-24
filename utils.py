@@ -296,7 +296,7 @@ def get_prior(data_ab):
     return prior
 
 
-def preprocess(data, training=True, c313=False, is_gan=False, is_rgb=True, prior_path='./resources/prior_probs_smoothed.npy', mask_gray=True, cond_l=False, gamma=0.5):
+def preprocess(data, training=True, c313=False, is_gan=False, is_rgb=True, prior_path='./resources/prior_probs_smoothed.npy', mask_gray=True, cond_l=False, gamma=0.5, sampler=False):
     '''Preprocess
     Args: 
       data: RGB batch (N * H * W * 3)
@@ -362,7 +362,11 @@ def preprocess(data, training=True, c313=False, is_gan=False, is_rgb=True, prior
         prior_boost_nongray = prior_boost
 
     if training:
-        return data_l, gt_ab_313, prior_boost_nongray, data_ab_ss
+        if sampler:
+            data_l_ss = (data_l_ss - 50.) / 50.
+            return data_l, data_l_ss, prior_boost_nongray, data_ab_ss
+        else:
+            return data_l, gt_ab_313, prior_boost_nongray, data_ab_ss
     else:
         return data_l, data_ab
 

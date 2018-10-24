@@ -3,7 +3,7 @@
 # ----- Parameters passed to the cluster -------
 ## <= 1h is short queue, <= 6h is middle queue, <= 48 h is long queue
 
-#$ -t 1:300
+#$ -t 1:50
 
 #$ -S /srv/glusterfs/xieya/anaconda2/bin/python
 
@@ -25,16 +25,14 @@ from skimage.io import imread
 from skimage import color
 from skimage.transform import resize
 import sklearn.neighbors as nn
-# import tensorflow as tf 
 
 import os
-# import random
 import sys
 
 _GRID_PATH = ''
 _LOG_FREQ = 100
 _N_CLASSES = 313
-_TASK_NUM = 300
+_TASK_NUM = 50
 _TASK_ID = os.environ.get('SGE_TASK_ID')
 if _TASK_ID is not None:
     print("Task id: {}".format(_TASK_ID))
@@ -73,21 +71,22 @@ class NNEncode():
 
         return pts_enc_nd
 
+
 class LookupEncode():
     '''Encode points using lookups'''
     def __init__(self, grid_path=''):
         self.cc = np.load(grid_path)
         self.grid_width = 10
-        self.offset = np.abs(np.amin(self.cc)) + 17 # add to get rid of negative numbers
-        self.x_mult = 300 # differentiate x from y
+        self.offset = np.abs(np.amin(self.cc)) + 17  # add to get rid of negative numbers
+        self.x_mult = 300  # differentiate x from y
         self.labels = {}
-        for idx, (x,y) in enumerate(self.cc):
+        for idx, (x, y) in enumerate(self.cc):
             x += self.offset
             x *= self.x_mult
             y += self.offset
-            if x+y in self.labels:
+            if x + y in self.labels:
                 print('Id collision!!!')
-            self.labels[x+y] = idx
+            self.labels[x + y] = idx
 
     def encode_points(self, pts_nd):
         '''Return 3d prior.'''
@@ -100,7 +99,7 @@ class LookupEncode():
         pvals = pgrid + self.offset
         pvals = pvals[:, 0] * self.x_mult + pvals[:, 1]
 
-        labels = np.zeros(pvals.shape,dtype='int32')
+        labels = np.zeros(pvals.shape, dtype='int32')
         labels.fill(-1)
 
         # lookup in label index and assign values
@@ -122,14 +121,16 @@ def get_index(ab):
 
 
 def get_file_list():
-    filename_lists = []
+    filename_list = []
     img_idx = 0
     for img_f in lists_f:
         if img_idx % _TASK_NUM == _TASK_ID:
             img_f = img_f.strip()
-            filename_lists.append(img_f)
+            filename_list.append(img_f)
         img_idx += 1
-    return filename_lists
+        if img_idx >= 19200:
+            break
+    return filename_list
 
 
 def cal_prob():
@@ -185,7 +186,7 @@ def cal_prob_soft(cond_l=False):
     if cond_l:
         print('Conditioning on luma.')
 
-    out_path = '/srv/glusterfs/xieya/prior/{0}_{2}_soft_{1}.npy'.format(_N_CLASSES, _TASK_ID, 'ab' if cond_l else '')
+    out_path = '/srv/glusterfs/xieya/prior/val_{0}_{2}soft_{1}.npy'.format(_N_CLASSES, _TASK_ID, 'abl_' if cond_l else '')
     if os.path.isfile(out_path):
         print('Done.')
         return
@@ -303,7 +304,7 @@ def merge():
 
 
 def cal_ab_hist_given_l():
-    out_path = '/srv/glusterfs/xieya/prior/{0}_ab_{1}.npy'.format(_N_CLASSES, _TASK_ID)
+    out_path = '/srv/glusterfs/xieya/prior/val_{0}_abl_{1}.npy'.format(_N_CLASSES, _TASK_ID)
     if os.path.isfile(out_path):
         print('Done.')
         return
@@ -342,7 +343,7 @@ def cal_ab_hist_given_l():
 def merge_abl():
     print("Merging...")
     probs = np.zeros((101, _N_CLASSES), dtype=np.float64)
-    path_pattern = '/srv/glusterfs/xieya/prior/{0}_ab_soft_{1}.npy'
+    path_pattern = '/srv/glusterfs/xieya/prior/val_{0}_abl_soft_{1}.npy'
     for i in xrange(_TASK_NUM):
         file_path = path_pattern.format(_N_CLASSES, i)
         if not os.path.exists(file_path):
@@ -354,11 +355,11 @@ def merge_abl():
     probs_nonzero = probs[probs > 0]
     print(np.mean(probs_nonzero), np.min(probs_nonzero), np.max(probs_nonzero), np.median(probs_nonzero), np.std(probs_nonzero))
     probs = probs / np.sum(probs)
-    np.save('/srv/glusterfs/xieya/prior/{}_abl_soft_bin1'.format(_N_CLASSES), probs)
+    np.save('/srv/glusterfs/xieya/prior/val_{}_abl_soft_bin1'.format(_N_CLASSES), probs)
 
 
 if __name__ == "__main__":
-    lists_f = open('/srv/glusterfs/xieya/data/imagenet1k_uncompressed/train.txt')
+    lists_f = open('/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val.txt')
     if _N_CLASSES == 313:
         _GRID_PATH = '/home/xieya/colorization-tf/resources/pts_in_hull.npy'
     else:
@@ -369,10 +370,10 @@ if __name__ == "__main__":
     print("Number of classes: {}.".format(_N_CLASSES))
     print("Imagenet.")
     # cal_prob()
-    # cal_prob_soft(True)
+    cal_prob_soft(False)
     # cal_ab_hist_given_l()
     # print("Coco.")
     # cal_prob_coco()
     # cal_prob_coco_soft(True)
     # merge()
-    merge_abl()
+    # merge_abl()

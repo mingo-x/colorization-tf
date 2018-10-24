@@ -16,6 +16,7 @@ import cv2
 
 from data import DataSet
 from data_coco import DataSet as DataSetCOCO
+import tools.ab as ab_tools
 import utils
 
 _AUC_THRESHOLD = 150
@@ -27,9 +28,9 @@ _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
 _G_VERSION = 1
-_CKPT_PATH = '/srv/glusterfs/xieya/tf_224_6/models/model.ckpt-95000'
+_CKPT_PATH = '/srv/glusterfs/xieya/tf_224_4/models/model.ckpt-188000'
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
-_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/tf_224_6_95k'
+_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/tf_224_4_188k'
 #_PRIOR_PATH = '/srv/glusterfs/xieya/prior/coco_313_soft.npy'
 _PRIOR_PATH = 'resources/prior_probs_smoothed.npy'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
@@ -69,6 +70,7 @@ def _get_model(input_tensor):
 def _cosine(a, b):
     return np.dot(a, b) / np.sqrt(np.dot(a, a) * np.dot(b, b))
 
+
 def compare_c313_pixelwise():
     input_tensor = tf.placeholder(
         tf.float32, shape=(1, _INPUT_SIZE, _INPUT_SIZE, 1))
@@ -77,9 +79,9 @@ def compare_c313_pixelwise():
     sess = tf.Session()
     saver.restore(sess, _CKPT_PATH)
 
-    img_name = 'ILSVRC2012_val_00049923.JPEG'
+    img_name = 'ILSVRC2012_val_00049829.JPEG'
     img_prefix = os.path.splitext(img_name)[0]
-    pos = [(1, 54), (55, 0)]
+    pos = [(0, 55), (0, 0)]
 
     img_path = os.path.join(IMG_DIR, img_name)
     img = cv2.imread(img_path)
@@ -100,12 +102,14 @@ def compare_c313_pixelwise():
         color = img_rgb[p]
         x = c313[p]
         plt.plot(x, c=color)
+        ab_tools.weights_to_image(x, '{0}_{1}_{2}'.format(img_prefix, p[0], p[1]), fill=0.5, out_dir=_OUTPUT_DIR)
     plt.savefig(os.path.join(_OUTPUT_DIR, '{0}.jpg'.format(img_prefix)))
     plt.clf()
     for p in pos:
         color = img_rgb[p]
         x_rb = c313_rb[p]
         plt.plot(x_rb, c=color)
+        ab_tools.weights_to_image(x_rb, '{0}_{1}_{2}_rb'.format(img_prefix, p[0], p[1]), fill=0.5, out_dir=_OUTPUT_DIR)
     plt.savefig(os.path.join(_OUTPUT_DIR, '{0}_rb.jpg'.format(img_prefix)))
 
 
@@ -308,7 +312,7 @@ def demo_wgan_ab():
 
     with tf.Session() as sess:
         saver.restore(sess, _CKPT_PATH)
-        ab = sess.run(colorized) # [-1, 1]
+        ab = sess.run(colorized)  # [-1, 1]
         ab *= 110.
         l = np.full((64, 64, 64, 1), 50)
         lab = np.concatenate((l, ab), axis=-1)
