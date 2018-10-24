@@ -1356,9 +1356,9 @@ class Net(object):
             color_emb = tf.stop_gradient(color_emb)
             output = color_emb * gamma + beta
             output = tf.concat((output, l_ss), axis=-1)
-            output = conv2d('conv_5', otuput, [3, 3, out_dim + 1, 128], stride=1, wd=self.weight_decay)
-            output = conv2d('conv_6', otuput, [3, 3, 128, 64], stride=1, wd=self.weight_decay)
-            output = conv2d('conv_7', otuput, [3, 3, 64, 2], stride=1, wd=self.weight_decay, relu=False)
+            output = conv2d('conv_5', output, [3, 3, out_dim + 1, 128], stride=1, wd=self.weight_decay)
+            output = conv2d('conv_6', output, [3, 3, 128, 64], stride=1, wd=self.weight_decay)
+            output = conv2d('conv_7', output, [3, 3, 64, 2], stride=1, wd=self.weight_decay, relu=False)
             return output
 
     def sample_loss(self, scope, gt_ab, pred_ab, prior):
