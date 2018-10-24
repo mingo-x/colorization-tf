@@ -206,23 +206,15 @@ class Solver_Sampler(object):
 
                     # Save sample image
                     img_ab_ss = pred_abs[0]
-                    print('1')
                     img_ab = cv2.resize(img_ab_ss, (224, 224), interpolation=cv2.INTER_CUBIC)
-                    print('11')
-                    img_l = val_data_l_ss[0]
-                    print('111')
+                    img_l = val_data_l[0]
                     img_l += 1
                     img_l *= 50
-                    print('1111')
                     img_lab = np.concatenate((img_l, img_ab), axis=-1).astype(np.float64)
-                    print('11111')
                     img_rgb = color.lab2rgb(img_lab)
-                    print('111111')
                     word_list = list(val_captions[0, :val_lens[0]])
-                    print('1111111')
                     img_caption = '_'.join(vrev.get(w, 'unk') for w in word_list) 
                     io.imsave(os.path.join(self.train_dir, '{0}_{1}.jpg').format(step, img_caption), img_rgb)
-                    print('11111111')
 
                 # Save the model checkpoint periodically.
                 if step % 1000 == 0:
