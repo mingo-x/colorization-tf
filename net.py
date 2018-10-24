@@ -911,7 +911,7 @@ class Net(object):
         l2_loss = tf.get_variable('regularization', (), initializer=tf.zeros_initializer, dtype=tf.float32)
         for var in tf.trainable_variables():
             if 'kernel' in var.name:
-                l2_loss += tf.nn.l2_loss(var)
+                l2_loss = l2_loss + tf.nn.l2_loss(var)
         l2_loss = l2_loss * self.weight_decay
         # l2_losses = [tf.nn.l2_loss(tf_var) for tf_var in tf.trainable_variables() if "kernel" in tf_var.name]
         # l2_loss = self.weight_decay * tf.add_n(l2_losses)
@@ -1350,12 +1350,15 @@ class Net(object):
             emb = tf.concat((cap_emb_expand, l_ss), axis=-1)  # NxHxWx513
             conv_1 = conv2d('conv_1', emb, [3, 3, 513, 512], stride=1, wd=self.weight_decay)
             conv_2 = conv2d('conv_2', conv_1, [3, 3, 512, 256], stride=1, wd=self.weight_decay)
-            gamma = conv2d('conv_3', conv_2, [3, 3, 256, 313], stride=1, wd=self.weight_decay, relu=False)
+            gamma = conv2d('conv_3', conv_2, [3, 3, 256, out_dim], stride=1, wd=self.weight_decay, relu=False)
+            beta = conv2d('conv_4', conv_2, [3, 3, 256, out_dim], stride=1, wd=self.weight_decay, relu=False)
             color_emb = tf.stop_gradient(color_emb)
-            # new_color_emb = color_emb * gamma
-            # new_color_emb = tf.
-            data_ab = tf.reshape(data_ab, (shape[0], shape[1], shape[2], 2))  # [N, H/4, W/4, 2]
-            return data_ab
+            output = color_emb * gamma + beta
+            output = tf.concat((output, l_ss), axis=-1)
+            output = conv2d('conv_5', otuput, [3, 3, out_dim + 1, 128], stride=1, wd=self.weight_decay)
+            output = conv2d('conv_6', otuput, [3, 3, 128, 64], stride=1, wd=self.weight_decay)
+            output = conv2d('conv_7', otuput, [3, 3, 64, 2], stride=1, wd=self.weight_decay, relu=False)
+            return output
 
     def sample_loss(self, scope, gt_ab, pred_ab, prior):
         huber_loss = tf.losses.huber_loss(gt_ab, pred_ab, weights=prior)

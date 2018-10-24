@@ -99,7 +99,7 @@ class Solver_Language(object):
                 if self.ckpt is None and self.init_ckpt is not None:
                     # Restore gamma and beta of BN.
                     self.biases = [None] * 8
-                    caption_layer = [7]
+                    caption_layer = [6]
                     print('Blocks with language guidance:')
                     for i in caption_layer:
                         print(i + 1)
@@ -228,7 +228,7 @@ class Solver_Language(object):
                     # Evaluate 1000 images.
                     eval_loss = 0.0
                     eval_loss_rb = 0.0
-                    eval_iters = 25
+                    eval_iters = 30
                     for _ in xrange(eval_iters):
                         val_data_l, val_gt_ab_313, val_prior_boost_nongray, val_captions, val_lens = self.val_dataset.batch()
                         loss_value, rb_loss_value, img_313s = sess.run([self.total_loss, self.rb_loss, self.conv8_313], feed_dict={
