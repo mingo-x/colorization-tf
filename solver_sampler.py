@@ -92,10 +92,10 @@ class Solver_Sampler(object):
                 (self.batch_size, int(self.height / 4), int(self.width / 4), 1)
             )
 
-            cc = np.load('resources/pts_in_hull.npy')
-            self.grid = tf.constant(cc, dtype=tf.float32)  # [313, 2]
-            self.conv8_313 = self.net.inference1(self.data_l)
-            self.pred_ab = self.net.sample_by_caption(self.captions, self.lens, self.data_l_ss, self.conv8_313, self.grid)
+            # cc = np.load('resources/pts_in_hull.npy')
+            # self.grid = tf.constant(cc, dtype=tf.float32)  # [313, 2]
+            _, color_emb = self.net.inference1(self.data_l)
+            self.pred_ab = self.net.sample_by_caption(self.captions, self.lens, self.data_l_ss, color_emb)
 
             huber_loss, total_loss, wd_loss = self.net.sample_loss(scope, self.gt_ab, self.pred_ab, self.prior)
 

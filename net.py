@@ -253,14 +253,15 @@ class Net(object):
             temp_conv = batch_norm('bn_{}'.format(batch_num), temp_conv, train=self.train)
             temp_conv = tf.nn.relu(temp_conv)
             conv_num += 1
-            batch_num += 1   
+            batch_num += 1  
+            block8 = temp_conv 
 
             # Unary prediction
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [1, 1, 256, 313], stride=1, relu=False, wd=self.weight_decay)
             conv_num += 1
 
         conv8_313 = temp_conv
-        return conv8_313
+        return conv8_313, block8
 
     def inference2(self, data_l):
         ''' U-net'''
@@ -1340,11 +1341,11 @@ class Net(object):
             hidden = tf.concat((state_fw.h, state_bw.h), 1)
             return hidden
 
-    def sample_by_caption(self, captions, lens, l_ss, color_emb, grid_tensor):
+    def sample_by_caption(self, captions, lens, l_ss, color_emb):
         with tf.variable_scope('Sampler', reuse=tf.AUTO_REUSE):
             cap_emb = self.caption_encoding(captions, lens)
             shape = tf.shape(l_ss)
-            out_dim = tf.shape(color_emb)[-1]
+            out_dim = color_emb.get_shape()[-1]
             cap_emb_expand = cap_emb[:, tf.newaxis, tf.newaxis, :]
             cap_emb_expand = tf.tile(cap_emb_expand, (1, shape[1], shape[2], 1))  # NxHxWx512
             emb = tf.concat((cap_emb_expand, l_ss), axis=-1)  # NxHxWx513
