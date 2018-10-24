@@ -108,7 +108,7 @@ class Solver_Language(object):
                         bn_saver = tf.train.Saver({'G/bn_{}/gamma'.format(i + 1): gamma, 'G/bn_{}/beta'.format(i + 1): beta})
                         bn_saver.restore(sess, self.init_ckpt)
                         bias = tf.concat((gamma, beta), axis=-1)
-                        self.biases[i](sess.run(bias))
+                        self.biases[i] = sess.run(bias)
                 kernel = None
                 if self.kernel_zero:
                     kernel = tf.zeros_initializer(dtype=tf.float32)
