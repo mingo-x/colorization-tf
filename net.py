@@ -1361,11 +1361,31 @@ class Net(object):
             output = conv2d('conv_7', output, [3, 3, 64, 2], stride=1, wd=self.weight_decay, relu=False)
             return output
 
+    def sample_by_caption_1(self, captions, lens, l_ss, color_emb):
+        with tf.variable_scope('Sampler', reuse=tf.AUTO_REUSE):
+            cap_emb = self.caption_encoding(captions, lens)
+            shape = tf.shape(l_ss)
+            out_dim = color_emb.get_shape()[-1]
+            cap_emb_expand = cap_emb[:, tf.newaxis, tf.newaxis, :]
+            cap_emb_expand = tf.tile(cap_emb_expand, (1, shape[1], shape[2], 1))  # NxHxWx512
+            emb = tf.concat((cap_emb_expand, l_ss), axis=-1)  # NxHxWx513
+            conv_1 = conv2d('conv_1', emb, [3, 3, 513, 512], stride=1, wd=self.weight_decay)
+            conv_2 = conv2d('conv_2', conv_1, [3, 3, 512, 256], stride=1, wd=self.weight_decay)
+            gamma = conv2d('conv_3', conv_2, [3, 3, 256, out_dim], stride=1, wd=self.weight_decay, relu=False)
+            beta = conv2d('conv_4', conv_2, [3, 3, 256, out_dim], stride=1, wd=self.weight_decay, relu=False)
+            color_emb = tf.stop_gradient(color_emb)
+            output = color_emb * gamma + beta
+            output = tf.concat((output, l_ss), axis=-1)
+            output = conv2d('conv_5', output, [3, 3, out_dim + 1, 128], stride=1, wd=self.weight_decay)
+            output = conv2d('conv_6', output, [3, 3, 128, 64], stride=1, wd=self.weight_decay)
+            output = conv2d('conv_7', output, [3, 3, 64, 2], stride=1, wd=self.weight_decay, relu=False)
+            return output
+
     def sample_loss(self, scope, gt_ab, pred_ab, prior):
         huber_loss = tf.losses.huber_loss(gt_ab, pred_ab, weights=prior)
         wd_loss = tf.get_variable('wd_loss', (), initializer=tf.zeros_initializer, dtype=tf.float32)
         for var in tf.trainable_variables(scope='Sampler'):
-            if 'weights' in var.name:
+            if 'weights' in var.name or 'kernel' in var.name:
                 wd_loss = wd_loss + tf.nn.l2_loss(var)
         wd_loss = wd_loss * self.weight_decay
         return huber_loss, huber_loss + wd_loss, wd_loss

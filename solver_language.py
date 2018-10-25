@@ -156,7 +156,9 @@ class Solver_Language(object):
 
             opt = tf.train.AdamOptimizer(
                 learning_rate=learning_rate, beta1=self.moment, beta2=0.99)
-            grads = opt.compute_gradients(self.new_loss)
+            film_vars = tf.trainable_variables(scope='Film')
+            lstm_vars = tf.trainable_variables(scope='LSTM')
+            grads = opt.compute_gradients(self.new_loss, var_list=film_vars + lstm_vars)
 
             # for grad, var in grads:
             #     if grad is not None:
