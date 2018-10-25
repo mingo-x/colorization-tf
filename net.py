@@ -1368,12 +1368,14 @@ class Net(object):
             out_dim = color_emb.get_shape()[-1]
             cap_emb_expand = cap_emb[:, tf.newaxis, tf.newaxis, :]
             cap_emb_expand = tf.tile(cap_emb_expand, (1, shape[1], shape[2], 1))  # NxHxWx512
-            emb = tf.concat((cap_emb_expand, l_ss), axis=-1)  # NxHxWx513
-            conv_1 = conv2d('conv_1', emb, [3, 3, 513, 512], stride=1, wd=self.weight_decay)
+            l_emb = tf.stop_gradient(color_emb)
+            emb = tf.concat((cap_emb_expand, l_emb), axis=-1)  # NxHxWx1024
+            conv_1 = conv2d('conv_1', emb, [3, 3, 1024, 512], stride=1, wd=self.weight_decay)
             conv_2 = conv2d('conv_2', conv_1, [3, 3, 512, 256], stride=1, wd=self.weight_decay)
-            gamma = conv2d('conv_3', conv_2, [3, 3, 256, out_dim], stride=1, wd=self.weight_decay, relu=False)
-            beta = conv2d('conv_4', conv_2, [3, 3, 256, out_dim], stride=1, wd=self.weight_decay, relu=False)
-            color_emb = tf.stop_gradient(color_emb)
+            conv_3 = conv2d('conv_3', conv_2, [3, 3, 256, 64], stride=1, wd=self.weight_decay)
+            attention = conv2d('conv_4', conv_3, [3, 3, 64, 1], stride=1, wd=self.weight_decay, relu=False)
+            
+            
             output = color_emb * gamma + beta
             output = tf.concat((output, l_ss), axis=-1)
             output = conv2d('conv_5', output, [3, 3, out_dim + 1, 128], stride=1, wd=self.weight_decay)
