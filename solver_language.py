@@ -226,7 +226,7 @@ class Solver_Language(object):
                              self.prior_boost_nongray: prior_boost_nongray,
                              self.captions: captions, self.lens: lens}
                 if self.with_cap_prior:
-                    feed_dict[self.cap_priors: cap_priors]
+                    feed_dict[self.cap_priors] = cap_priors
                 if step % _LOG_FREQ == 0:
                     duration = time.time() - start_time
                     num_examples_per_step = self.batch_size * self.num_gpus * _LOG_FREQ
