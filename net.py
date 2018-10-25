@@ -894,7 +894,7 @@ class Net(object):
         return gen_cost, disc_cost, w_dist, tf.reduce_mean(slopes)
 
     def loss(self, scope, conv8_313, prior_boost_nongray,
-             gt_ab_313, fake_data=None, is_gan=False, is_boost=True):
+             gt_ab_313, cap_prior=None):
         flat_conv8_313 = tf.reshape(conv8_313, [-1, 313])
         flat_gt_ab_313 = tf.reshape(gt_ab_313, [-1, 313])
         flat_gt_ab_313 = tf.stop_gradient(flat_gt_ab_313)
@@ -918,29 +918,13 @@ class Net(object):
         # l2_loss = self.weight_decay * tf.add_n(l2_losses)
         wd_loss += l2_loss 
 
-        new_loss = tf.reduce_sum(dl2c * conv8_313 * prior_boost_nongray) + wd_loss
+        new_loss = dl2c * conv8_313 * prior_boost_nongray
+        if cap_prior is not None:
+            new_loss = new_loss * cap_prior
+        new_loss = tf.reduce_sum(new_loss)
+        new_loss = new_loss + wd_loss
 
         return new_loss, g_loss, wd_loss, rb_loss
-
-        if is_boost:
-            #
-            dl2c = tf.gradients(g_loss, conv8_313)
-            dl2c = tf.stop_gradient(dl2c)
-            #
-            new_loss = tf.reduce_sum(
-                dl2c * conv8_313 * prior_boost_nongray) + tf.add_n(
-                tf.get_collection('losses', scope=scope))
-        else:
-            new_loss = g_loss + tf.add_n(
-                tf.get_collection('losses', scope=scope))
-
-        # Adversarial loss.
-        if is_gan:
-            adv_loss = -tf.reduce_mean(self.discriminator(fake_data, reuse=tf.AUTO_REUSE))
-            # new_loss += self.alpha * adv_loss
-            return new_loss, g_loss, adv_loss
-        else:
-            return new_loss, g_loss, None
 
     def discriminator(self, data_313, reuse=False):
         '''

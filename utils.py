@@ -7,6 +7,8 @@ import os
 import sklearn.neighbors as nn
 import warnings
 import configparser
+
+import pickle
 # *****************************
 # ***** Utility functions *****
 # *****************************
@@ -500,3 +502,33 @@ def is_grayscale(gt_ab):
     elif len(gt_ab.shape) == 3:
         is_gray = np.sum(np.abs(gt_ab) > thresh) == 0
     return is_gray
+
+
+class CaptionPrior():
+    def __init__(self):
+        color_probs = pickle.load(open('/home/xieya/colorfromlanguage/priors/color_probs.p', 'r'))
+        self.color_weights = {}
+        color_num = len(color_probs)
+        for c in color_probs:
+            self.color_weights[c] = 1. / color_probs[c] / color_num
+            print(c, self.color_weights[c])
+
+    def _get_weight(self, caption):
+        weight = 0.
+        for w in caption:
+            if w in self.color_weights:
+                weight += self.color_weights[w]
+        if weight == 0.:
+            weight = 1
+        return weight
+
+    def get_weight(self, captions):
+        n_dims = len(captions.shape)
+        if n_dims == 2:
+            weights = []
+            for caption in captions:
+                weights.append(self._get_weight(caption))
+            weights = np.asarray(weights)
+            return weights
+        elif n_dims == 1:
+            return self._get_weight(captions)
