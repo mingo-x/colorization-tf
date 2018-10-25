@@ -61,6 +61,10 @@ class Solver_Language(object):
                 print('Training with captions.')
             else:
                 print('Training without captions.')
+            if self.with_cap_prior:
+                print('Training with caption priors.')
+            else:
+                print('Training without caption priors.')
 
         if solver_params:
             self.learning_rate = float(solver_params['learning_rate'])
@@ -128,8 +132,7 @@ class Solver_Language(object):
 
             new_loss, g_loss, wd_loss, rb_loss = self.net.loss(
                 scope, self.conv8_313, self.prior_boost_nongray,
-                self.gt_ab_313, None, self.gan,
-                self.prior_boost, self.cap_priors)
+                self.gt_ab_313, self.cap_priors)
 
             tf.summary.scalar('new_loss', new_loss)
             tf.summary.scalar('total_loss', g_loss)
