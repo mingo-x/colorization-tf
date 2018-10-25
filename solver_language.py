@@ -76,6 +76,7 @@ class Solver_Language(object):
             self.lr_decay = float(solver_params['lr_decay'])
             self.decay_steps = int(solver_params['decay_steps'])
             self.moment = float(solver_params['moment'])
+            self.freeze_cnn = solver_params['freeze_cnn'] == '1'
         self.train = train
         self.net = Net(
             train=train, common_params=common_params, net_params=net_params)
@@ -167,16 +168,10 @@ class Solver_Language(object):
 
             opt = tf.train.AdamOptimizer(
                 learning_rate=learning_rate, beta1=self.moment, beta2=0.99)
-            if self.with_caption:
+            if self.freeze_cnn:
                 film_vars = tf.trainable_variables(scope='Film')
                 lstm_vars = tf.trainable_variables(scope='LSTM')
                 grads = opt.compute_gradients(self.new_loss, var_list=film_vars + lstm_vars)
-
-                # for grad, var in grads:
-                #     if grad is not None:
-                #         self.summaries.append(tf.summary.histogram(var.op.name + '/gradients', grad))
-                # for var in tf.global_variables():
-                #     self.summaries.append(tf.summary.histogram(var.op.name, var))
                 for var in film_vars:
                     print(var)
                 for var in lstm_vars:
