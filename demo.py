@@ -28,11 +28,11 @@ _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
 _G_VERSION = 1
-_CKPT_PATH = '/srv/glusterfs/xieya/tf_224_4/models/model.ckpt-217000'
+_CKPT_PATH = '/srv/glusterfs/xieya/language_1/models/model.ckpt-4000'
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
-_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/tf_224_4_217k'
-#_PRIOR_PATH = '/srv/glusterfs/xieya/prior/coco_313_soft.npy'
-_PRIOR_PATH = 'resources/prior_probs_smoothed.npy'
+_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/language_1_40k'
+_PRIOR_PATH = '/srv/glusterfs/xieya/prior/coco_313_soft.npy'
+#_PRIOR_PATH = 'resources/prior_probs_smoothed.npy'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
 _VIDEO_IN_DIR = '/srv/glusterfs/xieya/data/DAVIS/JPEGImages/Full-Resolution/bus'
 _VIDEO_OUT_DIR = '/srv/glusterfs/xieya/video/bus/vgg_4'
@@ -786,13 +786,13 @@ def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c3
 if __name__ == "__main__":
     subprocess.check_call(['mkdir', '-p', _OUTPUT_DIR])
     lookup = utils.LookupEncode('resources/pts_in_hull.npy')
-    main()
+    # main()
     # places365()
     # demo_wgan_ab()
     # demo_wgan_rgb()
     # _colorize_high_res_img(_IMG_NAME)
     # cifar()
-    # colorize_with_language()
+    colorize_with_language()
     # colorize_video_with_language()
     # colorize_coco_without_language(evaluate=False)
     # save_ground_truth()
