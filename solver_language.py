@@ -51,6 +51,8 @@ class Solver_Language(object):
             self.corr = True if common_params['correspondence'] == '1' else False
             self.with_caption = True if common_params['with_caption'] == '1' else False
             self.kernel_zero = True if common_params['kernel_zero'] == '1' else False
+            if 'with_cap_prior' in common_params:
+                self.with_cap_prior = common_params['with_cap_prior'] == '1'
             if self.prior_boost:
                 print('Using prior boost.')
             else:
@@ -85,6 +87,10 @@ class Solver_Language(object):
                 tf.float32, (self.batch_size, self.height, self.width, 1))
             self.captions = tf.placeholder(tf.int32, (self.batch_size, 20))
             self.lens = tf.placeholder(tf.int32, (self.batch_size))
+            if self.with_cap_prior:
+                self.cap_priors = tf.placeholder(tf.float32, (self.batch_size))
+            else:
+                self.cap_priors = None
             self.gt_ab_313 = tf.placeholder(
                 tf.float32,
                 (self.batch_size, int(self.height / 4), int(self.width / 4), 313)
@@ -123,7 +129,7 @@ class Solver_Language(object):
             new_loss, g_loss, wd_loss, rb_loss = self.net.loss(
                 scope, self.conv8_313, self.prior_boost_nongray,
                 self.gt_ab_313, None, self.gan,
-                self.prior_boost)
+                self.prior_boost, self.cap_priors)
 
             tf.summary.scalar('new_loss', new_loss)
             tf.summary.scalar('total_loss', g_loss)
@@ -209,16 +215,22 @@ class Solver_Language(object):
             start_step = int(start_step)
 
             for step in xrange(start_step, self.max_steps, self.g_repeat):
-                data_l, gt_ab_313, prior_boost_nongray, captions, lens = self.dataset.batch()
+                if self.with_cap_prior:
+                    data_l, gt_ab_313, prior_boost_nongray, captions, lens, cap_priors = self.dataset.batch()    
+                else:
+                    data_l, gt_ab_313, prior_boost_nongray, captions, lens = self.dataset.batch()
+                feed_dict = {self.data_l: data_l, self.gt_ab_313: gt_ab_313, 
+                             self.prior_boost_nongray: prior_boost_nongray,
+                             self.captions: captions, self.lens: lens}
+                if self.with_cap_prior:
+                    feed_dict[self.cap_priors: cap_priors]
                 if step % _LOG_FREQ == 0:
                     duration = time.time() - start_time
                     num_examples_per_step = self.batch_size * self.num_gpus * _LOG_FREQ
                     examples_per_sec = num_examples_per_step / duration
                     sec_per_batch = duration / (self.num_gpus * _LOG_FREQ)
 
-                    loss_value, new_loss_value, rb_loss_value = sess.run([self.total_loss, self.new_loss, self.rb_loss], feed_dict={
-                        self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray,
-                        self.captions: captions, self.lens: lens})
+                    loss_value, new_loss_value, rb_loss_value = sess.run([self.total_loss, self.new_loss, self.rb_loss], feed_dict=feed_dict)
                     format_str = ('%s: step %d, G loss = %.2f, new loss = %.2f, rb loss = %.3f (%.1f examples/sec; %.3f '
                                   'sec/batch)')
                     print (format_str % (datetime.now(),
@@ -227,13 +239,10 @@ class Solver_Language(object):
                     start_time = time.time()
 
                 # Generator training.
-                sess.run([train_op], feed_dict={
-                    self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray,
-                    self.captions: captions, self.lens: lens})
+                sess.run([train_op], feed_dict=feed_dict)
 
                 if step % 100 == 0:
-                    summary_str = sess.run(summary_op, feed_dict={
-                        self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray, self.captions: captions, self.lens: lens})
+                    summary_str = sess.run(summary_op, feed_dict=feed_dict)
                     summary_writer.add_summary(summary_str, step)
 
                     # Evaluate 1000 images.
@@ -241,10 +250,16 @@ class Solver_Language(object):
                     eval_loss_rb = 0.0
                     eval_iters = 30
                     for _ in xrange(eval_iters):
-                        val_data_l, val_gt_ab_313, val_prior_boost_nongray, val_captions, val_lens = self.val_dataset.batch()
-                        loss_value, rb_loss_value, img_313s = sess.run([self.total_loss, self.rb_loss, self.conv8_313], feed_dict={
+                        if self.with_cap_prior:
+                            val_data_l, val_gt_ab_313, val_prior_boost_nongray, val_captions, val_lens, val_cap_priors = self.val_dataset.batch()    
+                        else:
+                            val_data_l, val_gt_ab_313, val_prior_boost_nongray, val_captions, val_lens = self.val_dataset.batch()
+                        val_feed_dict = {
                             self.data_l: val_data_l, self.gt_ab_313: val_gt_ab_313, self.prior_boost_nongray: val_prior_boost_nongray,
-                            self.captions: val_captions, self.lens: val_lens})
+                            self.captions: val_captions, self.lens: val_lens}
+                        if self.with_cap_prior:
+                            val_feed_dict[self.cap_priors] = val_cap_priors
+                        loss_value, rb_loss_value, img_313s = sess.run([self.total_loss, self.rb_loss, self.conv8_313], feed_dict=val_feed_dict)
                         eval_loss += loss_value
                         eval_loss_rb += rb_loss_value
                     eval_loss /= eval_iters

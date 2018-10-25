@@ -25,6 +25,8 @@ class DataSet(object):
           common_params: A dict
           dataset_params: A dict
         """
+        self.cap_prior = False
+
         if dataset_params:
             self.data_path = str(dataset_params['path'])
             self.thread_num = int(dataset_params['thread_num'])
@@ -34,9 +36,13 @@ class DataSet(object):
             self.batch_size = int(common_params['batch_size'])
             self.with_caption = True if common_params['with_caption'] == '1' else False
             self.sampler = True if common_params['sampler'] == '1' else False
+            if 'with_cap_prior' in common_params:
+                self.cap_prior = common_params['with_cap_prior'] == '1'
 
         self.training = train
         self.with_ab = with_ab
+        if self.cap_prior:
+            self.cap_prior_encoder = CaptionPrior()
 
         # record and image_label queue
         self.record_queue = Queue(maxsize=15000)
@@ -107,10 +113,14 @@ class DataSet(object):
                 count += 1
             images = np.asarray(images, dtype=np.uint8)
             captions = np.asarray(captions, dtype=np.int32)
+            if self.cap_prior:
+                cap_priors = self.cap_prior_encoder.get_weight(captions)
             lens = np.asarray(lens, dtype=np.int32)
             l, gt, prior, ab = preprocess(images, c313=True, prior_path=self.prior_path, mask_gray=(not self.with_caption), sampler=self.sampler)
             if self.with_ab:
                 self.batch_queue.put((l, gt, prior, captions, lens, ab))
+            elif self.cap_prior:
+                self.batch_queue.put((l, gt, prior, captions, lens, cap_priors))
             else:    
                 self.batch_queue.put((l, gt, prior, captions, lens))
 
