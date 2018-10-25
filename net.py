@@ -920,7 +920,7 @@ class Net(object):
 
         new_loss = dl2c * conv8_313 * prior_boost_nongray
         if cap_prior is not None:
-            new_loss = new_loss * cap_prior
+            new_loss = new_loss * cap_prior[:, tf.newaxis, tf.newaxis, tf.newaxis]
         new_loss = tf.reduce_sum(new_loss)
         new_loss = new_loss + wd_loss
 
