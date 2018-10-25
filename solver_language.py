@@ -99,7 +99,7 @@ class Solver_Language(object):
                 if self.ckpt is None and self.init_ckpt is not None:
                     # Restore gamma and beta of BN.
                     self.biases = [None] * 8
-                    caption_layer = [6]
+                    caption_layer = [3, 4, 5, 6]
                     print('Blocks with language guidance:')
                     for i in caption_layer:
                         print(i + 1)
@@ -165,7 +165,9 @@ class Solver_Language(object):
             #         self.summaries.append(tf.summary.histogram(var.op.name + '/gradients', grad))
             # for var in tf.global_variables():
             #     self.summaries.append(tf.summary.histogram(var.op.name, var))
-            for var in tf.global_variables():
+            for var in film_vars:
+                print(var)
+            for var in lstm_vars:
                 print(var)
 
             apply_gradient_op = opt.apply_gradients(
