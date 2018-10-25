@@ -115,7 +115,7 @@ class DataSet(object):
             captions = np.asarray(captions, dtype=np.int32)
             if self.cap_prior:
                 cap_priors = self.cap_prior_encoder.get_weight(captions)
-                print(cap_priors[0])
+                print(np.sum(cap_priors))
             lens = np.asarray(lens, dtype=np.int32)
             l, gt, prior, ab = preprocess(images, c313=True, prior_path=self.prior_path, mask_gray=(not self.with_caption), sampler=self.sampler)
             if self.with_ab:
