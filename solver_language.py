@@ -158,19 +158,24 @@ class Solver_Language(object):
 
             opt = tf.train.AdamOptimizer(
                 learning_rate=learning_rate, beta1=self.moment, beta2=0.99)
-            film_vars = tf.trainable_variables(scope='Film')
-            lstm_vars = tf.trainable_variables(scope='LSTM')
-            grads = opt.compute_gradients(self.new_loss, var_list=film_vars + lstm_vars)
+            if self.with_caption:
+                film_vars = tf.trainable_variables(scope='Film')
+                lstm_vars = tf.trainable_variables(scope='LSTM')
+                grads = opt.compute_gradients(self.new_loss, var_list=film_vars + lstm_vars)
 
-            # for grad, var in grads:
-            #     if grad is not None:
-            #         self.summaries.append(tf.summary.histogram(var.op.name + '/gradients', grad))
-            # for var in tf.global_variables():
-            #     self.summaries.append(tf.summary.histogram(var.op.name, var))
-            for var in film_vars:
-                print(var)
-            for var in lstm_vars:
-                print(var)
+                # for grad, var in grads:
+                #     if grad is not None:
+                #         self.summaries.append(tf.summary.histogram(var.op.name + '/gradients', grad))
+                # for var in tf.global_variables():
+                #     self.summaries.append(tf.summary.histogram(var.op.name, var))
+                for var in film_vars:
+                    print(var)
+                for var in lstm_vars:
+                    print(var)
+            else:
+                grads = opt.compute_gradients(self.new_loss)
+                for var in tf.trainable_variables():
+                    print(var)
 
             apply_gradient_op = opt.apply_gradients(
                 grads, global_step=self.global_step)
