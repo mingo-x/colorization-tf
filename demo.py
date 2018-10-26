@@ -783,7 +783,7 @@ def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True):
                     feed_dict = {l_tensor: img_l, gt_313_tensor: gt_313, prior_tensor: prior_boost_nongray}
 
                 if cross_entropy:
-                    img_313, ce_loss, rb_loss, prior_sum = sess.run([c313_tensor, ce_loss_tensor, rb_loss_tensor, prior_sum_tensor], feed_dict=feed_dict)
+                    img_313, ce_loss, rb_loss = sess.run([c313_tensor, ce_loss_tensor, rb_loss_tensor], feed_dict=feed_dict)
                     ce.extend(ce_loss)
                     rb.extend(rb_loss)
                 else:
