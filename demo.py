@@ -404,7 +404,6 @@ def cross_entropy_loss(gt_313, conv8_313, prior_boost_nongray):
     rb_loss = ce_loss * prior_boost_nongray
     ce_loss = tf.reduce_mean(ce_loss, axis=(1, 2, 3))
     rb_loss = tf.reduce_sum(rb_loss, axis=(1, 2, 3)) / tf.reduce_sum(prior_boost_nongray, axis=(1, 2, 3))
-    print(rb_loss.get_shape())
     # rb_loss = tf.reduce_mean(rb_loss, axis=(1, 2, 3))
 
     return ce_loss, rb_loss, tf.reduce_sum(prior_boost_nongray, axis=(1, 2, 3))
@@ -795,7 +794,7 @@ def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True):
                     rgb, _ = decode(img_l[j: j + 1], img_313[j: j + 1], T, return_313=False)
                     io.imsave(os.path.join(_OUTPUT_DIR, "{0}.jpg".format(img_count)), rgb)
                     if cross_entropy:
-                        fout.write("{0}\t{1}\t{2}\t{3}\n".format(img_count, ce[img_count], rb[img_count], prior_sum[img_count]))
+                        fout.write("{0}\t{1}\t{2}\t{3}\n".format(img_count, ce[img_count % _BATCH_SIZE], rb[img_count % _BATCH_SIZE], prior_sum[img_count % _BATCH_SIZE]))
                     img_count += 1
                             
                 print(i)
