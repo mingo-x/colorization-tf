@@ -108,7 +108,7 @@ class Solver_Language(object):
             if self.with_caption:
                 # Restore gamma and beta of BN.
                 self.biases = [None] * 8
-                caption_layer = [6]
+                caption_layer = [0, 1, 2, 3, 4, 5, 6, 7]
                 print('Blocks with language guidance:')
                 for i in caption_layer:
                     print(i + 1)
