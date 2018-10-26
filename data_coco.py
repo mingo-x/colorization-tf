@@ -59,7 +59,7 @@ class DataSet(object):
             self.train_origs = hf['val_ims']            
             self.train_words = hf['val_words']                                         
             self.train_lengths = hf['val_length'] 
-            self.thread_num = 4
+            # self.thread_num = 4
 
         self.record_point = 0
         self.record_number = len(self.train_origs)

@@ -737,8 +737,8 @@ def evaluate_from_rgb(in_dir, gt_dir):
 
 def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True):
     if is_coco:
-        dataset_params = {'path': _COCO_PATH, 'thread_num': 4, 'prior_path': _PRIOR_PATH}
-        common_params = {'batch_size': _BATCH_SIZE, 'with_caption': '0', 'sampler': '0', }  # with_caption -> False: ignore grayscale images.
+        dataset_params = {'path': _COCO_PATH, 'thread_num': 1, 'prior_path': _PRIOR_PATH}
+        common_params = {'batch_size': _BATCH_SIZE, 'with_caption': '1', 'sampler': '0', }  # with_caption -> False: ignore grayscale images.
         dataset = DataSetCOCO(common_params, dataset_params, False, True, False)  # No shuffle, same validation set.
     else:
         dataset_params = {'path': '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val.txt', 'thread_num': 8, 
@@ -794,7 +794,7 @@ def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True):
                     rgb, _ = decode(img_l[j: j + 1], img_313[j: j + 1], T, return_313=False)
                     io.imsave(os.path.join(_OUTPUT_DIR, "{0}.jpg".format(img_count)), rgb)
                     if cross_entropy:
-                        fout.write("{0}\t{1}\t{2}\t{3}\n".format(img_count, ce[img_count % _BATCH_SIZE], rb[img_count % _BATCH_SIZE], prior_sum[img_count % _BATCH_SIZE]))
+                        fout.write("{0}\t{1}\t{2}\t{3}\n".format(img_count, ce[img_count], rb[img_count], prior_sum[j]))
                     img_count += 1
                             
                 print(i)
