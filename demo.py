@@ -22,6 +22,7 @@ import utils
 
 _AUC_THRESHOLD = 150
 _BATCH_SIZE = 32
+_CAP_LAYERS = [6]
 _COCO_PATH = '/srv/glusterfs/xieya/data/coco_colors.h5'
 _INPUT_SIZE = 224
 _RESIZE_SIZE = 0
@@ -746,7 +747,10 @@ def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True):
         len_tensor = tf.placeholder(tf.int32, (_BATCH_SIZE))
         autocolor = Net(train=False, g_version=_G_VERSION)
         if with_caption:
-            c313_tensor = autocolor.inference4(l_tensor, cap_tensor, len_tensor)
+            biases = [None] * 8
+            for l in _CAP_LAYERS:
+                biases[l] = 1.
+            c313_tensor = autocolor.inference4(l_tensor, cap_tensor, len_tensor, biases)
         else:
             c313_tensor = autocolor.inference(l_tensor)
             if len(c313_tensor) > 1:
