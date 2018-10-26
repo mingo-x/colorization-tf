@@ -728,7 +728,7 @@ def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True):
     if is_coco:
         dataset_params = {'path': _COCO_PATH, 'thread_num': 1, 'prior_path': _PRIOR_PATH}
         common_params = {'batch_size': _BATCH_SIZE, 'with_caption': '1', 'sampler': '0', }  # with_caption -> False: ignore grayscale images.
-        dataset = DataSetCOCO(common_params, dataset_params, False, True, False)  # No shuffle, same validation set.
+        dataset = DataSetCOCO(common_params, dataset_params, False, False, False)  # No shuffle, same validation set.
     else:
         dataset_params = {'path': '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val.txt', 'thread_num': 8, 
                           'c313': '1', 'cond_l': '0', 'gamma': '0.5'}
@@ -769,7 +769,7 @@ def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True):
                 
             for i in xrange(batch_num):
                 if is_coco:
-                    img_l, gt_313, prior_boost_nongray, img_cap, img_len, img_ab = dataset.batch()
+                    img_l, gt_313, prior_boost_nongray, img_cap, img_len = dataset.batch()
                     feed_dict = {l_tensor: img_l, cap_tensor: img_cap, len_tensor: img_len, gt_313_tensor: gt_313, prior_tensor: prior_boost_nongray}
                 else:
                     img_l, gt_313, prior_boost_nongray, img_ab = dataset.batch()

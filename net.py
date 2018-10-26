@@ -680,6 +680,7 @@ class Net(object):
                 temp_conv = bn('bn_6', temp_conv, train=self.train)    
                 temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
             temp_conv = tf.nn.relu(temp_conv)
+            conv_6 = temp_conv
 
             # conv7
             block_idx += 1
@@ -693,7 +694,10 @@ class Net(object):
                 temp_conv = batch_norm('bn_7', temp_conv, train=self.train)
             else:
                 temp_conv = bn('bn_7', temp_conv, train=self.train)
-                temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
+                attention_map = self.attention_block(conv_6, caption_feature)
+                temp_conv = attention_map * (
+                  gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]) + (
+                  1 - attention_map) * temp_conv
             temp_conv = tf.nn.relu(temp_conv)
 
             # conv8
@@ -1375,3 +1379,17 @@ class Net(object):
                 wd_loss = wd_loss + tf.nn.l2_loss(var)
         wd_loss = wd_loss * self.weight_decay
         return huber_loss, huber_loss + wd_loss, wd_loss
+
+    def attention_block(self, conv, cap_emb):
+        with tf.variable_scope('Attention', reuse=tf.AUTO_REUSE):
+            shape = tf.shape(conv)
+            cap_emb_expand = cap_emb[:, tf.newaxis, tf.newaxis, :]
+            cap_emb_expand = tf.tile(cap_emb_expand, (1, shape[1], shape[2], 1))  # NxHxWx512
+            conv = tf.stop_gradient(conv)
+            temp = tf.concat((conv, cap_emb_expand), axis=-1)  # NxHxWx1024
+            temp = conv2d('conv_1', temp, [3, 3, 1024, 512], stride=1, wd=self.weight_decay)
+            temp = conv2d('conv_2', temp, [3, 3, 512, 128], stride=1, wd=self.weight_decay)
+            temp = conv2d('conv_3', temp, [3, 3, 128, 16], stride=1, wd=self.weight_decay)
+            attention_map = conv2d('conv_4', temp, [3, 3, 16, 1], stride=1, wd=self.weight_decay, relu=False, sigmoid=True)
+
+        return attention_map
