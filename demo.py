@@ -683,6 +683,8 @@ def evaluate_from_rgb(in_dir, gt_dir):
     fout = open(os.path.join(in_dir, 'metrics.txt'), 'w')
 
     for img_name in img_names:
+        if not img_name.endswith('.jpg'):
+            continue
         img_id = os.path.splitext(img_name)[0]
         img_path = os.path.join(in_dir, img_name)
         gt_path = os.path.join(gt_dir, img_name)
@@ -819,6 +821,7 @@ if __name__ == "__main__":
     #       '/srv/glusterfs/xieya/image/color/tf_coco_5_38k', 
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/original', 
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/new')
-    evaluate(with_caption=False, cross_entropy=True, batch_num=600, is_coco=True)
+    # evaluate(with_caption=False, cross_entropy=True, batch_num=600, is_coco=True)
     # print("Model {}.".format(_CKPT_PATH))
     # compare_c313_pixelwise()
+    evaluate_from_rgb('/srv/glusterfs/xieya/image/color/tf_coco_24k', '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val')
