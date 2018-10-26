@@ -446,7 +446,6 @@ def colorize_with_language():
     val_imgs = hf['val_ims']
     val_caps = hf['val_words']
     val_lens = hf['val_length']
-    val_num = len(val_imgs)
 
     train_vocab = pickle.load(open('/home/xieya/colorfromlanguage/priors/coco_colors_vocab.p', 'r'))
     vrev = dict((v, k) for (k, v) in train_vocab.iteritems())
@@ -458,18 +457,12 @@ def colorize_with_language():
     if not os.path.exists(new_dir):
         os.makedirs(new_dir)
 
-    prior_factor = utils.PriorFactor(priorFile=_PRIOR_PATH, verbose=True)
-
     with tf.device('/gpu:0'):
         l_tensor = tf.placeholder(tf.float32, (1, _INPUT_SIZE, _INPUT_SIZE, 1))
         cap_tensor = tf.placeholder(tf.int32, (1, 20))
         len_tensor = tf.placeholder(tf.int32, (1))
         autocolor = Net(train=False)
         c313_tensor = autocolor.inference4(l_tensor, cap_tensor, len_tensor)
-        gt_313_tensor = tf.placeholder(tf.float32, (1, _INPUT_SIZE / 4, _INPUT_SIZE / 4, 313))
-        pred_313_tensor = tf.placeholder(tf.float32, (1, _INPUT_SIZE / 4, _INPUT_SIZE / 4, 313))
-        prior_tensor = tf.placeholder(tf.float32, (1, _INPUT_SIZE / 4, _INPUT_SIZE / 4, 1))
-        ce_loss_tensor, rb_loss_tensor = cross_entropy_loss(gt_313_tensor, pred_313_tensor, prior_tensor)
         saver = tf.train.Saver()
         print("Saver created.")
         config = tf.ConfigProto(allow_soft_placement=True)
@@ -481,7 +474,6 @@ def colorize_with_language():
             try:
                 idx = [335, 3735]
                 for i in xrange(200, 400):
-                    # i = random.randint(0, val_num - 1)
                     idx.append(i)
 
                 for i in idx:
@@ -497,13 +489,11 @@ def colorize_with_language():
                     img_cap = val_caps[i: i + 1]
                     img_len = val_lens[i: i + 1]
                     img_313 = sess.run(c313_tensor, feed_dict={l_tensor: img_l, cap_tensor: img_cap, len_tensor: img_len})
-                    img_dec, ab_dec = decode(img_l, img_313, 2.63)
-                    ce_loss, rb_loss = metrics(img_ab_ss, img_313, sess, gt_313_tensor, pred_313_tensor, prior_tensor, ce_loss_tensor, rb_loss_tensor)
-                    auc_score, auc_rb_score = _auc(img_ab_ss, ab_dec, prior_factor)
+                    img_dec, _ = decode(img_l, img_313, 2.63)
 
                     word_list = list(img_cap[0, :img_len[0]])
                     img_title = '_'.join(vrev.get(w, 'unk') for w in word_list) 
-                    io.imsave(os.path.join(orig_dir, '{0}_{1}_{2:.3f}_{3:.3f}_{4:.3f}_{5:.3f}.jpg').format(i, img_title, ce_loss, rb_loss, auc_score, auc_rb_score), img_dec)
+                    io.imsave(os.path.join(orig_dir, '{0}_{1}.jpg').format(i, img_title), img_dec)
                     print(img_title)
 
                     if _NEW_CAPTION:
@@ -515,13 +505,11 @@ def colorize_with_language():
                             new_img_cap[0, j] = train_vocab.get(new_words[j], 0)
                         new_img_len[0] = len(new_words)
                         new_img_313 = sess.run(c313_tensor, feed_dict={l_tensor: img_l, cap_tensor: new_img_cap, len_tensor: new_img_len})
-                        new_img_dec, new_ab_dec = decode(img_l, new_img_313, 2.63)
-                        new_ce_loss, new_rb_loss = metrics(img_ab_ss, new_img_313, sess, gt_313_tensor, pred_313_tensor, prior_tensor, ce_loss_tensor, rb_loss_tensor)
-                        new_auc_score, new_auc_rb_score = _auc(img_ab_ss, new_ab_dec, prior_factor)
+                        new_img_dec, _ = decode(img_l, new_img_313, 2.63)
 
                         new_word_list = list(new_img_cap[0, :new_img_len[0]])
                         new_img_title = '_'.join(vrev.get(w, 'unk') for w in new_word_list) 
-                        io.imsave(os.path.join(new_dir, '{0}_{1}_{2:.3f}_{3:.3f}_{4:.3f}_{5:.3f}.jpg').format(i, new_img_title, new_ce_loss, new_rb_loss, new_auc_score, new_auc_rb_score), new_img_dec)
+                        io.imsave(os.path.join(new_dir, '{0}_{1}.jpg').format(i, new_img_title), new_img_dec)
             finally:
                 hf.close()
                 print('H5 closed.')
