@@ -675,7 +675,8 @@ def evaluate_from_rgb(in_dir):
     hf = h5py.File('/srv/glusterfs/xieya/data/coco_colors.h5', 'r')
     gt_imgs = hf['val_ims']
 
-    img_names = os.listdir(in_dir).sort()
+    img_names = os.listdir(in_dir)
+    img_names.sort()
     l2_accs = []
     l2_rb_accs = []
     prior_weights = []
