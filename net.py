@@ -694,10 +694,12 @@ class Net(object):
                 temp_conv = batch_norm('bn_7', temp_conv, train=self.train)
             else:
                 temp_conv = bn('bn_7', temp_conv, train=self.train)
-                attention_map = self.attention_block(conv_6, caption_feature)
-                temp_conv = attention_map * (
-                  gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]) + (
-                  1 - attention_map) * temp_conv
+                # attention_map = self.attention_block(conv_6, caption_feature)
+                # temp_conv = attention_map * (
+                #   gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]) + (
+                #   1 - attention_map) * temp_conv
+                temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
+
             temp_conv = tf.nn.relu(temp_conv)
 
             # conv8

@@ -723,6 +723,8 @@ def evaluate_from_rgb(in_dir):
     # RMSE AB / pix
     print("RMSE AB per pix\t{0}".format(np.sqrt(np.mean(mse_ab_scores))))
 
+    fout.close()
+
 
 def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True):
     if is_coco:
