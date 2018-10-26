@@ -64,9 +64,11 @@ def annotate(model_names):
         img = compose_imgs(model_names, i, order)
         io.imshow(img)
         plt.show()
-        rank = raw_input('Please input your rank:')
-        rank = rank.strip().split(',')
-        rank = [int(r) for r in rank]
+        rank_input = raw_input('Please input your rank:')
+        rank_input = rank_input.strip().split(',')
+        rank = [-1] * n_models
+        for j in xrange(n_models):
+            rank[j] = int(rank_input[order[j]])
 
         for j in xrange(n_metrics):
             rank_by_m = rank_by_metrics[:, j]

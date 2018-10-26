@@ -404,9 +404,8 @@ def cross_entropy_loss(gt_313, conv8_313, prior_boost_nongray):
     rb_loss = ce_loss * prior_boost_nongray
     ce_loss = tf.reduce_mean(ce_loss, axis=(1, 2, 3))
     rb_loss = tf.reduce_sum(rb_loss, axis=(1, 2, 3)) / tf.reduce_sum(prior_boost_nongray, axis=(1, 2, 3))
-    # rb_loss = tf.reduce_mean(rb_loss, axis=(1, 2, 3))
 
-    return ce_loss, rb_loss, tf.reduce_sum(prior_boost_nongray, axis=(1, 2, 3))
+    return ce_loss, rb_loss
 
 
 def _l2_acc(gt_ab, pred_ab, prior_factor):
@@ -760,7 +759,7 @@ def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True):
         gt_313_tensor = tf.placeholder(tf.float32, (_BATCH_SIZE, _INPUT_SIZE / 4, _INPUT_SIZE / 4, 313))
         prior_tensor = tf.placeholder(tf.float32, (_BATCH_SIZE, _INPUT_SIZE / 4, _INPUT_SIZE / 4, 1))
         if cross_entropy:
-            ce_loss_tensor, rb_loss_tensor, prior_sum_tensor = cross_entropy_loss(gt_313_tensor, c313_tensor, prior_tensor)
+            ce_loss_tensor, rb_loss_tensor = cross_entropy_loss(gt_313_tensor, c313_tensor, prior_tensor)
             fout = open(os.path.join(_OUTPUT_DIR, 'ce.txt'), 'w')
         saver = tf.train.Saver()
         config = tf.ConfigProto(allow_soft_placement=True)
@@ -794,7 +793,7 @@ def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True):
                     rgb, _ = decode(img_l[j: j + 1], img_313[j: j + 1], T, return_313=False)
                     io.imsave(os.path.join(_OUTPUT_DIR, "{0}.jpg".format(img_count)), rgb)
                     if cross_entropy:
-                        fout.write("{0}\t{1}\t{2}\t{3}\n".format(img_count, ce[img_count], rb[img_count], prior_sum[j]))
+                        fout.write("{0}\t{1}\t{2}\n".format(img_count, ce[img_count], rb[img_count]))
                     img_count += 1
                             
                 print(i)
@@ -822,6 +821,6 @@ if __name__ == "__main__":
     #       '/srv/glusterfs/xieya/image/color/tf_coco_5_38k', 
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/original', 
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/new')
-    evaluate(with_caption=False, cross_entropy=True, batch_num=10, is_coco=True)
+    evaluate(with_caption=False, cross_entropy=True, batch_num=600, is_coco=True)
     # print("Model {}.".format(_CKPT_PATH))
     # compare_c313_pixelwise()
