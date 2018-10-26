@@ -38,11 +38,12 @@ class DataSet(object):
             self.sampler = True if common_params['sampler'] == '1' else False
             if 'with_cap_prior' in common_params:
                 self.cap_prior = common_params['with_cap_prior'] == '1'
+                self.cap_prior_gamma = float(common_params['cap_prior_gamma'])
 
         self.training = train
         self.with_ab = with_ab
         if self.cap_prior:
-            self.cap_prior_encoder = CaptionPrior()
+            self.cap_prior_encoder = CaptionPrior(self.cap_prior_gamma)
 
         # record and image_label queue
         self.record_queue = Queue(maxsize=15000)

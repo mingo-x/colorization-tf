@@ -505,12 +505,11 @@ def is_grayscale(gt_ab):
 
 
 class CaptionPrior():
-    def __init__(self):
+    def __init__(self, gamma=0.5):
         color_probs = pickle.load(open('/home/xieya/colorfromlanguage/priors/color_probs.p', 'r'))
         color_num = len(color_probs)
         smoothed_color_probs = {}
         uniform = 1. / color_num
-        gamma = 0.5
         for c in color_probs:
             smoothed_color_probs[c] = gamma * uniform + (1 - gamma) * color_probs[c]
         self.color_weights = {}

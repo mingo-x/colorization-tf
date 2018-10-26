@@ -1,3 +1,4 @@
+import math
 import random
 import subprocess
 
@@ -28,9 +29,9 @@ _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
 _G_VERSION = 1
-_CKPT_PATH = '/srv/glusterfs/xieya/language_1/models/model.ckpt-4000'
+_CKPT_PATH = '/srv/glusterfs/xieya/tf_coco/models/model.ckpt-24000'
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
-_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/language_1_40k'
+_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/tf_coco_24k'
 _PRIOR_PATH = '/srv/glusterfs/xieya/prior/coco_313_soft.npy'
 #_PRIOR_PATH = 'resources/prior_probs_smoothed.npy'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
@@ -39,6 +40,14 @@ _VIDEO_OUT_DIR = '/srv/glusterfs/xieya/video/bus/vgg_4'
 _NEW_CAPTION = True
 # T = 2.63
 T = 2.63
+
+
+def _psnr(img1, img2):
+    mse = np.mean((img1 - img2) ** 2)
+    if mse == 0:
+        return 100
+    PIXEL_MAX = 255.0
+    return 20 * math.log10(PIXEL_MAX / math.sqrt(mse))
 
 
 def _resize(image):
@@ -59,6 +68,10 @@ def _resize(image):
         crop_start = 0
         image = image[crop_start:crop_start + resize_size, :, :]
     return image
+
+
+def _rmse(img1, img2):
+    return np.sqrt(np.mean((img1 - img2) ** 2))
 
 
 def _get_model(input_tensor):
@@ -389,8 +402,8 @@ def cross_entropy_loss(gt_313, conv8_313, prior_boost_nongray):
     ce_loss = tf.nn.softmax_cross_entropy_with_logits_v2(logits=flat_conv8_313, labels=flat_gt_313)
     ce_loss = tf.reshape(ce_loss, tf.shape(prior_boost_nongray))
     rb_loss = ce_loss * prior_boost_nongray
-    ce_loss = tf.reduce_mean(ce_loss)
-    rb_loss = tf.reduce_sum(rb_loss) / tf.reduce_sum(prior_boost_nongray)
+    ce_loss = tf.reduce_mean(ce_loss, axis=(1, 2, 3))
+    rb_loss = tf.reduce_sum(rb_loss, axis=(1, 2, 3)) / tf.reduce_sum(prior_boost_nongray, axis=(1, 2, 3))
 
     return ce_loss, rb_loss
 
@@ -408,19 +421,19 @@ def _l2_acc(gt_ab, pred_ab, prior_factor):
     scores = []
     scores_rb = []
     total = np.sum(ones)
-    prior_weight = np.sum(prior) / total
+    prior_sum = np.sum(prior)
     for thr in range(0, _AUC_THRESHOLD + 1):
         score = np.sum(
             np.where(np.less_equal(l2_dist, thr), ones, zeros)) / total
         score_rb = np.sum(
-            np.where(np.less_equal(l2_dist, thr), prior, zeros)) / total
+            np.where(np.less_equal(l2_dist, thr), prior, zeros)) / prior_sum
         scores.append(score)
         scores_rb.append(score_rb)
-    return scores, score_rb, prior_weight
+    return scores, scores_rb, prior_sum
+
 
 def _auc(gt_ab, pred_ab, prior_factor):
-    scores, scores_rb, prior_weight = _l2_acc(gt_ab, pred_ab, prior_factor)
-    scores_rb /= prior_weight
+    scores, scores_rb, _ = _l2_acc(gt_ab, pred_ab, prior_factor)
     x = [i for i in range(0, _AUC_THRESHOLD + 1)]
     auc_score = auc(x, scores) / _AUC_THRESHOLD
     auc_rb_score = auc(x, scores_rb) / _AUC_THRESHOLD
@@ -562,13 +575,13 @@ def colorize_video_with_language():
 def colorize_coco_without_language(evaluate=False):
     hf = h5py.File('/srv/glusterfs/xieya/data/coco_colors.h5', 'r')
     val_imgs = hf['val_ims']
-    val_num = len(val_imgs)
-    prior_factor = utils.PriorFactor(priorFile=_PRIOR_PATH, verbose=True)
 
     with tf.device('/gpu:0'):
         l_tensor = tf.placeholder(tf.float32, (1, _INPUT_SIZE, _INPUT_SIZE, 1))
         autocolor = Net(train=False, g_version=_G_VERSION)
         c313_tensor = autocolor.inference(l_tensor)
+        if len(c313_tensor) == 2:
+            c313_tensor = c313_tensor[0]
         if evaluate:
             gt_313_tensor = tf.placeholder(tf.float32, (1, _INPUT_SIZE / 4, _INPUT_SIZE / 4, 313))
             pred_313_tensor = tf.placeholder(tf.float32, (1, _INPUT_SIZE / 4, _INPUT_SIZE / 4, 313))
@@ -578,23 +591,16 @@ def colorize_coco_without_language(evaluate=False):
         config = tf.ConfigProto(allow_soft_placement=True)
         config.gpu_options.allow_growth = True
 
-        out_dir = os.path.join(_VIDEO_OUT_DIR, 'nocap')
-        if not os.path.exists(out_dir):
-            os.makedirs(out_dir)
-
+        if evaluate:
+            ce_losses = []
+            rb_losses = []
+            fout = open(os.path.join(_OUTPUT_DIR, 'ce.txt'), 'w')
         with tf.Session(config=config) as sess:
             saver.restore(sess, _CKPT_PATH)
-            
-            # img_names = os.listdir(_VIDEO_IN_DIR)
-            for i in xrange(200, 400):
-            # for img_name in img_names:
-                # img_bgr = cv2.imread(os.path.join(_VIDEO_IN_DIR, img_name))
-                # img_bgr = _resize(img_bgr)
-                # i = random.randint(0, val_num - 1)
+            for i in xrange(192000):
                 img_bgr = val_imgs[i]
                 img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
                 img_lab = color.rgb2lab(img_rgb)
-                # img_lab = cv2.resize(img_lab, (224, 224), interpolation=cv2.INTER_CUBIC)
                 img_l = img_lab[None, :, :, 0: 1]
                 img_ab = img_lab[None, :, :, 1:]
                 img_ab_ss = transform.downscale_local_mean(img_ab, (1, 4, 4, 1))
@@ -602,17 +608,18 @@ def colorize_coco_without_language(evaluate=False):
                     continue
                 img_l = (img_l.astype(dtype=np.float32) - 50.) / 50.
                 img_313 = sess.run(c313_tensor, feed_dict={l_tensor: img_l})
-                img_dec, ab_dec = decode(img_l, img_313, T)
+                img_dec, _ = decode(img_l, img_313, T)
                 if evaluate:
                     # Evaluate metrics
                     ce_loss, rb_loss = metrics(img_ab_ss, img_313, sess, gt_313_tensor, pred_313_tensor, prior_tensor, ce_loss_tensor, rb_loss_tensor)
-                    auc_score, auc_rb_score = _auc(img_ab_ss, ab_dec, prior_factor)
-                    io.imsave(os.path.join(_OUTPUT_DIR, '{0}_{1:.3f}_{2:.3f}_{3:.3f}_{4:.3f}.jpg').format(i, ce_loss, rb_loss, auc_score, auc_rb_score), img_dec)
-                else:
-                    io.imsave(os.path.join(_OUTPUT_DIR, '{0}.jpg'.format(i)), img_dec)
-                # cv2.imwrite(os.path.join(_OUTPUT_DIR, '{0}_gt.jpg').format(i), img_bgr)
+                    fout.write('{0}\t{1}\t{2}\n'.format(i, ce_loss, rb_loss))
+                    ce_losses.append(ce_loss)
+                    rb_losses.append(rb_loss)
+                io.imsave(os.path.join(_OUTPUT_DIR, '{0}.jpg'.format(i)), img_dec)
                 print(i)
-                # print(img_name)
+    if evaluate:
+        fout.write('ave\t{0}\t{1}\n'.format(np.mean(ce_losses), np.mean(rb_losses)))
+        fout.close()
     hf.close()
     print('H5 closed.')
 
@@ -663,34 +670,80 @@ def merge(cic_dir, coco_dir, cap_dir, new_cap_dir):
         print(idx)
 
 
-def evaluate_from_rgb(in_dir):
+def evaluate_from_rgb(in_dir, gt_dir):
     '''
         AUC / image
         AUC / pixel
+        PSNR of RGB / image
+        RMSE of AB / pixel
     '''
+    prior_factor = utils.PriorFactor(gamma=0., priorFile=_PRIOR_PATH, verbose=True)
+
     img_names = os.listdir(in_dir)
+    l2_accs = []
+    l2_rb_accs = []
+    prior_weights = []
+    auc_scores = []
+    auc_rb_scores = []
+    psnr_rgb_scores = []
+    rmse_ab_scores = []
+    x = [i for i in range(0, _AUC_THRESHOLD + 1)]
+    fout = open(os.path.join(in_dir, 'metrics.txt'), 'w')
+
     for img_name in img_names:
+        img_id = os.path.splitext(img_name)[0]
         img_path = os.path.join(in_dir, img_name)
+        gt_path = os.path.join(gt_dir, img_name)
         img_rgb = io.imread(img_path)
+        gt_rgb = io.imread(gt_path)
         img_ab = color.rgb2lab(img_rgb)[:, :, 1:]
+        gt_ab = color.rgb2lab(gt_rgb)[:, :, 1:]
         ab_ss = transform.downscale_local_mean(img_ab, (4, 4, 1))
+        gt_ab_ss = transform.downscale_local_mean(gt_ab, (4, 4, 1))
+        l2_acc, l2_rb_acc, prior_weight = _l2_acc(gt_ab_ss, ab_ss, prior_factor)
+        l2_accs.append(l2_acc)
+        l2_rb_accs.append(l2_rb_accs)
+        prior_weights.append(prior_weight)
+        auc_score = auc(x, l2_acc) / _AUC_THRESHOLD
+        auc_rb_score = auc(x, l2_rb_acc) / _AUC_THRESHOLD
+        auc_scores.append(auc_score)
+        auc_rb_scores.append(auc_rb_score)
+        psnr_rgb_score = _psnr(gt_rgb, img_rgb)
+        psnr_rgb_scores.append(psnr_rgb_score)
+        rmse_ab_score = _rmse(gt_ab_ss, ab_ss)
+        rmse_ab_scores.append(rmse_ab_score)
+
+        fout.write('{0}\t{1}\t{2}\t{3}\t{4}\n'.format(img_id, auc_score, auc_rb_score, psnr_rgb_score, rmse_ab_score))
+
+    # AUC / pix
+    l2_acc_per_pix = np.average(l2_accs, weights=prior_weights, axis=0)
+    l2_rb_acc_per_pix = np.average(l2_rb_accs, weights=prior_weights, axis=0)
+    auc_per_pix = auc(x, l2_acc_per_pix) / _AUC_THRESHOLD
+    auc_rb_per_pix = auc(x, l2_rb_acc_per_pix) / _AUC_THRESHOLD
+    print("AUC per pix\t{0}".format(auc_per_pix))
+    print("AUC rebalanced per pix\t{0}".format(auc_rb_per_pix))
+
+    # AUC / img
+    print("AUC per image\t{0}".format(np.mean(auc_scores)))
+    print("AUC rebalanced per image\t{0}".format(np.mean(auc_rb_scores)))
+
+    # PSNR RGB / img
+    print("PSNR RGB per image\t{0}".format(np.mean(psnr_rgb_scores)))
+
+    # RMSE AB / pix
+    print("RMSE AB per pix\t{0}".format(np.mean(rmse_ab_scores)))
 
 
-
-def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c313_hist=False, get_ab_hist_given_l=False, get_c313_hist_given_l=False, model_name="", batch_num=300, ab_from_rgb=False, is_coco=True):
+def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True):
     if is_coco:
         dataset_params = {'path': _COCO_PATH, 'thread_num': 4, 'prior_path': _PRIOR_PATH}
-        common_params = {'batch_size': _BATCH_SIZE, 'with_caption': False}  # with_caption -> False: ignore grayscale images.
+        common_params = {'batch_size': _BATCH_SIZE, 'with_caption': '0', 'sampler': '0', }  # with_caption -> False: ignore grayscale images.
         dataset = DataSetCOCO(common_params, dataset_params, False, True, False)  # No shuffle, same validation set.
     else:
         dataset_params = {'path': '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val.txt', 'thread_num': 8, 
                           'c313': '1', 'cond_l': '0', 'gamma': '0.5'}
         common_params = {'image_size': _INPUT_SIZE, 'batch_size': _BATCH_SIZE, 'is_gan': '0', 'is_rgb': '0'}
         dataset = DataSet(common_params, dataset_params, True, False)  # No shuffle.
-
-    if auc:
-        prior_factor_0 = utils.PriorFactor(priorFile=_PRIOR_PATH, verbose=True)
-        prior_factor_5 = utils.PriorFactor(gamma=0.5, priorFile=_PRIOR_PATH, verbose=True)
 
     with tf.device('/gpu:0'):
         l_tensor = tf.placeholder(tf.float32, (_BATCH_SIZE, _INPUT_SIZE, _INPUT_SIZE, 1))
@@ -701,13 +754,18 @@ def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c3
             c313_tensor = autocolor.inference4(l_tensor, cap_tensor, len_tensor)
         else:
             c313_tensor = autocolor.inference(l_tensor)
+            if len(c313_tensor) > 1:
+                c313_tensor = c313_tensor[0]
         gt_313_tensor = tf.placeholder(tf.float32, (_BATCH_SIZE, _INPUT_SIZE / 4, _INPUT_SIZE / 4, 313))
         prior_tensor = tf.placeholder(tf.float32, (_BATCH_SIZE, _INPUT_SIZE / 4, _INPUT_SIZE / 4, 1))
         if cross_entropy:
             ce_loss_tensor, rb_loss_tensor = cross_entropy_loss(gt_313_tensor, c313_tensor, prior_tensor)
+            fout = open(os.path.join(_OUTPUT_DIR, 'ce.txt'), 'w')
         saver = tf.train.Saver()
         config = tf.ConfigProto(allow_soft_placement=True)
         config.gpu_options.allow_growth = True
+
+        img_count = 0
 
         with tf.Session(config=config) as sess:
             saver.restore(sess, _CKPT_PATH)
@@ -715,19 +773,6 @@ def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c3
             if cross_entropy:
                 ce = []
                 rb = []
-            if auc:
-                auc_0 = []
-                auc_rb_0 = []
-                auc_rb_5 = []
-            if ab_hist:
-                hist = np.zeros((313,), dtype=np.float64)
-                l_hist = np.zeros((101,), dtype=np.float64)
-            if get_c313_hist:
-                c313_hist = np.zeros((313,), dtype=np.float64)
-            if get_ab_hist_given_l:
-                abl_hist = np.zeros((101, 313), dtype=np.float64)
-            if get_c313_hist_given_l:
-                c313l_hist = np.zeros((101, 313), dtype=np.float64)
                 
             for i in xrange(batch_num):
                 if is_coco:
@@ -739,72 +784,24 @@ def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c3
 
                 if cross_entropy:
                     img_313, ce_loss, rb_loss = sess.run([c313_tensor, ce_loss_tensor, rb_loss_tensor], feed_dict=feed_dict)
-                    ce.append(ce_loss)
-                    rb.append(rb_loss)
+                    ce.extend(ce_loss)
+                    rb.extend(rb_loss)
                 else:
                     img_313 = sess.run(c313_tensor, feed_dict=feed_dict)
                 
-                if auc or ab_hist or get_c313_hist or get_ab_hist_given_l or get_c313_hist_given_l:
-                    for j in xrange(_BATCH_SIZE):
-                        rgb, ab_dec, prob_313 = decode(img_l[j: j + 1], img_313[j: j + 1], T, return_313=True)
-                        if ab_from_rgb:
-                            rgb_ss = transform.downscale_local_mean(rgb, (4, 4, 1))
-                            ab_dec = color.rgb2lab(rgb_ss)[:, :, 1:]
-                        if auc:
-                            auc_score_0, auc_rb_score_0 = _auc(img_ab, ab_dec, prior_factor_0)
-                            auc_0.append(auc_score_0)
-                            auc_rb_0.append(auc_rb_score_0)
-                            _, auc_rb_score_5 = _auc(img_ab, ab_dec, prior_factor_5)
-                            auc_rb_5.append(auc_rb_score_5)
-                        if ab_hist:
-                            ab_idx = lookup.encode_points(ab_dec).flatten()
-                            for idx in xrange(313):
-                                hist[idx] += len(ab_idx[ab_idx == idx])
-                        if get_c313_hist:
-                            prob_313_sum = np.sum(prob_313, axis=(0, 1))
-                            c313_hist += prob_313_sum
-                        if get_ab_hist_given_l:
-                            ab_idx = lookup.encode_points(ab_dec).flatten()
-                            img_l_ss = transform.downscale_local_mean((img_l[j] + 1) * 50, (4, 4, 1))
-                            l_idx = np.round(img_l_ss).flatten().astype(np.int32)
-                            for ab in xrange(313):
-                                for l in xrange(101):
-                                    abl_hist[l, ab] += np.sum(np.logical_and(ab_idx == ab, l_idx == l))
-                        if get_c313_hist_given_l:
-                            img_l_ss = transform.downscale_local_mean((img_l[j] + 1) * 50, (4, 4, 1))
-                            l_idx = np.round(img_l_ss[:, :, 0]).astype(np.int32)
-                            for l in xrange(101):
-                                c313l_hist[l] += np.sum(prob_313[l_idx == l], axis=0)
-                            
-                if ab_hist:
-                    l_idx = ((img_l + 1) * 50).astype(np.int32).flatten()
-                    for idx in xrange(101):
-                        l_hist[idx] += len(l_idx[l_idx == idx])
+                for j in xrange(_BATCH_SIZE):
+                    rgb, _ = decode(img_l[j: j + 1], img_313[j: j + 1], T, return_313=False)
+                    io.imsave(os.path.join(_OUTPUT_DIR, "{0}.jpg".format(img_count)), rgb)
+                    if cross_entropy:
+                        fout.write("{0}\t{1}\t{2}\n".format(img_count, ce[img_count], rb[img_count]))
+                    img_count += 1
                             
                 print(i)
 
             if cross_entropy:
                 print("cross entropy {0:.6f}, rebalanced cross entropy {1:.6f}".format(np.mean(ce), np.mean(rb)))
-            if auc:
-                print("auc {0:.6f}, rebalanced auc {1:.6f}, rebalanced auc (g=0.5) {2:.6f}".format(np.mean(auc_0), np.mean(auc_rb_0), np.mean(auc_rb_5)))
-            if ab_hist:
-                np.save("/srv/glusterfs/xieya/image/ab/{0}_{1}hist.npy".format(model_name, 'rgb_' if ab_from_rgb else ''), hist)
-                np.save("/srv/glusterfs/xieya/image/ab/l_hist.npy", l_hist)
-                print("Hist stats: min {0} @ {5}, max {1} @ {6}, mean {2}, std {3}, median {4}".format(
-                    np.min(hist), np.max(hist), np.mean(hist), np.std(hist), np.median(hist), np.argmin(hist), np.argmax(hist)))
-                print("Luma hist stats: min {0} @ {5}, max {1} @ {6}, mean {2}, std {3}, median {4}".format(
-                    np.min(l_hist), np.max(l_hist), np.mean(l_hist), np.std(l_hist), np.median(l_hist), np.argmin(l_hist), np.argmax(l_hist)))
-            if get_c313_hist:
-                np.save("/srv/glusterfs/xieya/image/ab/{}_c313_hist.npy".format(model_name), c313_hist)
-                print("C313 hist stats: min {0} @ {5}, max {1} @ {6}, mean {2}, std {3}, median {4}".format(
-                    np.min(c313_hist), np.max(c313_hist), np.mean(c313_hist), np.std(c313_hist), np.median(c313_hist), np.argmin(c313_hist), np.argmax(c313_hist)))
-            if get_ab_hist_given_l:
-                np.save("/srv/glusterfs/xieya/image/ab/{0}_abl_{1}hist.npy".format(model_name, 'rgb_' if ab_from_rgb else ''), abl_hist)
-                print("Check mean: {0}".format(np.sum(abl_hist) / 313.))
-            if get_c313_hist_given_l:
-                np.save("/srv/glusterfs/xieya/image/ab/{}_c313l_hist.npy".format(model_name), c313l_hist)
-                print("Check mean: {0}".format(np.sum(c313l_hist) / 313.))
-            print("Total {}".format(batch_num * _BATCH_SIZE))
+                print("Total {}".format(len(ce)))
+                fout.close()
 
 
 if __name__ == "__main__":
@@ -816,14 +813,14 @@ if __name__ == "__main__":
     # demo_wgan_rgb()
     # _colorize_high_res_img(_IMG_NAME)
     # cifar()
-    colorize_with_language()
+    # colorize_with_language()
     # colorize_video_with_language()
-    # colorize_coco_without_language(evaluate=False)
+    # colorize_coco_without_language(evaluate=True)
     # save_ground_truth()
     # merge('/srv/glusterfs/xieya/image/color/tf_224_1_476k', 
     #       '/srv/glusterfs/xieya/image/color/tf_coco_5_38k', 
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/original', 
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/new')
-    # evaluate(with_caption=False, cross_entropy=False, auc=True, ab_hist=True, get_c313_hist=False, get_ab_hist_given_l=True, get_c313_hist_given_l=False, model_name='tf_224_1_476k', batch_num=600, ab_from_rgb=False, is_coco=False)
+    evaluate(with_caption=False, cross_entropy=True, batch_num=10, is_coco=True)
     # print("Model {}.".format(_CKPT_PATH))
     # compare_c313_pixelwise()

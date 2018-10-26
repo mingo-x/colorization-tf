@@ -110,7 +110,7 @@ class Solver_Language(object):
                 if self.ckpt is None and self.init_ckpt is not None:
                     # Restore gamma and beta of BN.
                     self.biases = [None] * 8
-                    caption_layer = [0, 1, 2, 3, 4, 5, 6, 7]
+                    caption_layer = [6]
                     print('Blocks with language guidance:')
                     for i in caption_layer:
                         print(i + 1)

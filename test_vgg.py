@@ -16,9 +16,9 @@ OUT_DIR = '/srv/glusterfs/xieya/colorization-tf/prediction'
 LABEL_PATH = '/home/xieya/colorization-tf/resources/val.txt'
 LOG_PATH = '/home/xieya/metrics.txt'
 MODEL_CHECKPOINT = '/srv/glusterfs/xieya/colorization-tf/pretrained/color_model.ckpt'
-#CLASS_ID_DICT_PATH = '/srv/glusterfs/xieya/colorization-tf/resources/class_index_dict.pkl'
+# CLASS_ID_DICT_PATH = '/srv/glusterfs/xieya/colorization-tf/resources/class_index_dict.pkl'
 NUM_IMGS = 10000
-#CLASS_ID_DICT = pickle.load(open(CLASS_ID_DICT_PATH, 'rb'))
+# CLASS_ID_DICT = pickle.load(open(CLASS_ID_DICT_PATH, 'rb'))
 THRESHOLD = 50
 
 
@@ -48,15 +48,15 @@ def _image_process(image):
     w = image.shape[1]
 
     if w > h:
-      image = cv2.resize(image, (int(IMG_SIZE * w / h), IMG_SIZE))
+        image = cv2.resize(image, (int(IMG_SIZE * w / h), IMG_SIZE))
 
-      crop_start = (int(IMG_SIZE * w / h) - IMG_SIZE) / 2
-      image = image[:, crop_start:crop_start + IMG_SIZE, :]
+        crop_start = (int(IMG_SIZE * w / h) - IMG_SIZE) / 2
+        image = image[:, crop_start:crop_start + IMG_SIZE, :]
     else:
-      image = cv2.resize(image, (IMG_SIZE, int(IMG_SIZE * h / w)))
+        image = cv2.resize(image, (IMG_SIZE, int(IMG_SIZE * h / w)))
 
-      crop_start = (int(IMG_SIZE * h / w) - IMG_SIZE) / 2
-      image = image[crop_start:crop_start + IMG_SIZE, :, :]
+        crop_start = (int(IMG_SIZE * h / w) - IMG_SIZE) / 2
+        image = image[crop_start:crop_start + IMG_SIZE, :, :]
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     return image
 
