@@ -412,10 +412,10 @@ def _l2_acc(gt_ab, pred_ab, prior_factor):
     '''
     L2 accuracy given different threshold.
     '''
-    ab_idx = lookup.encode_points(gt_ab[0])
+    ab_idx = lookup.encode_points(gt_ab)
     prior = prior_factor.get_weights(ab_idx)
 
-    l2_dist = np.sqrt(np.sum(np.square(gt_ab[0] - pred_ab), axis=2))
+    l2_dist = np.sqrt(np.sum(np.square(gt_ab - pred_ab), axis=2))
     ones = np.ones_like(l2_dist)
     zeros = np.zeros_like(l2_dist)
     scores = []
@@ -432,15 +432,6 @@ def _l2_acc(gt_ab, pred_ab, prior_factor):
     print(scores)
     print(scores_rb)
     return scores, scores_rb, prior_sum
-
-
-def _auc(gt_ab, pred_ab, prior_factor):
-    scores, scores_rb, _ = _l2_acc(gt_ab, pred_ab, prior_factor)
-    x = [i for i in range(0, _AUC_THRESHOLD + 1)]
-    auc_score = auc(x, scores) / _AUC_THRESHOLD
-    auc_rb_score = auc(x, scores_rb) / _AUC_THRESHOLD
-
-    return auc_score, auc_rb_score
 
 
 def colorize_with_language():
