@@ -106,20 +106,18 @@ class Solver_Language(object):
             )
 
             if self.with_caption:
-                self.biases = None
-                if self.ckpt is None and self.init_ckpt is not None:
-                    # Restore gamma and beta of BN.
-                    self.biases = [None] * 8
-                    caption_layer = [6]
-                    print('Blocks with language guidance:')
-                    for i in caption_layer:
-                        print(i + 1)
-                        gamma = tf.get_variable('gamma{}'.format(i + 1), (self.net.in_dims[i], ), dtype=tf.float32, trainable=False)
-                        beta = tf.get_variable('beta{}'.format(i + 1), (self.net.in_dims[i], ), dtype=tf.float32, trainable=False)
-                        bn_saver = tf.train.Saver({'G/bn_{}/gamma'.format(i + 1): gamma, 'G/bn_{}/beta'.format(i + 1): beta})
-                        bn_saver.restore(sess, self.init_ckpt)
-                        bias = tf.concat((gamma, beta), axis=-1)
-                        self.biases[i] = sess.run(bias)
+                # Restore gamma and beta of BN.
+                self.biases = [None] * 8
+                caption_layer = [6]
+                print('Blocks with language guidance:')
+                for i in caption_layer:
+                    print(i + 1)
+                    gamma = tf.get_variable('gamma{}'.format(i + 1), (self.net.in_dims[i], ), dtype=tf.float32, trainable=False)
+                    beta = tf.get_variable('beta{}'.format(i + 1), (self.net.in_dims[i], ), dtype=tf.float32, trainable=False)
+                    bn_saver = tf.train.Saver({'G/bn_{}/gamma'.format(i + 1): gamma, 'G/bn_{}/beta'.format(i + 1): beta})
+                    bn_saver.restore(sess, self.init_ckpt)
+                    bias = tf.concat((gamma, beta), axis=-1)
+                    self.biases[i] = sess.run(bias)
                 kernel = None
                 if self.kernel_zero:
                     kernel = tf.zeros_initializer(dtype=tf.float32)
