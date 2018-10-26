@@ -662,7 +662,7 @@ def merge(cic_dir, coco_dir, cap_dir, new_cap_dir):
         print(idx)
 
 
-def evaluate_from_rgb(in_dir, gt_dir):
+def evaluate_from_rgb(in_dir):
     '''
         AUC / image
         AUC / pixel
@@ -670,6 +670,8 @@ def evaluate_from_rgb(in_dir, gt_dir):
         RMSE of AB / pixel
     '''
     prior_factor = utils.PriorFactor(gamma=0., priorFile=_PRIOR_PATH, verbose=True)
+    hf = h5py.File('/srv/glusterfs/xieya/data/coco_colors.h5', 'r')
+    gt_imgs = hf['val_ims']
 
     img_names = os.listdir(in_dir)
     l2_accs = []
@@ -687,9 +689,9 @@ def evaluate_from_rgb(in_dir, gt_dir):
             continue
         img_id = os.path.splitext(img_name)[0]
         img_path = os.path.join(in_dir, img_name)
-        gt_path = os.path.join(gt_dir, img_name)
+        gt_bgr = gt_imgs[img_id]
         img_rgb = io.imread(img_path)
-        gt_rgb = io.imread(gt_path)
+        gt_rgb = cv2.cvtColor(gt_bgr, cv2.COLOR_BGR2RGB)
         img_ab = color.rgb2lab(img_rgb)[:, :, 1:]
         gt_ab = color.rgb2lab(gt_rgb)[:, :, 1:]
         ab_ss = transform.downscale_local_mean(img_ab, (4, 4, 1))
