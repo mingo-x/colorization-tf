@@ -395,7 +395,10 @@ def cross_entropy_loss(gt_313, conv8_313, prior_boost_nongray):
     return ce_loss, rb_loss
 
 
-def _auc(gt_ab, pred_ab, prior_factor):
+def _l2_acc(gt_ab, pred_ab, prior_factor):
+    '''
+    L2 accuracy given different threshold.
+    '''
     ab_idx = lookup.encode_points(gt_ab[0])
     prior = prior_factor.get_weights(ab_idx)
 
@@ -404,13 +407,20 @@ def _auc(gt_ab, pred_ab, prior_factor):
     zeros = np.zeros_like(l2_dist)
     scores = []
     scores_rb = []
+    total = np.sum(ones)
+    prior_weight = np.sum(prior) / total
     for thr in range(0, _AUC_THRESHOLD + 1):
         score = np.sum(
-            np.where(np.less_equal(l2_dist, thr), ones, zeros)) / np.sum(ones)
+            np.where(np.less_equal(l2_dist, thr), ones, zeros)) / total
         score_rb = np.sum(
-            np.where(np.less_equal(l2_dist, thr), prior, zeros)) / np.sum(prior)
+            np.where(np.less_equal(l2_dist, thr), prior, zeros)) / total
         scores.append(score)
         scores_rb.append(score_rb)
+    return scores, score_rb, prior_weight
+
+def _auc(gt_ab, pred_ab, prior_factor):
+    scores, scores_rb, prior_weight = _l2_acc(gt_ab, pred_ab, prior_factor)
+    scores_rb /= prior_weight
     x = [i for i in range(0, _AUC_THRESHOLD + 1)]
     auc_score = auc(x, scores) / _AUC_THRESHOLD
     auc_rb_score = auc(x, scores_rb) / _AUC_THRESHOLD
@@ -651,6 +661,20 @@ def merge(cic_dir, coco_dir, cap_dir, new_cap_dir):
             img_name = "{0}_A_{1}_B_{2}_C_{3}.jpg".format(idx, cic_score, coco_score, cap_score)
             cv2.imwrite(os.path.join(_OUTPUT_DIR, img_name), img)
         print(idx)
+
+
+def evaluate_from_rgb(in_dir):
+    '''
+        AUC / image
+        AUC / pixel
+    '''
+    img_names = os.listdir(in_dir)
+    for img_name in img_names:
+        img_path = os.path.join(in_dir, img_name)
+        img_rgb = io.imread(img_path)
+        img_ab = color.rgb2lab(img_rgb)[:, :, 1:]
+        ab_ss = transform.downscale_local_mean(img_ab, (4, 4, 1))
+
 
 
 def evaluate(with_caption, cross_entropy=False, auc=False, ab_hist=False, get_c313_hist=False, get_ab_hist_given_l=False, get_c313_hist_given_l=False, model_name="", batch_num=300, ab_from_rgb=False, is_coco=True):
