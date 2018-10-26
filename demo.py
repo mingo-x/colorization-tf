@@ -42,6 +42,10 @@ _NEW_CAPTION = True
 T = 2.63
 
 
+def _mse(img1, img2):
+    return np.mean((img1 - img2) ** 2)
+
+
 def _psnr(img1, img2):
     mse = np.mean((img1 - img2) ** 2)
     if mse == 0:
@@ -68,10 +72,6 @@ def _resize(image):
         crop_start = 0
         image = image[crop_start:crop_start + resize_size, :, :]
     return image
-
-
-def _rmse(img1, img2):
-    return np.sqrt(np.mean((img1 - img2) ** 2))
 
 
 def _get_model(input_tensor):
@@ -429,6 +429,8 @@ def _l2_acc(gt_ab, pred_ab, prior_factor):
             np.where(np.less_equal(l2_dist, thr), prior, zeros)) / prior_sum
         scores.append(score)
         scores_rb.append(score_rb)
+    print(scores)
+    print(scores_rb)
     return scores, scores_rb, prior_sum
 
 
@@ -680,7 +682,7 @@ def evaluate_from_rgb(in_dir):
     auc_scores = []
     auc_rb_scores = []
     psnr_rgb_scores = []
-    rmse_ab_scores = []
+    mse_ab_scores = []
     x = [i for i in range(0, _AUC_THRESHOLD + 1)]
     fout = open(os.path.join(in_dir, 'metrics.txt'), 'w')
 
@@ -706,10 +708,10 @@ def evaluate_from_rgb(in_dir):
         auc_rb_scores.append(auc_rb_score)
         psnr_rgb_score = _psnr(gt_rgb, img_rgb)
         psnr_rgb_scores.append(psnr_rgb_score)
-        rmse_ab_score = _rmse(gt_ab_ss, ab_ss)
-        rmse_ab_scores.append(rmse_ab_score)
+        mse_ab_score = _mse(gt_ab_ss, ab_ss)
+        mse_ab_scores.append(mse_ab_score)
 
-        summary = '{0}\t{1}\t{2}\t{3}\t{4}\n'.format(img_id, auc_score, auc_rb_score, psnr_rgb_score, rmse_ab_score)
+        summary = '{0}\t{1}\t{2}\t{3}\t{4}\n'.format(img_id, auc_score, auc_rb_score, psnr_rgb_score, np.sqrt(mse_ab_score))
         print(summary)
         fout.write(summary)
 
@@ -729,7 +731,7 @@ def evaluate_from_rgb(in_dir):
     print("PSNR RGB per image\t{0}".format(np.mean(psnr_rgb_scores)))
 
     # RMSE AB / pix
-    print("RMSE AB per pix\t{0}".format(np.mean(rmse_ab_scores)))
+    print("RMSE AB per pix\t{0}".format(np.sqrt(np.mean(mse_ab_scores))))
 
 
 def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True):
