@@ -462,7 +462,11 @@ def colorize_with_language():
         cap_tensor = tf.placeholder(tf.int32, (1, 20))
         len_tensor = tf.placeholder(tf.int32, (1))
         autocolor = Net(train=False)
-        c313_tensor = autocolor.inference4(l_tensor, cap_tensor, len_tensor)
+        biases = [None] * 8
+        cap_layer = [6]
+        for l in cap_layer:
+            biases[l] = tf.zeros_initializer(dtype=tf.float32)
+        c313_tensor = autocolor.inference4(l_tensor, cap_tensor, len_tensor, biases)
         saver = tf.train.Saver()
         print("Saver created.")
         config = tf.ConfigProto(allow_soft_placement=True)
