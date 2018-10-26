@@ -745,6 +745,9 @@ def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True):
         common_params = {'image_size': _INPUT_SIZE, 'batch_size': _BATCH_SIZE, 'is_gan': '0', 'is_rgb': '0'}
         dataset = DataSet(common_params, dataset_params, True, False)  # No shuffle.
 
+    train_vocab = pickle.load(open('/home/xieya/colorfromlanguage/priors/coco_colors_vocab.p', 'r'))
+    vrev = dict((v, k) for (k, v) in train_vocab.iteritems())
+
     with tf.device('/gpu:0'):
         l_tensor = tf.placeholder(tf.float32, (_BATCH_SIZE, _INPUT_SIZE, _INPUT_SIZE, 1))
         cap_tensor = tf.placeholder(tf.int32, (_BATCH_SIZE, 20))
@@ -791,9 +794,11 @@ def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True):
                 
                 for j in xrange(_BATCH_SIZE):
                     rgb, _ = decode(img_l[j: j + 1], img_313[j: j + 1], T, return_313=False)
+                    word_list = list(img_cap[j, :img_len[j]])
+                    img_title = '_'.join(vrev.get(w, 'unk') for w in word_list) 
                     io.imsave(os.path.join(_OUTPUT_DIR, "{0}.jpg".format(img_count)), rgb)
                     if cross_entropy:
-                        fout.write("{0}\t{1}\t{2}\n".format(img_count, ce[img_count], rb[img_count]))
+                        fout.write("{0}_{3}\t{1}\t{2}\n".format(img_count, ce[img_count], rb[img_count], img_title))
                     img_count += 1
                             
                 print(i)
@@ -801,6 +806,7 @@ def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True):
             if cross_entropy:
                 print("cross entropy {0:.6f}, rebalanced cross entropy {1:.6f}".format(np.mean(ce), np.mean(rb)))
                 print("Total {}".format(len(ce)))
+                fout.write("ave\t{0}\t{1}\n".format(np.mean(ce), np.mean(rb)))
                 fout.close()
 
 
