@@ -106,7 +106,7 @@ class DataSet(object):
                     continue
                 # Augmentation.
                 mirror = np.random.randint(0, 2)
-                if mirror:
+                if self.training and mirror:
                     image = np.fliplr(image)
                 images.append(image)
                 captions.append(caption)
