@@ -429,8 +429,6 @@ def _l2_acc(gt_ab, pred_ab, prior_factor):
             np.where(np.less_equal(l2_dist, thr), prior, zeros)) / prior_sum
         scores.append(score)
         scores_rb.append(score_rb)
-    print(scores)
-    print(scores_rb)
     return scores, scores_rb, prior_sum
 
 
