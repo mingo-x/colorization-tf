@@ -687,7 +687,7 @@ def evaluate_from_rgb(in_dir):
     for img_name in img_names:
         if not img_name.endswith('.jpg'):
             continue
-        img_id = os.path.splitext(img_name)[0]
+        img_id = int(os.path.splitext(img_name)[0])
         img_path = os.path.join(in_dir, img_name)
         gt_bgr = gt_imgs[img_id]
         img_rgb = io.imread(img_path)
