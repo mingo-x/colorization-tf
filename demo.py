@@ -709,7 +709,9 @@ def evaluate_from_rgb(in_dir):
         rmse_ab_score = _rmse(gt_ab_ss, ab_ss)
         rmse_ab_scores.append(rmse_ab_score)
 
-        fout.write('{0}\t{1}\t{2}\t{3}\t{4}\n'.format(img_id, auc_score, auc_rb_score, psnr_rgb_score, rmse_ab_score))
+        summary = '{0}\t{1}\t{2}\t{3}\t{4}\n'.format(img_id, auc_score, auc_rb_score, psnr_rgb_score, rmse_ab_score)
+        print(summary)
+        fout.write(summary)
 
     # AUC / pix
     l2_acc_per_pix = np.average(l2_accs, weights=prior_weights, axis=0)
@@ -826,4 +828,4 @@ if __name__ == "__main__":
     # evaluate(with_caption=False, cross_entropy=True, batch_num=600, is_coco=True)
     # print("Model {}.".format(_CKPT_PATH))
     # compare_c313_pixelwise()
-    evaluate_from_rgb('/srv/glusterfs/xieya/image/color/tf_coco_24k', '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val')
+    evaluate_from_rgb('/srv/glusterfs/xieya/image/color/tf_coco_24k')
