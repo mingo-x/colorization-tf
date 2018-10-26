@@ -465,7 +465,7 @@ def colorize_with_language():
         biases = [None] * 8
         cap_layer = [6]
         for l in cap_layer:
-            biases[l] = tf.zeros_initializer(dtype=tf.float32)
+            biases[l] = 1.
         c313_tensor = autocolor.inference4(l_tensor, cap_tensor, len_tensor, biases)
         saver = tf.train.Saver()
         print("Saver created.")
