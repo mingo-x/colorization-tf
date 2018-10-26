@@ -403,7 +403,8 @@ def cross_entropy_loss(gt_313, conv8_313, prior_boost_nongray):
     ce_loss = tf.reshape(ce_loss, tf.shape(prior_boost_nongray))
     rb_loss = ce_loss * prior_boost_nongray
     ce_loss = tf.reduce_mean(ce_loss, axis=(1, 2, 3))
-    rb_loss = tf.reduce_sum(rb_loss, axis=(1, 2, 3)) / tf.reduce_sum(prior_boost_nongray, axis=(1, 2, 3))
+    # rb_loss = tf.reduce_sum(rb_loss, axis=(1, 2, 3)) / tf.reduce_sum(prior_boost_nongray, axis=(1, 2, 3))
+    rb_loss = tf.reduce_mean(rb_loss, axis=(1, 2, 3))
 
     return ce_loss, rb_loss
 
