@@ -68,7 +68,7 @@ def _parse_annotation():
 
 
 def _parse_metrics(model_name, metric_file_name):
-    file_path = os.path.join(model_name, metric_file_name)
+    file_path = os.path.join(_DIR, os.path.join(model_name, metric_file_name))
     metrics = []
     with open(file_path, 'r') as fin:
         for line in fin:
