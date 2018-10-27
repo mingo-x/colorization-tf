@@ -16,6 +16,14 @@ _LOG_FREQ = 32
 _PRIOR_PATH = '/srv/glusterfs/xieya/prior/coco_313_soft.npy'
 
 
+def _compose_imgs(model_names, idx, order):
+    img = io.imread(os.path.join(_DIR, _get_img_name(model_names[order[0]], idx)))
+    for i in xrange(1, len(order)):
+        next_img = io.imread(os.path.join(_DIR, _get_img_name(model_names[order[i]], idx)))
+        img = np.hstack((img, next_img))
+    return img
+
+
 def _get_img_name(model_name, idx):
     return os.path.join(model_name, "{}.jpg".format(idx))
 
@@ -48,12 +56,77 @@ def _mse(img1, img2):
     return np.mean((img1 - img2) ** 2)
 
 
+def _parse_annotation():
+    annotation = []
+    with open('/srv/glusterfs/xieya/rank.txt', 'r') as fin:
+        for line in fin:
+            items = line.strip().split('\t')
+            rank = [int(items[i]) for i in xrange(1, len(items))]
+            order = np.argsort(rank)
+            annotation.append(order)
+    return np.asarray(annotation)
+
+
+def _parse_metrics(model_name, metric_file_name):
+    file_path = os.path.join(model_name, metric_file_name)
+    metrics = []
+    with open(file_path, 'r') as fin:
+        for line in fin:
+            items = line.strip().split('\t')
+            if len(items) - 1 > len(metrics):
+                for _ in xrange(len(items) - 1):
+                    metrics.append([])
+            for i in xrange(len(items) - 1):
+                metrics[i].append(items[i + 1])
+
+    return np.asarray(metrics)
+
+
 def _psnr(img1, img2):
     mse = np.mean((img1 - img2) ** 2)
     if mse == 0:
         return 100
     PIXEL_MAX = 255.0
     return 20 * math.log10(PIXEL_MAX / math.sqrt(mse))
+
+
+def annotate(model_names):
+    n_models = len(model_names)
+    with open(os.path.join(_DIR, model_names[0] + "/ce.txt")) as fin, open('/srv/glusterfs/xieya/rank.txt', 'a+') as fout:
+        for i in xrange(9, 100):
+            order = np.random.permutation(n_models)
+            print(fin.readline().strip().split('\t')[0])
+            img = _compose_imgs(model_names, i, order)
+            io.imshow(img)
+            io.show()
+            rank_input = raw_input('Please input your rank:')
+            rank_input = rank_input.strip().split(',')
+            rank = ['-1'] * n_models
+            for j in xrange(n_models):
+                rank[j] = rank_input[order[j]]
+            rank_str = "\t".join(rank)
+            fout.write("{0}\t{1}\n".format(i, rank_str))
+            fout.flush()
+
+
+def compare_metrics(model_names, metric_file_name, sort_order):
+    model_metrics = []  # n_models * n_samples * n_metrics
+    for model_name in model_names:
+        model_metrics.append(_parse_metrics(model_name, metric_file_name))
+
+    model_metrics = np.asarray(model_metrics)
+    n_models, _, n_metrics = model_metrics.shape
+
+    annotation = _parse_annotation()
+    n_annotations = annotation.shape[0]
+
+    for i in xrange(n_metrics):
+        scores = model_metrics[:, 0: n_annotations, i]  # n_models * n_annotations
+        orders = np.argsort(scores, axis=0)[::sort_order[i]]
+        print(orders[:, 0], annotation[:, 0])
+        match_total = np.sum(annotation == orders)
+        match_top = np.sum(annotation[0] == orders[0])
+        print("Metrics {0} total match {1} top match {2}".format(i, match_total, match_top))
 
 
 def evaluate_from_rgb(in_dir):
@@ -139,50 +212,10 @@ def evaluate_from_rgb(in_dir):
     print(in_dir)
 
 
-def parse_metrics(model_name, metric_file_name):
-    file_path = os.path.join(model_name, metric_file_name)
-    metrics = []
-    with open(file_path, 'r') as fin:
-        for line in fin:
-            items = line.strip().split('\t')
-            if len(items) - 1 > len(metrics):
-                for _ in xrange(len(items) - 1):
-                    metrics.append([])
-            for i in xrange(len(items) - 1):
-                metrics[i].append(items[i + 1])
-
-    return np.asarray(metrics)
-
-
-def compose_imgs(model_names, idx, order):
-    img = io.imread(os.path.join(_DIR, _get_img_name(model_names[order[0]], idx)))
-    for i in xrange(1, len(order)):
-        next_img = io.imread(os.path.join(_DIR, _get_img_name(model_names[order[i]], idx)))
-        img = np.hstack((img, next_img))
-    return img
-
-
-def annotate(model_names):
-    n_models = len(model_names)
-    with open(os.path.join(_DIR, model_names[0] + "/ce.txt")) as fin, open('/srv/glusterfs/xieya/rank.txt', 'a+') as fout:
-        for i in xrange(9, 100):
-            order = np.random.permutation(n_models)
-            print(fin.readline().strip().split('\t')[0])
-            img = compose_imgs(model_names, i, order)
-            io.imshow(img)
-            io.show()
-            rank_input = raw_input('Please input your rank:')
-            rank_input = rank_input.strip().split(',')
-            rank = ['-1'] * n_models
-            for j in xrange(n_models):
-                rank[j] = rank_input[order[j]]
-            rank_str = "\t".join(rank)
-            fout.write("{0}\t{1}\n".format(i, rank_str))
-            fout.flush()
-
-
 if __name__ == "__main__":
     model_names = ['tf_224_1_476k', 'tf_coco_24k', 'language_2_18k']
     lookup = utils.LookupEncode('resources/pts_in_hull.npy')
     # annotate(model_names)
-    evaluate_from_rgb('/srv/glusterfs/xieya/image/color/tf_224_1_476k')
+    compare_metrics(model_names, 'ce.txt', [1, 1])
+    # evaluate_from_rgb('/srv/glusterfs/xieya/image/color/tf_224_1_476k')
+
