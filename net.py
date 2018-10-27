@@ -593,8 +593,6 @@ class Net(object):
                     gammas.append(gamma)
                     betas.append(beta)
 
-        attention_map = self.attention_block(conv_6, caption_feature)
-        
         with tf.variable_scope('G'):
             # conv1
             block_idx = 0
@@ -683,6 +681,9 @@ class Net(object):
                 temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
             temp_conv = tf.nn.relu(temp_conv)
             conv_6 = temp_conv
+
+        attention_map = self.attention_block(conv_6, caption_feature)
+        with tf.variable_scope('G'):
 
             # conv7
             block_idx += 1
