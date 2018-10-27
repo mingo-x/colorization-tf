@@ -198,4 +198,5 @@ def annotate(model_names):
 
 if __name__ == "__main__":
     model_names = ['', '', '']
+    lookup = utils.LookupEncode('resources/pts_in_hull.npy')
     annotate(model_names)
