@@ -117,8 +117,9 @@ def compare_metrics(model_names, metric_file_name, sort_order):
     model_metrics = np.asarray(model_metrics)
     n_models, _, n_metrics = model_metrics.shape
 
-    annotation = _parse_annotation()
+    annotation = _parse_annotation()  # n_annotations * n_models
     n_annotations = annotation.shape[0]
+    annotation = np.transpose(annotation, (1, 0))
 
     for i in xrange(n_metrics):
         scores = model_metrics[:, 0: n_annotations, i]  # n_models * n_annotations
