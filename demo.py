@@ -698,7 +698,6 @@ def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True):
 
 if __name__ == "__main__":
     subprocess.check_call(['mkdir', '-p', _OUTPUT_DIR])
-    lookup = utils.LookupEncode('resources/pts_in_hull.npy')
     # main()
     # places365()
     # demo_wgan_ab()
