@@ -169,10 +169,13 @@ class Solver_Language(object):
             if self.freeze_cnn:
                 film_vars = tf.trainable_variables(scope='Film')
                 lstm_vars = tf.trainable_variables(scope='LSTM')
-                grads = opt.compute_gradients(self.new_loss, var_list=film_vars + lstm_vars)
+                attetion_vars = tf.trainable_variables(scope='Attention')
+                grads = opt.compute_gradients(self.new_loss, var_list=film_vars + lstm_vars + attetion_vars)
                 for var in film_vars:
                     print(var)
                 for var in lstm_vars:
+                    print(var)
+                for var in attetion_vars:
                     print(var)
             else:
                 grads = opt.compute_gradients(self.new_loss)
