@@ -73,11 +73,10 @@ def _parse_metrics(model_name, metric_file_name):
     with open(file_path, 'r') as fin:
         for line in fin:
             items = line.strip().split('\t')
-            if len(items) - 1 > len(metrics):
-                for _ in xrange(len(items) - 1):
-                    metrics.append([])
-            for i in xrange(len(items) - 1):
-                metrics[i].append(items[i + 1])
+            scores = []
+            for i in xrange(1, len(items)):
+                scores.append(float(items[i]))
+            metrics.append(scores)
 
     return np.asarray(metrics)
 
