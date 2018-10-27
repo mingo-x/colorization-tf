@@ -396,7 +396,7 @@ def cross_entropy_loss(gt_313, conv8_313, prior_boost_nongray):
     return ce_loss, rb_loss
 
 
-def colorize_with_language():
+def colorize_with_language(with_attention=False):
     hf = h5py.File('/srv/glusterfs/xieya/data/coco_colors.h5', 'r')
     val_imgs = hf['val_ims']
     val_caps = hf['val_words']
@@ -420,7 +420,7 @@ def colorize_with_language():
         biases = [None] * 8
         for l in _CAP_LAYERS:
             biases[l] = 1.
-        c313_tensor = autocolor.inference4(l_tensor, cap_tensor, len_tensor, biases)
+        c313_tensor = autocolor.inference4(l_tensor, cap_tensor, len_tensor, biases, with_attention=with_attention)
         saver = tf.train.Saver()
         print("Saver created.")
         config = tf.ConfigProto(allow_soft_placement=True)
@@ -703,7 +703,7 @@ if __name__ == "__main__":
     # demo_wgan_rgb()
     # _colorize_high_res_img(_IMG_NAME)
     # cifar()
-    colorize_with_language()
+    colorize_with_language(with_attention=False)
     # colorize_video_with_language()
     # colorize_coco_without_language(evaluate=True)
     # save_ground_truth()

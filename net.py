@@ -573,7 +573,7 @@ class Net(object):
         conv8_313 = temp_conv
         return conv8_313
 
-    def inference4(self, data_l, captions, lens, biases=None, kernel_initializer=None):
+    def inference4(self, data_l, captions, lens, biases=None, kernel_initializer=None, with_attention=False):
         caption_feature = self.caption_encoding(captions, lens)
         # caption_feature = tf.zeros_like(caption_feature)
         with tf.variable_scope('Film'):
@@ -682,7 +682,9 @@ class Net(object):
             temp_conv = tf.nn.relu(temp_conv)
             conv_6 = temp_conv
 
-        attention_map = self.attention_block(conv_6, caption_feature)
+        if with_attention:
+            attention_map = self.attention_block(conv_6, caption_feature)
+
         with tf.variable_scope('G'):
 
             # conv7
@@ -697,10 +699,12 @@ class Net(object):
                 temp_conv = batch_norm('bn_7', temp_conv, train=self.train)
             else:
                 temp_conv = bn('bn_7', temp_conv, train=self.train)
-                temp_conv = attention_map * (
-                  gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]) + (
-                  1 - attention_map) * temp_conv
-                # temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
+                if with_attention:
+                      temp_conv = attention_map * (
+                        gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]) + (
+                        1 - attention_map) * temp_conv
+                else:
+                      temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
 
             temp_conv = tf.nn.relu(temp_conv)
 
