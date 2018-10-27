@@ -28,6 +28,19 @@ def _get_img_name(model_name, idx):
     return os.path.join(model_name, "{}.jpg".format(idx))
 
 
+def _get_pairwise_order(scores, sort_order):
+    n_samples = len(scores)
+    order = []
+    for i in xrange(n_samples):
+        for j in xrange(i + 1, n_samples):
+            if sort_order == 1:
+                order.append(scores[i] < scores[j])
+            else:
+                order.append(scores[i] > scores[j])
+
+    return np.asarray(order)
+
+
 def _l2_acc(gt_ab, pred_ab, prior_factor):
     '''
     L2 accuracy given different threshold.
@@ -58,13 +71,16 @@ def _mse(img1, img2):
 
 def _parse_annotation():
     annotation = []
+    pairwise = []
     with open('/srv/glusterfs/xieya/rank.txt', 'r') as fin:
         for line in fin:
             items = line.strip().split('\t')
             rank = [int(items[i]) for i in xrange(1, len(items))]
             order = np.argsort(rank)
             annotation.append(order)
-    return np.asarray(annotation)
+            pairwise_order = _get_pairwise_order(rank, 1)
+            pairwise.append(pairwise_order)
+    return np.asarray(annotation), np.asarray(pairwise)
 
 
 def _parse_metrics(model_name, metric_file_name):
@@ -116,17 +132,20 @@ def compare_metrics(model_names, metric_file_name, sort_order):
     model_metrics = np.asarray(model_metrics)
     n_models, _, n_metrics = model_metrics.shape
 
-    annotation = _parse_annotation()  # n_annotations * n_models
+    annotation, pairwise_annotation = _parse_annotation()  # n_annotations * n_models, n_annotations * n_pairs
     n_annotations = annotation.shape[0]
     annotation = np.transpose(annotation, (1, 0))
 
     for i in xrange(n_metrics):
         scores = model_metrics[:, 0: n_annotations, i]  # n_models * n_annotations
         orders = np.argsort(scores, axis=0)[::sort_order[i]]
-        print(orders[:, 0], annotation[:, 0])
         match_total = np.sum(annotation == orders)
         match_top = np.sum(annotation[0] == orders[0])
-        print("Metrics {0} total match {1} top match {2}".format(i, match_total, match_top))
+        pairwise_orders = [_get_pairwise_order(scores[:, j], sort_order[i]) for j in xrange(n_annotations)]
+        pairwise_orders = np.asarray(pairwise_orders)
+        match_pairwise = np.sum(pairwise_annotation == pairwise_orders)
+
+        print("Metrics {0} total match {1} top match {2} pairwise match {3}".format(i, match_total, match_top, match_pairwise))
 
 
 def evaluate_from_rgb(in_dir):
