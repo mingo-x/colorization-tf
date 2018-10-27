@@ -94,7 +94,7 @@ def evaluate_from_rgb(in_dir):
         gt_ab_ss = transform.downscale_local_mean(gt_ab, (4, 4, 1))
         l2_acc, l2_rb_acc, prior_weight = _l2_acc(gt_ab_ss, ab_ss, prior_factor)
         l2_accs.append(l2_acc)
-        l2_rb_accs.append(l2_rb_accs)
+        l2_rb_accs.append(l2_rb_acc)
         prior_weights.append(prior_weight)
         auc_score = auc(x, l2_acc) / _AUC_THRESHOLD
         auc_rb_score = auc(x, l2_rb_acc) / _AUC_THRESHOLD
@@ -113,6 +113,10 @@ def evaluate_from_rgb(in_dir):
             print(img_count)
             fout.flush()
 
+    l2_accs = np.asarray(l2_accs)
+    prior_weights = np.asarray(prior_weights)
+    l2_rb_accs = np.asarray(l2_rb_accs)
+    
     # AUC / pix
     l2_acc_per_pix = np.average(l2_accs, weights=prior_weights, axis=0)
     l2_rb_acc_per_pix = np.average(l2_rb_accs, weights=prior_weights, axis=0)
@@ -181,4 +185,4 @@ if __name__ == "__main__":
     model_names = ['tf_224_1_476k', 'tf_coco_24k', 'language_2_18k']
     lookup = utils.LookupEncode('resources/pts_in_hull.npy')
     # annotate(model_names)
-    evaluate_from_rgb('/srv/glusterfs/xieya/image/color/language_2_18k')
+    evaluate_from_rgb('/srv/glusterfs/xieya/image/color/tf_224_1_476k')
