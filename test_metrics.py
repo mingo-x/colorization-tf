@@ -216,6 +216,6 @@ if __name__ == "__main__":
     model_names = ['tf_224_1_476k', 'tf_coco_24k', 'language_2_18k']
     lookup = utils.LookupEncode('resources/pts_in_hull.npy')
     # annotate(model_names)
-    compare_metrics(model_names, 'ce.txt', [1, 1])
+    compare_metrics(model_names, 'metrics.txt', [-1, -1, -1, 1])
     # evaluate_from_rgb('/srv/glusterfs/xieya/image/color/tf_224_1_476k')
 
