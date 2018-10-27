@@ -21,7 +21,7 @@ import utils
 
 _AUC_THRESHOLD = 150
 _BATCH_SIZE = 32
-_CAP_LAYERS = [6]
+_CAP_LAYERS = [0,1,2,3,4,5,6,7]
 _COCO_PATH = '/srv/glusterfs/xieya/data/coco_colors.h5'
 _INPUT_SIZE = 224
 _RESIZE_SIZE = 0
@@ -29,9 +29,9 @@ _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
 _G_VERSION = 1
-_CKPT_PATH = '/srv/glusterfs/xieya/language_4/models/model.ckpt-10000'
+_CKPT_PATH = '/srv/glusterfs/xieya/language_2/models/model.ckpt-18000'
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
-_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/language_4_10k'
+_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/language_2_18k'
 _PRIOR_PATH = '/srv/glusterfs/xieya/prior/coco_313_soft.npy'
 #_PRIOR_PATH = 'resources/prior_probs_smoothed.npy'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
@@ -418,8 +418,7 @@ def colorize_with_language():
         len_tensor = tf.placeholder(tf.int32, (1))
         autocolor = Net(train=False)
         biases = [None] * 8
-        cap_layer = [6]
-        for l in cap_layer:
+        for l in _CAP_LAYERS:
             biases[l] = 1.
         c313_tensor = autocolor.inference4(l_tensor, cap_tensor, len_tensor, biases)
         saver = tf.train.Saver()
@@ -431,7 +430,7 @@ def colorize_with_language():
             saver.restore(sess, _CKPT_PATH)
 
             try:
-                idx = [335, 3735]
+                idx = [335, 2632, 3735]
                 for i in xrange(200, 400):
                     idx.append(i)
 
@@ -712,7 +711,7 @@ if __name__ == "__main__":
     #       '/srv/glusterfs/xieya/image/color/tf_coco_5_38k', 
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/original', 
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/new')
-    # evaluate(with_caption=False, cross_entropy=True, batch_num=600, is_coco=True)
+    # evaluate(with_caption=True, cross_entropy=True, batch_num=600, is_coco=True)
     # print("Model {}.".format(_CKPT_PATH))
     # compare_c313_pixelwise()
     # evaluate_from_rgb('/srv/glusterfs/xieya/image/color/tf_coco_24k')

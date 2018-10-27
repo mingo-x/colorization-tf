@@ -3,17 +3,16 @@ import os
 
 import cv2
 import h5py
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 import numpy as np
 from skimage import color, io, transform
+io.use_plugin('matplotlib')
 from sklearn.metrics import auc
 
-from ... import utils
+import utils
 
 _AUC_THRESHOLD = 150
 _DIR = '/srv/glusterfs/xieya/image/color'
+_LOG_FREQ = 32
 _PRIOR_PATH = '/srv/glusterfs/xieya/prior/coco_313_soft.npy'
 
 
@@ -79,6 +78,7 @@ def evaluate_from_rgb(in_dir):
     mse_ab_scores = []
     x = [i for i in range(0, _AUC_THRESHOLD + 1)]
     fout = open(os.path.join(in_dir, 'metrics.txt'), 'w')
+    img_count = 0
 
     for img_name in img_names:
         if not img_name.endswith('.jpg'):
@@ -106,8 +106,12 @@ def evaluate_from_rgb(in_dir):
         mse_ab_scores.append(mse_ab_score)
 
         summary = '{0}\t{1}\t{2}\t{3}\t{4}\n'.format(img_id, auc_score, auc_rb_score, psnr_rgb_score, np.sqrt(mse_ab_score))
-        print(summary)
+        # print(summary)
         fout.write(summary)
+        img_count += 1
+        if img_count % _LOG_FREQ == 0:
+            print(img_count)
+            fout.flush()
 
     # AUC / pix
     l2_acc_per_pix = np.average(l2_accs, weights=prior_weights, axis=0)
@@ -128,6 +132,7 @@ def evaluate_from_rgb(in_dir):
     print("RMSE AB per pix\t{0}".format(np.sqrt(np.mean(mse_ab_scores))))
 
     fout.close()
+    print(in_dir)
 
 
 def parse_metrics(model_name, metric_file_name):
@@ -150,53 +155,30 @@ def compose_imgs(model_names, idx, order):
     for i in xrange(1, len(order)):
         next_img = io.imread(os.path.join(_DIR, _get_img_name(model_names[order[i]], idx)))
         img = np.hstack((img, next_img))
-
     return img
 
 
 def annotate(model_names):
-    model_metrics = []
-    for model_name in model_names:
-        metrics = parse_metrics(model_name, 'ce.txt')
-        metrics.extend(parse_metrics(model_name, 'metrics.txt'))
-        model_metrics.append(metrics)
-
-    model_metrics = np.asarray(model_metrics)
     n_models = len(model_names)
-    n_metrics = model_metrics.shape[1]
-    metrics_acc = np.zeros((n_metrics,))
-
-    for i in xrange(100):
-        metrics = model_metrics[:, :, i]
-        rank_by_metrics = [
-            np.argsort(metrics[:, 0]), 
-            np.argsort(metrics[:, 1]), 
-            np.argsort(metrics[:, 2])[::-1],
-            np.argsort(metrics[:, 3])[::-1],
-            np.argsort(metrics[:, 4])[::-1],
-            np.argsort(metrics[:, 5])
-        ]
-
-        order = np.random.permutation(n_models)
-        img = compose_imgs(model_names, i, order)
-        io.imshow(img)
-        plt.show()
-        rank_input = raw_input('Please input your rank:')
-        rank_input = rank_input.strip().split(',')
-        rank = [-1] * n_models
-        for j in xrange(n_models):
-            rank[j] = int(rank_input[order[j]])
-
-        for j in xrange(n_metrics):
-            rank_by_m = rank_by_metrics[:, j]
-            hit = np.sum(rank_by_m[order] == rank)
-            metrics_acc[j] += hit
-            print(j, metrics[:, j], rank_by_m)
-
-    print(metrics_acc)
+    with open(os.path.join(_DIR, model_names[0] + "/ce.txt")) as fin, open('/srv/glusterfs/xieya/rank.txt', 'a+') as fout:
+        for i in xrange(9, 100):
+            order = np.random.permutation(n_models)
+            print(fin.readline().strip().split('\t')[0])
+            img = compose_imgs(model_names, i, order)
+            io.imshow(img)
+            io.show()
+            rank_input = raw_input('Please input your rank:')
+            rank_input = rank_input.strip().split(',')
+            rank = ['-1'] * n_models
+            for j in xrange(n_models):
+                rank[j] = rank_input[order[j]]
+            rank_str = "\t".join(rank)
+            fout.write("{0}\t{1}\n".format(i, rank_str))
+            fout.flush()
 
 
 if __name__ == "__main__":
-    model_names = ['', '', '']
+    model_names = ['tf_224_1_476k', 'tf_coco_24k', 'language_2_18k']
     lookup = utils.LookupEncode('resources/pts_in_hull.npy')
-    annotate(model_names)
+    # annotate(model_names)
+    evaluate_from_rgb('/srv/glusterfs/xieya/image/color/language_2_18k')
