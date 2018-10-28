@@ -50,7 +50,6 @@ class Solver_Language(object):
             self.prior_boost = True if common_params['prior_boost'] == '1' else False
             self.corr = True if common_params['correspondence'] == '1' else False
             self.with_caption = True if common_params['with_caption'] == '1' else False
-            self.with_attention = common_params['with_attention'] == '1'
             self.kernel_zero = True if common_params['kernel_zero'] == '1' else False
             if 'with_cap_prior' in common_params:
                 self.with_cap_prior = common_params['with_cap_prior'] == '1'
@@ -79,6 +78,7 @@ class Solver_Language(object):
             self.decay_steps = int(solver_params['decay_steps'])
             self.moment = float(solver_params['moment'])
             self.freeze_cnn = solver_params['freeze_cnn'] == '1'
+            self.with_attention = common_params['with_attention'] == '1'
         self.train = train
         self.net = Net(
             train=train, common_params=common_params, net_params=net_params)
