@@ -445,12 +445,8 @@ def colorize_with_language(with_attention=False):
                         continue
                     img_l = (img_l.astype(dtype=np.float32) - 50.) / 50.
                     img_cap = val_caps[i: i + 1]
-                    print(img_cap)
                     img_len = val_lens[i: i + 1]
-                    print(img_len)
-                    print(img_l[0, 0: 2, 0: 2])
                     img_313 = sess.run(c313_tensor, feed_dict={l_tensor: img_l, cap_tensor: img_cap, len_tensor: img_len})
-                    print(img_313[0, 0, 0])
                     img_dec, _ = decode(img_l, img_313, 2.63)
 
                     word_list = list(img_cap[0, :img_len[0]])
@@ -465,12 +461,8 @@ def colorize_with_language(with_attention=False):
                         new_img_len = np.zeros_like(img_len)
                         for j in xrange(len(new_words)):
                             new_img_cap[0, j] = train_vocab.get(new_words[j], 0)
-                        print(new_img_cap)
                         new_img_len[0] = len(new_words)
-                        print(new_img_len)
-                        print(img_l[0, 0: 2, 0: 2])
                         new_img_313 = sess.run(c313_tensor, feed_dict={l_tensor: img_l, cap_tensor: new_img_cap, len_tensor: new_img_len})
-                        print(new_img_313[0, 0, 0])
                         new_img_dec, _ = decode(img_l, new_img_313, 2.63)
 
                         new_word_list = list(new_img_cap[0, :new_img_len[0]])
