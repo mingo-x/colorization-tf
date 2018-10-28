@@ -50,6 +50,7 @@ class Solver_Language(object):
             self.prior_boost = True if common_params['prior_boost'] == '1' else False
             self.corr = True if common_params['correspondence'] == '1' else False
             self.with_caption = True if common_params['with_caption'] == '1' else False
+            self.with_attention = common_params['with_attention'] == '1'
             self.kernel_zero = True if common_params['kernel_zero'] == '1' else False
             if 'with_cap_prior' in common_params:
                 self.with_cap_prior = common_params['with_cap_prior'] == '1'
@@ -109,7 +110,7 @@ class Solver_Language(object):
             if self.with_caption:
                 # Restore gamma and beta of BN.
                 self.biases = [None] * 8
-                caption_layer = [6]
+                caption_layer = [0, 1, 2, 3, 4, 5, 6, 7]
                 print('Blocks with language guidance:')
                 for i in caption_layer:
                     print(i + 1)
@@ -123,7 +124,7 @@ class Solver_Language(object):
                 if self.kernel_zero:
                     kernel = tf.zeros_initializer(dtype=tf.float32)
                     print('Film dense kernel initialized with zeros.')
-                self.conv8_313 = self.net.inference4(self.data_l, self.captions, self.lens, self.biases, kernel)
+                self.conv8_313 = self.net.inference4(self.data_l, self.captions, self.lens, self.biases, kernel, with_attention=self.with_attention)
             else:
                 self.conv8_313 = self.net.inference(self.data_l)
                 if len(self.conv8_313) == 2:

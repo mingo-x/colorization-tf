@@ -683,6 +683,7 @@ class Net(object):
             conv_6 = temp_conv
 
         if with_attention:
+            print('Using attention map.')
             attention_map = self.attention_block(conv_6, caption_feature)
 
         with tf.variable_scope('G'):
