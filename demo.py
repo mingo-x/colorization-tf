@@ -454,6 +454,17 @@ def colorize_with_language(with_attention=False):
                     io.imsave(os.path.join(orig_dir, '{0}_{1}.jpg').format(i, img_title), img_dec)
                     print(img_title)
 
+                    img_lab = color.rgb2lab(img_rgb)
+                    img_l = img_lab[None, :, :, 0: 1]
+                    img_l = (img_l.astype(dtype=np.float32) - 50.) / 50.
+                    img_313 = sess.run(c313_tensor, feed_dict={l_tensor: img_l, cap_tensor: img_cap, len_tensor: img_len})
+                    img_dec, _ = decode(img_l, img_313, 2.63)
+                    io.imsave(os.path.join(orig_dir, '{0}_{1}_1.jpg').format(i, img_title), img_dec)
+
+                    img_313 = sess.run(c313_tensor, feed_dict={l_tensor: img_l, cap_tensor: img_cap, len_tensor: img_len})
+                    img_dec, _ = decode(img_l, img_313, 2.63)
+                    io.imsave(os.path.join(orig_dir, '{0}_{1}_2.jpg').format(i, img_title), img_dec)
+
                     if _NEW_CAPTION:
                         new_caption = raw_input('New caption?')
                         new_words = new_caption.strip().split(' ')
