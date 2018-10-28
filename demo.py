@@ -714,7 +714,7 @@ if __name__ == "__main__":
     # demo_wgan_rgb()
     # _colorize_high_res_img(_IMG_NAME)
     # cifar()
-    colorize_with_language(with_attention=True)
+    # colorize_with_language(with_attention=True)
     # colorize_video_with_language()
     # colorize_coco_without_language(evaluate=True)
     # save_ground_truth()
@@ -722,7 +722,7 @@ if __name__ == "__main__":
     #       '/srv/glusterfs/xieya/image/color/tf_coco_5_38k', 
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/original', 
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/new')
-    # evaluate(with_caption=True, cross_entropy=True, batch_num=600, is_coco=True)
+    evaluate(with_caption=True, cross_entropy=True, batch_num=600, is_coco=True)
     # print("Model {}.".format(_CKPT_PATH))
     # compare_c313_pixelwise()
     # evaluate_from_rgb('/srv/glusterfs/xieya/image/color/tf_coco_24k')
