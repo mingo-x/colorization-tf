@@ -258,5 +258,5 @@ if __name__ == "__main__":
     lookup = utils.LookupEncode('resources/pts_in_hull.npy')
     # annotate(model_names)
     # compare_metrics(model_names, 'ce.txt', [1, 1])
-    evaluate_from_rgb('/srv/glusterfs/xieya/image/color/language_5_31k')
+    evaluate_from_rgb('/srv/glusterfs/xieya/image/color/language_2_18k')
 
