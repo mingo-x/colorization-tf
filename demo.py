@@ -447,6 +447,8 @@ def colorize_with_language(with_attention=False):
                     img_cap = val_caps[i: i + 1]
                     print(img_cap)
                     img_len = val_lens[i: i + 1]
+                    print(img_len)
+                    print(img_l[0, 0: 10, 0: 10])
                     img_313 = sess.run(c313_tensor, feed_dict={l_tensor: img_l, cap_tensor: img_cap, len_tensor: img_len})
                     img_dec, _ = decode(img_l, img_313, 2.63)
 
@@ -464,6 +466,8 @@ def colorize_with_language(with_attention=False):
                             new_img_cap[0, j] = train_vocab.get(new_words[j], 0)
                         print(new_img_cap)
                         new_img_len[0] = len(new_words)
+                        print(new_img_len)
+                        print(img_l[0, 0: 10, 0: 10])
                         new_img_313 = sess.run(c313_tensor, feed_dict={l_tensor: img_l, cap_tensor: new_img_cap, len_tensor: new_img_len})
                         new_img_dec, _ = decode(img_l, new_img_313, 2.63)
 
