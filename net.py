@@ -1329,7 +1329,7 @@ class Net(object):
         with tf.variable_scope('LSTM', reuse=tf.AUTO_REUSE):
             embedding = tf.constant(self.word_embedding, name='word_embedding', dtype='float32')
             encoded_captions = tf.nn.embedding_lookup(embedding, captions, name='lookup')
-            encoded_captions = tf.nn.dropout(encoded_captions, 0.8)
+            encoded_captions = tf.nn.dropout(encoded_captions, 0.8 if self.train else 1.)
             initializer = tf.contrib.layers.variance_scaling_initializer(factor=2.0, mode='FAN_IN', uniform=True, dtype=tf.float32)
             lstm_fw = tf.nn.rnn_cell.LSTMCell(self.lstm_hid_dim, reuse=tf.AUTO_REUSE, initializer=initializer)
             lstm_bw = tf.nn.rnn_cell.LSTMCell(self.lstm_hid_dim, reuse=tf.AUTO_REUSE, initializer=initializer)
