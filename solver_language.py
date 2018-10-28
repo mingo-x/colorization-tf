@@ -186,7 +186,7 @@ class Solver_Language(object):
                 for var in attetion_vars:
                     print(var)
             else:
-                grads = opt.compute_gradients(self.new_loss, var_list=g_vars) + opt.compute_gradients(self.new_loss, var_list=film_vars + lstm_vars + attetion_vars)
+                grads = opt.compute_gradients(self.new_loss, var_list=g_vars) + opt_cap.compute_gradients(self.new_loss, var_list=film_vars + lstm_vars + attetion_vars)
                 for var in tf.trainable_variables():
                     print(var)
 
