@@ -78,7 +78,7 @@ class Solver_Language(object):
             self.decay_steps = int(solver_params['decay_steps'])
             self.moment = float(solver_params['moment'])
             self.freeze_cnn = solver_params['freeze_cnn'] == '1'
-            self.with_attention = common_params['with_attention'] == '1'
+            self.with_attention = solver_params['with_attention'] == '1'
         self.train = train
         self.net = Net(
             train=train, common_params=common_params, net_params=net_params)
