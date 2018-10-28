@@ -157,7 +157,8 @@ def evaluate_from_rgb(in_dir):
         PSNR of RGB / image
         RMSE of AB / pixel
     '''
-    prior_factor = utils.PriorFactor(gamma=0., priorFile=_PRIOR_PATH, verbose=True)
+    prior_factor_0 = utils.PriorFactor(gamma=0., priorFile=_PRIOR_PATH, verbose=True)
+    prior_factor_5 = utils.PriorFactor(gamma=0.5, priorFile=_PRIOR_PATH, verbose=True)
     hf = h5py.File('/srv/glusterfs/xieya/data/coco_colors.h5', 'r')
     gt_imgs = hf['val_ims']
 
