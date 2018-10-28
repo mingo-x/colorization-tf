@@ -29,9 +29,9 @@ _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
 _G_VERSION = 1
-_CKPT_PATH = '/srv/glusterfs/xieya/language_5/models/model.ckpt-31000'
+_CKPT_PATH = '/srv/glusterfs/xieya/language_1/models/model.ckpt-14000'
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
-_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/language_5_31k'
+_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/language_1_14k'
 _PRIOR_PATH = '/srv/glusterfs/xieya/prior/coco_313_soft.npy'
 #_PRIOR_PATH = 'resources/prior_probs_smoothed.npy'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
@@ -703,7 +703,7 @@ if __name__ == "__main__":
     # demo_wgan_rgb()
     # _colorize_high_res_img(_IMG_NAME)
     # cifar()
-    # colorize_with_language(with_attention=True)
+    colorize_with_language(with_attention=False)
     # colorize_video_with_language()
     # colorize_coco_without_language(evaluate=True)
     # save_ground_truth()
@@ -711,7 +711,7 @@ if __name__ == "__main__":
     #       '/srv/glusterfs/xieya/image/color/tf_coco_5_38k', 
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/original', 
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/new')
-    evaluate(with_caption=True, cross_entropy=True, batch_num=600, is_coco=True)
+    # evaluate(with_caption=True, cross_entropy=True, batch_num=600, is_coco=True)
     # print("Model {}.".format(_CKPT_PATH))
     # compare_c313_pixelwise()
     # evaluate_from_rgb('/srv/glusterfs/xieya/image/color/tf_coco_24k')
