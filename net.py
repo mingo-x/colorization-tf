@@ -1391,9 +1391,9 @@ class Net(object):
 
     def attention_block(self, l, cap_emb):
         with tf.variable_scope('Attention', reuse=tf.AUTO_REUSE):
-            shape = tf.shape(conv)
+            _, h, w, _ = tf.shape(l)
             cap_emb_expand = cap_emb[:, tf.newaxis, tf.newaxis, :]
-            cap_emb_expand = tf.tile(cap_emb_expand, (1, shape[1], shape[2], 1))  # NxHxWx512
+            cap_emb_expand = tf.tile(cap_emb_expand, (1, h, w, 1))  # NxHxWx512
             # conv = tf.stop_gradient(conv)
             conv = conv2d('l1', l, [3, 3, 1, 64], stride=2, wd=self.weight_decay)  # 112
             conv = conv2d('l2', conv, [3, 3, 64, 128], stride=2, wd=self.weight_decay)  # 56
