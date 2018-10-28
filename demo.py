@@ -616,7 +616,7 @@ def merge(cic_dir, coco_dir, cap_dir, new_cap_dir):
         print(idx)
 
 
-def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True):
+def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True, with_attention=False):
     if is_coco:
         dataset_params = {'path': _COCO_PATH, 'thread_num': 1, 'prior_path': _PRIOR_PATH}
         common_params = {'batch_size': _BATCH_SIZE, 'with_caption': '1', 'sampler': '0', }  # with_caption -> False: ignore grayscale images.
@@ -639,7 +639,7 @@ def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True):
             biases = [None] * 8
             for l in _CAP_LAYERS:
                 biases[l] = 1.
-            c313_tensor = autocolor.inference4(l_tensor, cap_tensor, len_tensor, biases)
+            c313_tensor = autocolor.inference4(l_tensor, cap_tensor, len_tensor, biases, with_attention=with_attention)
         else:
             c313_tensor = autocolor.inference(l_tensor)
             if len(c313_tensor) > 1:
@@ -714,4 +714,3 @@ if __name__ == "__main__":
     # evaluate(with_caption=True, cross_entropy=True, batch_num=600, is_coco=True)
     # print("Model {}.".format(_CKPT_PATH))
     # compare_c313_pixelwise()
-    # evaluate_from_rgb('/srv/glusterfs/xieya/image/color/tf_coco_24k')
