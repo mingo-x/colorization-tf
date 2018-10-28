@@ -68,6 +68,7 @@ class Solver_Language(object):
 
         if solver_params:
             self.learning_rate = float(solver_params['learning_rate'])
+            self.learning_rate_cap = float(solver_params['learning_rate_cap'])
             self.D_learning_rate = float(solver_params['d_learning_rate'])
             print("Learning rate G: {0} D: {1}".format(self.learning_rate, self.D_learning_rate))
             # self.moment = float(solver_params['moment'])
@@ -147,6 +148,8 @@ class Solver_Language(object):
             self.global_step = tf.get_variable('global_step', [], initializer=tf.constant_initializer(0), trainable=False)
             learning_rate = tf.train.exponential_decay(self.learning_rate, self.global_step,
                                                        self.decay_steps, self.lr_decay, staircase=True)
+            learning_rate_cap = tf.train.exponential_decay(self.learning_rate_cap, self.global_step,
+                                                           self.decay_steps, self.lr_decay, staircase=True)
 
             train_vocab = pickle.load(open('/home/xieya/colorfromlanguage/priors/coco_colors_vocab.p', 'r'))
             vrev = dict((v, k) for (k, v) in train_vocab.iteritems())
@@ -166,11 +169,15 @@ class Solver_Language(object):
 
             opt = tf.train.AdamOptimizer(
                 learning_rate=learning_rate, beta1=self.moment, beta2=0.99)
-            if self.freeze_cnn:
-                film_vars = tf.trainable_variables(scope='Film')
-                lstm_vars = tf.trainable_variables(scope='LSTM')
-                attetion_vars = tf.trainable_variables(scope='Attention')
-                grads = opt.compute_gradients(self.new_loss, var_list=film_vars + lstm_vars + attetion_vars)
+            if self.with_caption:
+                opt_cap = tf.train.AdamOptimizer(
+                    learning_rate=learning_rate_cap, beta1=self.moment, beta2=0.99)
+            film_vars = tf.trainable_variables(scope='Film')
+            lstm_vars = tf.trainable_variables(scope='LSTM')
+            attetion_vars = tf.trainable_variables(scope='Attention')
+            g_vars = tf.trainable_variables(scope='G')
+            if self.freeze_cnn:         
+                grads = opt_cap.compute_gradients(self.new_loss, var_list=film_vars + lstm_vars + attetion_vars)
                 for var in film_vars:
                     print(var)
                 for var in lstm_vars:
@@ -178,7 +185,7 @@ class Solver_Language(object):
                 for var in attetion_vars:
                     print(var)
             else:
-                grads = opt.compute_gradients(self.new_loss)
+                grads = opt.compute_gradients(self.new_loss, var_list=g_vars) + opt.compute_gradients(self.new_loss, var_list=film_vars + lstm_vars + attetion_vars)
                 for var in tf.trainable_variables():
                     print(var)
 
