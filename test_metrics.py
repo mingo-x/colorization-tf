@@ -143,6 +143,8 @@ def compare_metrics(model_names, metric_file_name, sort_order):
         match_top = np.sum(annotation[0] == orders[0])
         pairwise_orders = [_get_pairwise_order(scores[:, j], sort_order[i]) for j in xrange(n_annotations)]
         pairwise_orders = np.asarray(pairwise_orders)
+        print(orders[:, 0], annotation[:, 0])
+        print(pairwise_orders[0], pairwise_annotation[0])
         match_pairwise = np.sum(pairwise_annotation == pairwise_orders)
 
         print("Metrics {0} total match {1} top match {2} pairwise match {3}".format(i, match_total, match_top, match_pairwise))
@@ -235,6 +237,6 @@ if __name__ == "__main__":
     model_names = ['tf_224_1_476k', 'tf_coco_24k', 'language_2_18k']
     lookup = utils.LookupEncode('resources/pts_in_hull.npy')
     # annotate(model_names)
-    compare_metrics(model_names, 'metrics.txt', [-1, -1, -1, 1])
-    # evaluate_from_rgb('/srv/glusterfs/xieya/image/color/tf_224_1_476k')
+    # compare_metrics(model_names, 'ce.txt', [1, 1])
+    evaluate_from_rgb('/srv/glusterfs/xieya/image/color/language_6_45k')
 
