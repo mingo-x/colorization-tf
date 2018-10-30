@@ -680,7 +680,7 @@ def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True, wit
                 for j in xrange(_BATCH_SIZE):
                     luma = img_l[j: j + 1]
                     if resize:
-                        luma = transform.downscale_local_mean(luma, (4, 4, 1))
+                        luma = transform.downscale_local_mean(luma, (1, 4, 4, 1))
                     rgb, _ = decode(luma, img_313[j: j + 1], T, return_313=False)
                     word_list = list(img_cap[j, :img_len[j]])
                     img_title = '_'.join(vrev.get(w, 'unk') for w in word_list) 
