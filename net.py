@@ -684,7 +684,7 @@ class Net(object):
 
         if with_attention:
             print('Using attention map.')
-            attention_map = self.attention_block(data_l, caption_feature)
+            attention_map = self.attention_block(conv_6, caption_feature)
 
         with tf.variable_scope('G'):
 
@@ -729,7 +729,7 @@ class Net(object):
             conv_num += 1
 
         conv8_313 = temp_conv
-        return conv8_313
+        return conv8_313, attention_map
 
     def inference5(self, data_l, captions, lens, biases=None, kernel_initializer=None):
         '''Using fewer FiLM layers.'''
@@ -1389,7 +1389,23 @@ class Net(object):
         wd_loss = wd_loss * self.weight_decay
         return huber_loss, huber_loss + wd_loss, wd_loss
 
-    def attention_block(self, l, cap_emb):
+    def attention_block(self, conv, cap_emb):
+        with tf.variable_scope('Attention', reuse=tf.AUTO_REUSE):
+            conv = tf.stop_gradient(conv)
+
+            shape = tf.shape(conv)
+            cap_emb_expand = cap_emb[:, tf.newaxis, tf.newaxis, :]
+            cap_emb_expand = tf.tile(cap_emb_expand, (1, shape[1], shape[2], 1))  # NxHxWx512
+            
+            temp = tf.concat((conv, cap_emb_expand), axis=-1)  # NxHxWx1024
+            temp = conv2d('conv_1', temp, [3, 3, 1024, 512], stride=1, wd=self.weight_decay)
+            temp = conv2d('conv_2', temp, [3, 3, 512, 128], stride=1, wd=self.weight_decay)
+            temp = conv2d('conv_3', temp, [3, 3, 128, 16], stride=1, wd=self.weight_decay)
+            attention_map = conv2d('conv_4', temp, [3, 3, 16, 1], stride=1, wd=self.weight_decay, relu=False, sigmoid=True)
+
+        return attention_map
+
+    def attention_block_1(self, l, cap_emb):
         with tf.variable_scope('Attention', reuse=tf.AUTO_REUSE):
             # conv = tf.stop_gradient(conv)
             conv = conv2d('l1', l, [3, 3, 1, 64], stride=2, wd=self.weight_decay)  # 112

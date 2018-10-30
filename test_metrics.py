@@ -111,23 +111,28 @@ def _psnr(img1, img2):
     return 20 * math.log10(PIXEL_MAX / math.sqrt(mse))
 
 
-def annotate(model_names):
+def annotate(model_names, annotate=True):
     n_models = len(model_names)
-    with open(os.path.join(_DIR, model_names[0] + "/ce.txt")) as fin, open('/srv/glusterfs/xieya/rank.txt', 'a+') as fout:
-        for i in xrange(9, 100):
-            order = np.random.permutation(n_models)
-            print(fin.readline().strip().split('\t')[0])
-            img = _compose_imgs(model_names, i, order)
-            io.imshow(img)
-            io.show()
-            rank_input = raw_input('Please input your rank:')
-            rank_input = rank_input.strip().split(',')
-            rank = ['-1'] * n_models
-            for j in xrange(n_models):
-                rank[j] = rank_input[order[j]]
-            rank_str = "\t".join(rank)
-            fout.write("{0}\t{1}\n".format(i, rank_str))
-            fout.flush()
+    with open(os.path.join(_DIR, model_names[0] + "/ce.txt")) as fin, open('/srv/glusterfs/xieya/rank_1.txt', 'a+') as fout:
+        for i in xrange(0, 100):
+            if annotate:
+                order = np.random.permutation(n_models)
+                print(fin.readline().strip().split('\t')[0])
+                img = _compose_imgs(model_names, i, order)
+            
+                io.imshow(img)
+                io.show()
+                rank_input = raw_input('Please input your rank:')
+                rank_input = rank_input.strip().split(',')
+                rank = ['-1'] * n_models
+                for j in xrange(n_models):
+                    rank[j] = rank_input[order[j]]
+                rank_str = "\t".join(rank)
+                fout.write("{0}\t{1}\n".format(i, rank_str))
+                fout.flush()
+            else:
+                img = _compose_imgs(model_names, i, range(n_models))
+                io.imsave('/srv/glusterfs/xieya/image/color/compare/language/{}.jpg'.format(i), img)
 
 
 def compare_metrics(model_names, metric_file_name, sort_order):
@@ -168,8 +173,6 @@ def evaluate_from_rgb(in_dir):
     hf = h5py.File('/srv/glusterfs/xieya/data/coco_colors.h5', 'r')
     gt_imgs = hf['val_ims']
 
-    img_names = os.listdir(in_dir)
-    img_names.sort()
     l2_accs = []
     l2_rb_0_accs = []
     l2_rb_5_accs = []
@@ -184,10 +187,8 @@ def evaluate_from_rgb(in_dir):
     fout = open(os.path.join(in_dir, 'metrics.txt'), 'w')
     img_count = 0
 
-    for img_name in img_names:
-        if not img_name.endswith('.jpg'):
-            continue
-        img_id = int(os.path.splitext(img_name)[0])
+    for img_id in xrange(19200):
+        img_name = "{}.jpg".format(img_id)
         img_path = os.path.join(in_dir, img_name)
         gt_bgr = gt_imgs[img_id]
         img_rgb = io.imread(img_path)
@@ -254,9 +255,11 @@ def evaluate_from_rgb(in_dir):
 
 
 if __name__ == "__main__":
+    # model_names = ['language_1_14k', 'language_2_18k', 'language_4_9k', 'language_5_31k', 'language_6_45k']
     model_names = ['tf_224_1_476k', 'tf_coco_24k', 'language_2_18k']
     lookup = utils.LookupEncode('resources/pts_in_hull.npy')
-    # annotate(model_names)
-    # compare_metrics(model_names, 'ce.txt', [1, 1])
-    evaluate_from_rgb('/srv/glusterfs/xieya/image/color/language_2_18k')
-
+    # annotate(model_names, False)
+    compare_metrics(model_names, 'ce.txt', [1, 1])
+    compare_metrics(model_names, 'metrics.txt', [-1, -1, -1, -1, 1])
+    compare_metrics(model_names, 'pdist.txt', [1])
+    # evaluate_from_rgb('/srv/glusterfs/xieya/image/color/language_6_45k')

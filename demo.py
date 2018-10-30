@@ -21,7 +21,8 @@ import utils
 
 _AUC_THRESHOLD = 150
 _BATCH_SIZE = 32
-_CAP_LAYERS = [0,1,2,3,4,5,6,7]
+#_CAP_LAYERS = [0,1,2,3,4,5,6,7]
+_CAP_LAYERS = [6]
 _COCO_PATH = '/srv/glusterfs/xieya/data/coco_colors.h5'
 _INPUT_SIZE = 224
 _RESIZE_SIZE = 0
@@ -29,9 +30,9 @@ _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
 _G_VERSION = 1
-_CKPT_PATH = '/srv/glusterfs/xieya/language_3/models/model.ckpt-27000'
+_CKPT_PATH = '/srv/glusterfs/xieya/language_5/models/model.ckpt-31000'
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
-_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/language_3_27k'
+_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/language_5_31k'
 _PRIOR_PATH = '/srv/glusterfs/xieya/prior/coco_313_soft.npy'
 #_PRIOR_PATH = 'resources/prior_probs_smoothed.npy'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
@@ -420,7 +421,7 @@ def colorize_with_language(with_attention=False):
         biases = [None] * 8
         for l in _CAP_LAYERS:
             biases[l] = 1.
-        c313_tensor = autocolor.inference4(l_tensor, cap_tensor, len_tensor, biases, with_attention=with_attention)
+        c313_tensor, attention_tensor = autocolor.inference4(l_tensor, cap_tensor, len_tensor, biases, with_attention=with_attention)
         saver = tf.train.Saver()
         print("Saver created.")
         config = tf.ConfigProto(allow_soft_placement=True)
@@ -446,12 +447,13 @@ def colorize_with_language(with_attention=False):
                     img_l = (img_l.astype(dtype=np.float32) - 50.) / 50.
                     img_cap = val_caps[i: i + 1]
                     img_len = val_lens[i: i + 1]
-                    img_313 = sess.run(c313_tensor, feed_dict={l_tensor: img_l, cap_tensor: img_cap, len_tensor: img_len})
+                    img_313, img_attention = sess.run([c313_tensor, attention_tensor], feed_dict={l_tensor: img_l, cap_tensor: img_cap, len_tensor: img_len})
                     img_dec, _ = decode(img_l, img_313, 2.63)
 
                     word_list = list(img_cap[0, :img_len[0]])
                     img_title = '_'.join(vrev.get(w, 'unk') for w in word_list) 
                     io.imsave(os.path.join(orig_dir, '{0}_{1}.jpg').format(i, img_title), img_dec)
+                    io.imsave(os.path.join(orig_dir, '{0}_{1}_att.jpg').format(i, img_title), cv2.resize(img_attention[0, :, :, 0], (224, 224)))
                     print(img_title)
 
                     if _NEW_CAPTION:
@@ -462,12 +464,13 @@ def colorize_with_language(with_attention=False):
                         for j in xrange(len(new_words)):
                             new_img_cap[0, j] = train_vocab.get(new_words[j], 0)
                         new_img_len[0] = len(new_words)
-                        new_img_313 = sess.run(c313_tensor, feed_dict={l_tensor: img_l, cap_tensor: new_img_cap, len_tensor: new_img_len})
+                        new_img_313, new_img_attention = sess.run([c313_tensor, attention_tensor], feed_dict={l_tensor: img_l, cap_tensor: new_img_cap, len_tensor: new_img_len})
                         new_img_dec, _ = decode(img_l, new_img_313, 2.63)
 
                         new_word_list = list(new_img_cap[0, :new_img_len[0]])
                         new_img_title = '_'.join(vrev.get(w, 'unk') for w in new_word_list) 
                         io.imsave(os.path.join(new_dir, '{0}_{1}.jpg').format(i, new_img_title), new_img_dec)
+                        io.imsave(os.path.join(new_dir, '{0}_{1}_att.jpg').format(i, new_img_title), cv2.resize(new_img_attention[0, :, :, 0], (224, 224)))
             finally:
                 hf.close()
                 print('H5 closed.')
@@ -703,7 +706,7 @@ if __name__ == "__main__":
     # demo_wgan_rgb()
     # _colorize_high_res_img(_IMG_NAME)
     # cifar()
-    colorize_with_language(with_attention=False)
+    colorize_with_language(with_attention=True)
     # colorize_video_with_language()
     # colorize_coco_without_language(evaluate=True)
     # save_ground_truth()
