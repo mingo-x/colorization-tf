@@ -619,7 +619,7 @@ def merge(cic_dir, coco_dir, cap_dir, new_cap_dir):
         print(idx)
 
 
-def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True, with_attention=False):
+def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True, with_attention=False, resize=False):
     if is_coco:
         dataset_params = {'path': _COCO_PATH, 'thread_num': 1, 'prior_path': _PRIOR_PATH}
         common_params = {'batch_size': _BATCH_SIZE, 'with_caption': '1', 'sampler': '0', }  # with_caption -> False: ignore grayscale images.
@@ -681,10 +681,13 @@ def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True, wit
                     img_313 = sess.run(c313_tensor, feed_dict=feed_dict)
                 
                 for j in xrange(_BATCH_SIZE):
-                    rgb, _ = decode(img_l[j: j + 1], img_313[j: j + 1], T, return_313=False)
+                    luma = img_l[j: j + 1]
+                    if resize:
+                        luma = transform.downscale_local_mean(luma, (4, 4, 1))
+                    rgb, _ = decode(luma, img_313[j: j + 1], T, return_313=False)
                     word_list = list(img_cap[j, :img_len[j]])
                     img_title = '_'.join(vrev.get(w, 'unk') for w in word_list) 
-                    io.imsave(os.path.join(_OUTPUT_DIR, "{0}.jpg".format(img_count)), rgb)
+                    io.imsave(os.path.join(_OUTPUT_DIR, "{0}{1}.jpg".format(img_count, '_rs' if resize else '')), rgb)
                     if cross_entropy:
                         fout.write("{0}_{3}\t{1}\t{2}\n".format(img_count, ce[img_count], rb[img_count], img_title))
                     img_count += 1
