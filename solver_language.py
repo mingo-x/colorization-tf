@@ -81,9 +81,14 @@ class Solver_Language(object):
             self.freeze_cnn = solver_params['freeze_cnn'] == '1'
             self.with_attention = solver_params['with_attention'] == '1'
             self.concat = solver_params['concat'] == '1'
+            self.same_lstm = solver_params['same_lstm'] == '1'
             if self.with_caption:
                 if self.concat:
                     print('CONCAT.')
+                    if self.same_lstm:
+                        print('Same lstm.')
+                    else:
+                        print('Different lstm.')
                 else:
                     print('FILM.')
         self.train = train
@@ -118,7 +123,7 @@ class Solver_Language(object):
                 # caption_layer = [0, 1, 2, 3, 4, 5, 6, 7]
                 caption_layers = [5]
                 if self.concat:
-                    self.conv8_313 = self.net.inference5(self.data_l, self.captions, self.lens, caption_layers)
+                    self.conv8_313 = self.net.inference5(self.data_l, self.captions, self.lens, caption_layers, self.same_lstm)
                 else:
                     # Restore gamma and beta of BN.
                     self.biases = [None] * 8

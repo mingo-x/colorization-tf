@@ -16,10 +16,10 @@ _LOG_FREQ = 32
 _PRIOR_PATH = '/srv/glusterfs/xieya/prior/coco_313_soft.npy'
 
 
-def _compose_imgs(model_names, idx, order, gt=None):
-    img = io.imread(os.path.join(_DIR, _get_img_name(model_names[order[0]], idx)))
-    for i in xrange(1, len(order)):
-        next_img = io.imread(os.path.join(_DIR, _get_img_name(model_names[order[i]], idx)))
+def _compose_imgs(model_names, idx, gt=None):
+    img = io.imread(os.path.join(_DIR, _get_img_name(model_names[0], idx)))
+    for i in xrange(1, len(model_names)):
+        next_img = io.imread(os.path.join(_DIR, _get_img_name(model_names[i], idx)))
         img = np.hstack((img, next_img))
     if gt is not None:
         next_img = gt[idx]
@@ -134,14 +134,43 @@ def _topk_match_nsamples(gt, pred, k):
     return count
 
 
-def annotate(model_names, annotate=True, with_gt=False):
+def annotate(model_names, file_id, annotate=True, with_gt=False):
     n_models = len(model_names)
     if with_gt:
         hf = h5py.File('/srv/glusterfs/xieya/data/coco_colors.h5', 'r')
         gt = hf['val_ims']
     else:
         gt = None
-    with open(os.path.join(_DIR, model_names[0] + "/ce.txt")) as fin, open('/srv/glusterfs/xieya/rank_1.txt', 'a+') as fout:
+    with open(os.path.join(_DIR, model_names[0] + "/ce.txt")) as fin, open('/srv/glusterfs/xieya/rank_{}.txt'.format(file_id), 'a+') as fout:
+        for i in xrange(0, 100):
+            if annotate:
+                order = np.random.permutation(n_models)
+                print(fin.readline().strip().split('\t')[0])
+                img = _compose_imgs(model_names[order], i)
+            
+                io.imshow(img)
+                io.show()
+                rank_input = raw_input('Please input your rank:')
+                rank_input = rank_input.strip().split(',')
+                rank = ['-1'] * n_models
+                for j in xrange(n_models):
+                    rank[j] = rank_input[order[j]]
+                rank_str = "\t".join(rank)
+                fout.write("{0}\t{1}\n".format(i, rank_str))
+                fout.flush()
+            else:
+                img = _compose_imgs(model_names, i, gt=gt)
+                io.imsave('/srv/glusterfs/xieya/image/color/compare/language/{}.jpg'.format(i), img)
+
+
+def annotate_random_pair(model_names, file_id, annotate=True, with_gt=False):
+    n_models = len(model_names)
+    if with_gt:
+        hf = h5py.File('/srv/glusterfs/xieya/data/coco_colors.h5', 'r')
+        gt = hf['val_ims']
+    else:
+        gt = None
+    with open(os.path.join(_DIR, model_names[0] + "/ce.txt")) as fin, open('/srv/glusterfs/xieya/rank_{}.txt'.format(file_id), 'a+') as fout:
         for i in xrange(0, 100):
             if annotate:
                 order = np.random.permutation(n_models)

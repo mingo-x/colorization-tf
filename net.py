@@ -731,9 +731,14 @@ class Net(object):
         conv8_313 = temp_conv
         return conv8_313
 
-    def inference5(self, data_l, captions, lens, cap_layers=[1, 2, 3, 4, 5, 6, 7, 8]):
+    def inference5(self, data_l, captions, lens, cap_layers=[0, 1, 2, 3, 4, 5, 6, 7], same_lstm=True):
         '''Concat.'''
-        caption_feature = self.caption_encoding(captions, lens)
+        if same_lstm:
+            caption_features = {-1: self.caption_encoding(captions, lens)}
+        else:
+            caption_features = {}
+            for i in cap_layers:
+                caption_features[i] = self.caption_encoding(captions, lens, i) 
 
         with tf.variable_scope('G'):
             # conv0
@@ -781,6 +786,7 @@ class Net(object):
             if block_idx in cap_layers:
                 print("Concat at block {}.".format(block_idx))
                 shape = tf.shape(temp_conv)
+                caption_feature = caption_features[-1] if same_lstm else caption_features[block_idx]
                 cap_emb_expand = caption_feature[:, tf.newaxis, tf.newaxis, :]
                 cap_emb_expand = tf.tile(cap_emb_expand, (1, shape[1], shape[2], 1))  # NxHxWx512
                 temp_conv = tf.concat((temp_conv, cap_emb_expand), axis=-1)  # NxHxWx1024
@@ -802,6 +808,7 @@ class Net(object):
             if block_idx in cap_layers:
                 print("Concat at block {}.".format(block_idx))
                 shape = tf.shape(temp_conv)
+                caption_feature = caption_features[-1] if same_lstm else caption_features[block_idx]
                 cap_emb_expand = caption_feature[:, tf.newaxis, tf.newaxis, :]
                 cap_emb_expand = tf.tile(cap_emb_expand, (1, shape[1], shape[2], 1))  # NxHxWx512
                 temp_conv = tf.concat((temp_conv, cap_emb_expand), axis=-1)  # NxHxWx1024
@@ -823,6 +830,7 @@ class Net(object):
             if block_idx in cap_layers:
                 print("Concat at block {}.".format(block_idx))
                 shape = tf.shape(temp_conv)
+                caption_feature = caption_features[-1] if same_lstm else caption_features[block_idx]
                 cap_emb_expand = caption_feature[:, tf.newaxis, tf.newaxis, :]
                 cap_emb_expand = tf.tile(cap_emb_expand, (1, shape[1], shape[2], 1))  # NxHxWx512
                 temp_conv = tf.concat((temp_conv, cap_emb_expand), axis=-1)  # NxHxWx1024
@@ -1345,14 +1353,14 @@ class Net(object):
 
         return data_ab
 
-    def caption_encoding(self, captions, lens):
+    def caption_encoding(self, captions, lens, idx=-1):
         with tf.variable_scope('LSTM', reuse=tf.AUTO_REUSE):
             embedding = tf.constant(self.word_embedding, name='word_embedding', dtype='float32')
             encoded_captions = tf.nn.embedding_lookup(embedding, captions, name='lookup')
             encoded_captions = tf.nn.dropout(encoded_captions, 0.8 if self.train else 1.)
             initializer = tf.contrib.layers.variance_scaling_initializer(factor=2.0, mode='FAN_IN', uniform=True, dtype=tf.float32)
-            lstm_fw = tf.nn.rnn_cell.LSTMCell(self.lstm_hid_dim, reuse=tf.AUTO_REUSE, initializer=initializer)
-            lstm_bw = tf.nn.rnn_cell.LSTMCell(self.lstm_hid_dim, reuse=tf.AUTO_REUSE, initializer=initializer)
+            lstm_fw = tf.nn.rnn_cell.LSTMCell(self.lstm_hid_dim, reuse=tf.AUTO_REUSE, initializer=initializer, name='fw_{}'.format(idx))
+            lstm_bw = tf.nn.rnn_cell.LSTMCell(self.lstm_hid_dim, reuse=tf.AUTO_REUSE, initializer=initializer, name='bw_{}'.format(idx))
             _, (state_fw, state_bw) = tf.nn.bidirectional_dynamic_rnn(lstm_fw, lstm_bw, encoded_captions, sequence_length=lens, dtype='float32')
             hidden = tf.concat((state_fw.h, state_bw.h), 1)
             return hidden
