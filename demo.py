@@ -21,7 +21,7 @@ import utils
 
 _AUC_THRESHOLD = 150
 _BATCH_SIZE = 32
-_CAP_LAYERS = [0,1,2,3,4,5,6,7]
+_CAP_LAYERS = [5]
 #_CAP_LAYERS = [6]
 _COCO_PATH = '/srv/glusterfs/xieya/data/coco_colors.h5'
 _INPUT_SIZE = 224
@@ -30,9 +30,9 @@ _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
 _G_VERSION = 1
-_CKPT_PATH = '/srv/glusterfs/xieya/tf_224_1/models/model.ckpt-476000'
+_CKPT_PATH = '/srv/glusterfs/xieya/concat_1/models/model.ckpt-19000'
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
-_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/tf_224_1_476k_img'
+_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/concat_1_19k'
 _PRIOR_PATH = '/srv/glusterfs/xieya/prior/coco_313_soft.npy'
 #_PRIOR_PATH = 'resources/prior_probs_smoothed.npy'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
@@ -397,7 +397,7 @@ def cross_entropy_loss(gt_313, conv8_313, prior_boost_nongray):
     return ce_loss, rb_loss
 
 
-def colorize_with_language(with_attention=False):
+def colorize_with_language(with_attention=False, concat=False):
     hf = h5py.File('/srv/glusterfs/xieya/data/coco_colors.h5', 'r')
     val_imgs = hf['val_ims']
     val_caps = hf['val_words']
@@ -418,10 +418,13 @@ def colorize_with_language(with_attention=False):
         cap_tensor = tf.placeholder(tf.int32, (1, 20))
         len_tensor = tf.placeholder(tf.int32, (1))
         autocolor = Net(train=False)
-        biases = [None] * 8
-        for l in _CAP_LAYERS:
-            biases[l] = 1.
-        c313_tensor, attention_tensor = autocolor.inference4(l_tensor, cap_tensor, len_tensor, biases, with_attention=with_attention)
+        if concat:
+            c313_tensor = autocolor.inference5(l_tensor, cap_tensor, len_tensor, _CAP_LAYERS)
+        else:
+            biases = [None] * 8
+            for l in _CAP_LAYERS:
+                biases[l] = 1.
+            c313_tensor = autocolor.inference4(l_tensor, cap_tensor, len_tensor, biases, with_attention=with_attention)
         saver = tf.train.Saver()
         print("Saver created.")
         config = tf.ConfigProto(allow_soft_placement=True)
@@ -447,13 +450,13 @@ def colorize_with_language(with_attention=False):
                     img_l = (img_l.astype(dtype=np.float32) - 50.) / 50.
                     img_cap = val_caps[i: i + 1]
                     img_len = val_lens[i: i + 1]
-                    img_313, img_attention = sess.run([c313_tensor, attention_tensor], feed_dict={l_tensor: img_l, cap_tensor: img_cap, len_tensor: img_len})
+                    img_313 = sess.run(c313_tensor, feed_dict={l_tensor: img_l, cap_tensor: img_cap, len_tensor: img_len})
                     img_dec, _ = decode(img_l, img_313, 2.63)
 
                     word_list = list(img_cap[0, :img_len[0]])
                     img_title = '_'.join(vrev.get(w, 'unk') for w in word_list) 
                     io.imsave(os.path.join(orig_dir, '{0}_{1}.jpg').format(i, img_title), img_dec)
-                    io.imsave(os.path.join(orig_dir, '{0}_{1}_att.jpg').format(i, img_title), cv2.resize(img_attention[0, :, :, 0], (224, 224)))
+                    # io.imsave(os.path.join(orig_dir, '{0}_{1}_att.jpg').format(i, img_title), cv2.resize(img_attention[0, :, :, 0], (224, 224)))
                     print(img_title)
 
                     if _NEW_CAPTION:
@@ -464,13 +467,13 @@ def colorize_with_language(with_attention=False):
                         for j in xrange(len(new_words)):
                             new_img_cap[0, j] = train_vocab.get(new_words[j], 0)
                         new_img_len[0] = len(new_words)
-                        new_img_313, new_img_attention = sess.run([c313_tensor, attention_tensor], feed_dict={l_tensor: img_l, cap_tensor: new_img_cap, len_tensor: new_img_len})
+                        new_img_313 = sess.run(c313_tensor, feed_dict={l_tensor: img_l, cap_tensor: new_img_cap, len_tensor: new_img_len})
                         new_img_dec, _ = decode(img_l, new_img_313, 2.63)
 
                         new_word_list = list(new_img_cap[0, :new_img_len[0]])
                         new_img_title = '_'.join(vrev.get(w, 'unk') for w in new_word_list) 
                         io.imsave(os.path.join(new_dir, '{0}_{1}.jpg').format(i, new_img_title), new_img_dec)
-                        io.imsave(os.path.join(new_dir, '{0}_{1}_att.jpg').format(i, new_img_title), cv2.resize(new_img_attention[0, :, :, 0], (224, 224)))
+                        # io.imsave(os.path.join(new_dir, '{0}_{1}_att.jpg').format(i, new_img_title), cv2.resize(new_img_attention[0, :, :, 0], (224, 224)))
             finally:
                 hf.close()
                 print('H5 closed.')
@@ -709,7 +712,7 @@ if __name__ == "__main__":
     # demo_wgan_rgb()
     # _colorize_high_res_img(_IMG_NAME)
     # cifar()
-    # colorize_with_language(with_attention=True)
+    colorize_with_language(with_attention=False, concat=True)
     # colorize_video_with_language()
     # colorize_coco_without_language(evaluate=True)
     # save_ground_truth()
@@ -717,6 +720,6 @@ if __name__ == "__main__":
     #       '/srv/glusterfs/xieya/image/color/tf_coco_5_38k', 
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/original', 
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/new')
-    evaluate(with_caption=False, cross_entropy=False, batch_num=600, is_coco=False, with_attention=False, resize=False)
+    # evaluate(with_caption=False, cross_entropy=False, batch_num=600, is_coco=False, with_attention=False, resize=False)
     # print("Model {}.".format(_CKPT_PATH))
     # compare_c313_pixelwise()
