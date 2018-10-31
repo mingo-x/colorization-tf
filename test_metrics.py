@@ -16,10 +16,14 @@ _LOG_FREQ = 32
 _PRIOR_PATH = '/srv/glusterfs/xieya/prior/coco_313_soft.npy'
 
 
-def _compose_imgs(model_names, idx, order):
+def _compose_imgs(model_names, idx, order, gt=None):
     img = io.imread(os.path.join(_DIR, _get_img_name(model_names[order[0]], idx)))
     for i in xrange(1, len(order)):
         next_img = io.imread(os.path.join(_DIR, _get_img_name(model_names[order[i]], idx)))
+        img = np.hstack((img, next_img))
+    if gt is not None:
+        next_img = gt[idx]
+        next_img = next_img[:, :, ::-1]
         img = np.hstack((img, next_img))
     return img
 
@@ -78,7 +82,7 @@ def _mse(img1, img2):
 def _parse_annotation():
     annotation = []
     pairwise = []
-    with open('/srv/glusterfs/xieya/rank.txt', 'r') as fin:
+    with open('/srv/glusterfs/xieya/rank_1.txt', 'r') as fin:
         for line in fin:
             items = line.strip().split('\t')
             rank = [int(items[i]) for i in xrange(1, len(items))]
@@ -111,8 +115,32 @@ def _psnr(img1, img2):
     return 20 * math.log10(PIXEL_MAX / math.sqrt(mse))
 
 
-def annotate(model_names, annotate=True):
+def _topk_match(gt, pred, k):
+    gt_topk = gt[0: k]
+    pred_topk = pred[0: k]
+    count = 0
+    for p in pred_topk:
+        if p in gt_topk:
+            count += 1
+
+    return count
+
+
+def _topk_match_nsamples(gt, pred, k):
+    n_samples = gt.shape[1]
+    count = 0
+    for i in xrange(n_samples):
+        count += _topk_match(gt[:, i], pred[:, i], k)
+    return count
+
+
+def annotate(model_names, annotate=True, with_gt=False):
     n_models = len(model_names)
+    if with_gt:
+        hf = h5py.File('/srv/glusterfs/xieya/data/coco_colors.h5', 'r')
+        gt = hf['val_ims']
+    else:
+        gt = None
     with open(os.path.join(_DIR, model_names[0] + "/ce.txt")) as fin, open('/srv/glusterfs/xieya/rank_1.txt', 'a+') as fout:
         for i in xrange(0, 100):
             if annotate:
@@ -131,7 +159,7 @@ def annotate(model_names, annotate=True):
                 fout.write("{0}\t{1}\n".format(i, rank_str))
                 fout.flush()
             else:
-                img = _compose_imgs(model_names, i, range(n_models))
+                img = _compose_imgs(model_names, i, range(n_models), gt=gt)
                 io.imsave('/srv/glusterfs/xieya/image/color/compare/language/{}.jpg'.format(i), img)
 
 
@@ -152,13 +180,14 @@ def compare_metrics(model_names, metric_file_name, sort_order):
         orders = np.argsort(scores, axis=0)[::sort_order[i]]
         match_total = np.sum(annotation == orders)
         match_top = np.sum(annotation[0] == orders[0])
+        match_top2 = _topk_match_nsamples(annotation, orders, 3)
         pairwise_orders = [_get_pairwise_order(scores[:, j], sort_order[i]) for j in xrange(n_annotations)]
         pairwise_orders = np.asarray(pairwise_orders)
         print(orders[:, 0], annotation[:, 0])
         print(pairwise_orders[0], pairwise_annotation[0])
         match_pairwise = np.sum(pairwise_annotation == pairwise_orders)
 
-        print("Metrics {0} total match {1} top match {2} pairwise match {3}".format(i, match_total, match_top, match_pairwise))
+        print("Metrics {0} total match {1} top match {2} top 2 match {4} pairwise match {3}".format(i, match_total, match_top, match_pairwise, match_top2))
 
 
 def evaluate_from_rgb(in_dir):
@@ -255,11 +284,12 @@ def evaluate_from_rgb(in_dir):
 
 
 if __name__ == "__main__":
-    # model_names = ['language_1_14k', 'language_2_18k', 'language_4_9k', 'language_5_31k', 'language_6_45k']
-    model_names = ['tf_224_1_476k', 'tf_coco_24k', 'language_2_18k']
+    model_names = ['language_1_14k', 'language_2_18k', 'language_4_9k', 'language_5_31k', 'language_6_45k']
+    # model_names = ['tf_224_1_476k', 'tf_coco_24k', 'language_2_18k']
     lookup = utils.LookupEncode('resources/pts_in_hull.npy')
-    # annotate(model_names, False)
+    # annotate(model_names, False, True)
     compare_metrics(model_names, 'ce.txt', [1, 1])
     compare_metrics(model_names, 'metrics.txt', [-1, -1, -1, -1, 1])
     compare_metrics(model_names, 'pdist.txt', [1])
+    compare_metrics(model_names, 'pdist_56.txt', [1])
     # evaluate_from_rgb('/srv/glusterfs/xieya/image/color/language_6_45k')

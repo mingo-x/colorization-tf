@@ -24,6 +24,7 @@ _LOG_FREQ = 10
 def scalar_summary(tag, value):
     return tf.Summary(value=[tf.Summary.Value(tag=tag, simple_value=value)])
 
+
 class Solver_Language(object):
 
     def __init__(
@@ -79,6 +80,12 @@ class Solver_Language(object):
             self.moment = float(solver_params['moment'])
             self.freeze_cnn = solver_params['freeze_cnn'] == '1'
             self.with_attention = solver_params['with_attention'] == '1'
+            self.concat = solver_params['concat'] == '1'
+            if self.with_caption:
+                if self.concat:
+                    print('CONCAT.')
+                else:
+                    print('FILM.')
         self.train = train
         self.net = Net(
             train=train, common_params=common_params, net_params=net_params)
@@ -108,24 +115,27 @@ class Solver_Language(object):
             )
 
             if self.with_caption:
-                # Restore gamma and beta of BN.
-                self.biases = [None] * 8
                 # caption_layer = [0, 1, 2, 3, 4, 5, 6, 7]
-                caption_layer = [6]
-                print('Blocks with language guidance:')
-                for i in caption_layer:
-                    print(i + 1)
-                    gamma = tf.get_variable('gamma{}'.format(i + 1), (self.net.in_dims[i], ), dtype=tf.float32, trainable=False)
-                    beta = tf.get_variable('beta{}'.format(i + 1), (self.net.in_dims[i], ), dtype=tf.float32, trainable=False)
-                    bn_saver = tf.train.Saver({'G/bn_{}/gamma'.format(i + 1): gamma, 'G/bn_{}/beta'.format(i + 1): beta})
-                    bn_saver.restore(sess, self.init_ckpt)
-                    bias = tf.concat((gamma, beta), axis=-1)
-                    self.biases[i] = sess.run(bias)
-                kernel = None
-                if self.kernel_zero:
-                    kernel = tf.zeros_initializer(dtype=tf.float32)
-                    print('Film dense kernel initialized with zeros.')
-                self.conv8_313, _ = self.net.inference4(self.data_l, self.captions, self.lens, self.biases, kernel, with_attention=self.with_attention)
+                caption_layers = [5]
+                if self.concat:
+                    self.conv8_313 = self.net.inference5(self.data_l, self.captions, self.lens, caption_layers)
+                else:
+                    # Restore gamma and beta of BN.
+                    self.biases = [None] * 8
+                    print('Blocks with language guidance:')
+                    for i in caption_layers:
+                        print(i + 1)
+                        gamma = tf.get_variable('gamma{}'.format(i + 1), (self.net.in_dims[i], ), dtype=tf.float32, trainable=False)
+                        beta = tf.get_variable('beta{}'.format(i + 1), (self.net.in_dims[i], ), dtype=tf.float32, trainable=False)
+                        bn_saver = tf.train.Saver({'G/bn_{}/gamma'.format(i + 1): gamma, 'G/bn_{}/beta'.format(i + 1): beta})
+                        bn_saver.restore(sess, self.init_ckpt)
+                        bias = tf.concat((gamma, beta), axis=-1)
+                        self.biases[i] = sess.run(bias)
+                    kernel = None
+                    if self.kernel_zero:
+                        kernel = tf.zeros_initializer(dtype=tf.float32)
+                        print('Film dense kernel initialized with zeros.')
+                    self.conv8_313, _ = self.net.inference4(self.data_l, self.captions, self.lens, self.biases, kernel, with_attention=self.with_attention)
             else:
                 self.conv8_313 = self.net.inference(self.data_l)
                 if len(self.conv8_313) == 2:
@@ -177,6 +187,7 @@ class Solver_Language(object):
             film_vars = tf.trainable_variables(scope='Film')
             lstm_vars = tf.trainable_variables(scope='LSTM')
             attetion_vars = tf.trainable_variables(scope='Attention')
+            concat_vars = tf.trainable_variables(scope='Concat')
             g_vars = tf.trainable_variables(scope='G')
             if self.freeze_cnn:         
                 grads = opt_cap.compute_gradients(self.new_loss, var_list=film_vars + lstm_vars + attetion_vars)
@@ -187,7 +198,7 @@ class Solver_Language(object):
                 for var in attetion_vars:
                     print(var)
             else:
-                grads = opt.compute_gradients(self.new_loss, var_list=g_vars) + opt_cap.compute_gradients(self.new_loss, var_list=film_vars + lstm_vars + attetion_vars)
+                grads = opt.compute_gradients(self.new_loss, var_list=g_vars) + opt_cap.compute_gradients(self.new_loss, var_list=film_vars + lstm_vars + attetion_vars + concat_vars)
                 for var in tf.trainable_variables():
                     print(var)
 

@@ -729,27 +729,14 @@ class Net(object):
             conv_num += 1
 
         conv8_313 = temp_conv
-        return conv8_313, attention_map
+        return conv8_313
 
-    def inference5(self, data_l, captions, lens, biases=None, kernel_initializer=None):
-        '''Using fewer FiLM layers.'''
+    def inference5(self, data_l, captions, lens, cap_layers=[1, 2, 3, 4, 5, 6, 7, 8]):
+        '''Concat.'''
         caption_feature = self.caption_encoding(captions, lens)
-        with tf.variable_scope('Film'):
-            gammas = []
-            betas = []
-            for i in range(4, 8):
-                if biases is None:
-                    initializer = tf.zeros_initializer(dtype=tf.float32)
-                else:
-                    initializer = tf.constant_initializer(biases[i], dtype=tf.float32)
-
-                dense = Linear('dense_{}'.format(i), caption_feature, self.in_dims[i] * 2, initializer, kernel_initializer)
-                gamma, beta = tf.split(dense, 2, axis=-1)
-                gammas.append(gamma)
-                betas.append(beta)
 
         with tf.variable_scope('G'):
-            # conv1
+            # conv0
             block_idx = 0
             conv_num = 1
             temp_conv = conv2d('conv_{}'.format(conv_num), data_l, [3, 3, 1, 64], stride=1, wd=self.weight_decay)
@@ -757,20 +744,18 @@ class Net(object):
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 64, 64], stride=2, relu=False, wd=self.weight_decay)
             conv_num += 1
             temp_conv = batch_norm('bn_1', temp_conv, train=self.train)
-            # temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
             temp_conv = tf.nn.relu(temp_conv)
             
-            # conv2
+            # conv1
             block_idx += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 64, 128], stride=1, wd=self.weight_decay)
             conv_num += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 128, 128], stride=2, relu=False, wd=self.weight_decay)
             conv_num += 1
             temp_conv = batch_norm('bn_2', temp_conv, train=self.train)
-            # temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
             temp_conv = tf.nn.relu(temp_conv)
 
-            # conv3
+            # conv2
             block_idx += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 128, 256], stride=1, wd=self.weight_decay)
             conv_num += 1
@@ -779,10 +764,9 @@ class Net(object):
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 256], stride=2, relu=False, wd=self.weight_decay)
             conv_num += 1
             temp_conv = batch_norm('bn_3', temp_conv, train=self.train)
-            # temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
             temp_conv = tf.nn.relu(temp_conv)
 
-            # conv4
+            # conv3
             block_idx += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 512], stride=1, wd=self.weight_decay)
             conv_num += 1
@@ -790,10 +774,40 @@ class Net(object):
             conv_num += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, relu=False, wd=self.weight_decay)
             conv_num += 1
-            temp_conv = bn('bn_4', temp_conv, train=self.train)
-            temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
+            temp_conv = batch_norm('bn_4', temp_conv, train=self.train)
             temp_conv = tf.nn.relu(temp_conv)
 
+        with tf.variable_scope('Concat'):
+            if block_idx in cap_layers:
+                print("Concat at block {}.".format(block_idx))
+                shape = tf.shape(temp_conv)
+                cap_emb_expand = caption_feature[:, tf.newaxis, tf.newaxis, :]
+                cap_emb_expand = tf.tile(cap_emb_expand, (1, shape[1], shape[2], 1))  # NxHxWx512
+                temp_conv = tf.concat((temp_conv, cap_emb_expand), axis=-1)  # NxHxWx1024
+                temp_conv = conv2d('conv{}'.format(block_idx), temp_conv, [3, 3, temp_conv.get_shape()[3], 512], stride=1, wd=self.weight_decay)
+
+        with tf.variable_scope('G'):
+            # conv4
+            block_idx += 1
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
+            conv_num += 1    
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, relu=False, dilation=2, wd=self.weight_decay)
+            conv_num += 1
+            temp_conv = batch_norm('bn_5', temp_conv, train=self.train)
+            temp_conv = tf.nn.relu(temp_conv)
+
+        with tf.variable_scope('Concat'):
+            if block_idx in cap_layers:
+                print("Concat at block {}.".format(block_idx))
+                shape = tf.shape(temp_conv)
+                cap_emb_expand = caption_feature[:, tf.newaxis, tf.newaxis, :]
+                cap_emb_expand = tf.tile(cap_emb_expand, (1, shape[1], shape[2], 1))  # NxHxWx512
+                temp_conv = tf.concat((temp_conv, cap_emb_expand), axis=-1)  # NxHxWx1024
+                temp_conv = conv2d('conv{}'.format(block_idx), temp_conv, [3, 3, temp_conv.get_shape()[3], 512], stride=1, wd=self.weight_decay)
+
+        with tf.variable_scope('G'):
             # conv5
             block_idx += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
@@ -801,24 +815,21 @@ class Net(object):
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
             conv_num += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, relu=False, dilation=2, wd=self.weight_decay)
-            conv_num += 1
-            temp_conv = bn('bn_5', temp_conv, train=self.train)
-            temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
+            conv_num += 1  
+            temp_conv = batch_norm('bn_6', temp_conv, train=self.train)
             temp_conv = tf.nn.relu(temp_conv)
+       
+        with tf.variable_scope('Concat'):
+            if block_idx in cap_layers:
+                print("Concat at block {}.".format(block_idx))
+                shape = tf.shape(temp_conv)
+                cap_emb_expand = caption_feature[:, tf.newaxis, tf.newaxis, :]
+                cap_emb_expand = tf.tile(cap_emb_expand, (1, shape[1], shape[2], 1))  # NxHxWx512
+                temp_conv = tf.concat((temp_conv, cap_emb_expand), axis=-1)  # NxHxWx1024
+                temp_conv = conv2d('conv{}'.format(block_idx), temp_conv, [3, 3, temp_conv.get_shape()[3], 512], stride=1, wd=self.weight_decay)
 
+        with tf.variable_scope('G'):
             # conv6
-            block_idx += 1
-            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
-            conv_num += 1    
-            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
-            conv_num += 1
-            temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, relu=False, dilation=2, wd=self.weight_decay)
-            conv_num += 1    
-            temp_conv = bn('bn_6', temp_conv, train=self.train)    
-            temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
-            temp_conv = tf.nn.relu(temp_conv)
-
-            # conv7
             block_idx += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, wd=self.weight_decay)
             conv_num += 1
@@ -826,11 +837,20 @@ class Net(object):
             conv_num += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, relu=False, wd=self.weight_decay)
             conv_num += 1
-            temp_conv = bn('bn_7', temp_conv, train=self.train)
-            temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
+            temp_conv = batch_norm('bn_7', temp_conv, train=self.train)
             temp_conv = tf.nn.relu(temp_conv)
+      
+        with tf.variable_scope('Concat'):
+            if block_idx in cap_layers:
+                print("Concat at block {}.".format(block_idx))
+                shape = tf.shape(temp_conv)
+                cap_emb_expand = caption_feature[:, tf.newaxis, tf.newaxis, :]
+                cap_emb_expand = tf.tile(cap_emb_expand, (1, shape[1], shape[2], 1))  # NxHxWx512
+                temp_conv = tf.concat((temp_conv, cap_emb_expand), axis=-1)  # NxHxWx1024
+                temp_conv = conv2d('conv{}'.format(block_idx), temp_conv, [3, 3, temp_conv.get_shape()[3], 512], stride=1, wd=self.weight_decay)
 
-            # conv8
+        with tf.variable_scope('G'):
+            # conv7
             block_idx += 1
             temp_conv = deconv2d('conv_{}'.format(conv_num), temp_conv, [4, 4, 512, 256], stride=2, wd=self.weight_decay)
             conv_num += 1    
@@ -839,7 +859,6 @@ class Net(object):
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 256], stride=1, relu=False, wd=self.weight_decay)
             conv_num += 1
             temp_conv = batch_norm('bn_8', temp_conv, train=self.train)
-            # temp_conv = gammas[block_idx][:, tf.newaxis, tf.newaxis, :] * temp_conv + betas[block_idx][:, tf.newaxis, tf.newaxis, :]
             temp_conv = tf.nn.relu(temp_conv)
 
             # Unary prediction

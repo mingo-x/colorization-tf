@@ -21,8 +21,8 @@ import utils
 
 _AUC_THRESHOLD = 150
 _BATCH_SIZE = 32
-#_CAP_LAYERS = [0,1,2,3,4,5,6,7]
-_CAP_LAYERS = [6]
+_CAP_LAYERS = [0,1,2,3,4,5,6,7]
+#_CAP_LAYERS = [6]
 _COCO_PATH = '/srv/glusterfs/xieya/data/coco_colors.h5'
 _INPUT_SIZE = 224
 _RESIZE_SIZE = 0
@@ -32,7 +32,7 @@ _CIFAR_COUNT = 0
 _G_VERSION = 1
 _CKPT_PATH = '/srv/glusterfs/xieya/tf_224_1/models/model.ckpt-476000'
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
-_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/tf_224_1_476k'
+_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/tf_224_1_476k_img'
 _PRIOR_PATH = '/srv/glusterfs/xieya/prior/coco_313_soft.npy'
 #_PRIOR_PATH = 'resources/prior_probs_smoothed.npy'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
@@ -685,10 +685,10 @@ def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True, wit
                     if resize:
                         luma = transform.downscale_local_mean(luma, (1, 4, 4, 1))
                     rgb, _ = decode(luma, img_313[j: j + 1], T, return_313=False)
-                    word_list = list(img_cap[j, :img_len[j]])
-                    img_title = '_'.join(vrev.get(w, 'unk') for w in word_list) 
                     io.imsave(os.path.join(_OUTPUT_DIR, "{0}{1}.jpg".format(img_count, '_rs' if resize else '')), rgb)
                     if cross_entropy:
+                        word_list = list(img_cap[j, :img_len[j]])
+                        img_title = '_'.join(vrev.get(w, 'unk') for w in word_list)
                         fout.write("{0}_{3}\t{1}\t{2}\n".format(img_count, ce[img_count], rb[img_count], img_title))
                     img_count += 1
                             
@@ -717,6 +717,6 @@ if __name__ == "__main__":
     #       '/srv/glusterfs/xieya/image/color/tf_coco_5_38k', 
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/original', 
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/new')
-    evaluate(with_caption=False, cross_entropy=False, batch_num=600, is_coco=True, with_attention=False, resize=True)
+    evaluate(with_caption=False, cross_entropy=False, batch_num=600, is_coco=False, with_attention=False, resize=False)
     # print("Model {}.".format(_CKPT_PATH))
     # compare_c313_pixelwise()
