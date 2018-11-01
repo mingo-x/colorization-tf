@@ -93,18 +93,21 @@ def scale_regions(region_file_name):
         img_w = img_meta.width
         img_h = img_meta.height
         scale = min(img_w, img_h) / 224.
-        original_img = io.imread('/srv/glusterfs/xieya/data/visual_genome/VG_100K/{}.jpg'.format(img_id))
+        img_path = '/srv/glusterfs/xieya/data/visual_genome/VG_100K_224/{}.jpg'.format(img_id)
+        if not os.exists(img_path):
+            img_path = '/srv/glusterfs/xieya/data/visual_genome/VG_100K_224_2/{}.jpg'.format(img_id)
+        original_img = io.imread(img_path)
         new_regions = []
         for reg in img['regions']:
+            reg_id = reg['region_id']
             x = reg['x']
             y = reg['y']
             w = reg['width']
             h = reg['height']
 
-            print(reg['phrase'])
+            print(img_id, reg_id, reg['phrase'])
             region_img = original_img[x: x + h, y: y + w]
-            io.imshow(region_img)
-            io.show()
+            io.imsave('/srv/glusterfs/xieya/tmp/{0}_{1}.jpg'.format(img_id, reg_id), region_img)
 
             nx = _scale_to_int(x, scale)
             ny = _scale_to_int(y, scale)
@@ -114,11 +117,12 @@ def scale_regions(region_file_name):
             new_regions.append(new_reg)
 
         new_data.append({'id': img_id, 'regions': new_regions})
+        raw_input('')
 
     json.dump(new_data, open(os.path.join('/srv/glusterfs/xieya/data/visual_genome', 'scaled_' + region_file_name), 'w'))
 
 
 if __name__ == "__main__":
     # build_vocabulary()
-    scale_images('/srv/glusterfs/xieya/data/visual_genome/100k_2.txt', '/srv/glusterfs/xieya/data/visual_genome/VG_100K_224_2')
-    # scale_regions('region_descriptions.json')
+    # scale_images('/srv/glusterfs/xieya/data/visual_genome/100k_2.txt', '/srv/glusterfs/xieya/data/visual_genome/VG_100K_224_2')
+    scale_regions('region_descriptions.json')
