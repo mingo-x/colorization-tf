@@ -82,6 +82,7 @@ class Solver_Language(object):
             self.with_attention = solver_params['with_attention'] == '1'
             self.concat = solver_params['concat'] == '1'
             self.same_lstm = solver_params['same_lstm'] == '1'
+            self.residual = solver_params['residual'] == '1'
             if self.with_caption:
                 if self.concat:
                     print('CONCAT.')
@@ -89,6 +90,8 @@ class Solver_Language(object):
                         print('Same lstm.')
                     else:
                         print('Different lstm.')
+                    if self.residual:
+                        print('Residual structure.')
                 else:
                     print('FILM.')
         self.train = train
@@ -121,9 +124,9 @@ class Solver_Language(object):
 
             if self.with_caption:
                 # caption_layer = [0, 1, 2, 3, 4, 5, 6, 7]
-                caption_layers = [4, 5, 6]
+                caption_layers = [6]
                 if self.concat:
-                    self.conv8_313 = self.net.inference5(self.data_l, self.captions, self.lens, caption_layers, self.same_lstm)
+                    self.conv8_313 = self.net.inference5(self.data_l, self.captions, self.lens, caption_layers, self.same_lstm, self.residual)
                 else:
                     # Restore gamma and beta of BN.
                     self.biases = [None] * 8

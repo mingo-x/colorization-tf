@@ -731,7 +731,7 @@ class Net(object):
         conv8_313 = temp_conv
         return conv8_313
 
-    def inference5(self, data_l, captions, lens, cap_layers=[0, 1, 2, 3, 4, 5, 6, 7], same_lstm=True):
+    def inference5(self, data_l, captions, lens, cap_layers=[0, 1, 2, 3, 4, 5, 6, 7], same_lstm=True, res=False):
         '''Concat.'''
         if same_lstm:
             caption_features = {-1: self.caption_encoding(captions, lens)}
@@ -783,19 +783,26 @@ class Net(object):
             temp_conv = tf.nn.relu(temp_conv)
 
         with tf.variable_scope('Concat'):
+            add_on = None
             if block_idx in cap_layers:
                 print("Concat at block {}.".format(block_idx))
                 shape = tf.shape(temp_conv)
                 caption_feature = caption_features[-1] if same_lstm else caption_features[block_idx]
                 cap_emb_expand = caption_feature[:, tf.newaxis, tf.newaxis, :]
                 cap_emb_expand = tf.tile(cap_emb_expand, (1, shape[1], shape[2], 1))  # NxHxWx512
-                temp_conv = tf.concat((temp_conv, cap_emb_expand), axis=-1)  # NxHxWx1024
-                temp_conv = conv2d('conv{}'.format(block_idx), temp_conv, [3, 3, temp_conv.get_shape()[3], 512], stride=1, wd=self.weight_decay)
+                concat_block = tf.concat((temp_conv, cap_emb_expand), axis=-1)  # NxHxWx1024
+                concat_block = conv2d('conv{}'.format(block_idx), concat_block, [3, 3, concat_block.get_shape()[3], 512], stride=1, wd=self.weight_decay)
+                if res:
+                    add_on = concat_block
+                else:
+                    temp_conv = concat_block
 
         with tf.variable_scope('G'):
             # conv4
             block_idx += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
+            if add_on is not None:
+                temp_conv = temp_conv + add_on
             conv_num += 1    
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
             conv_num += 1
@@ -805,19 +812,26 @@ class Net(object):
             temp_conv = tf.nn.relu(temp_conv)
 
         with tf.variable_scope('Concat'):
+            add_on = None
             if block_idx in cap_layers:
                 print("Concat at block {}.".format(block_idx))
                 shape = tf.shape(temp_conv)
                 caption_feature = caption_features[-1] if same_lstm else caption_features[block_idx]
                 cap_emb_expand = caption_feature[:, tf.newaxis, tf.newaxis, :]
                 cap_emb_expand = tf.tile(cap_emb_expand, (1, shape[1], shape[2], 1))  # NxHxWx512
-                temp_conv = tf.concat((temp_conv, cap_emb_expand), axis=-1)  # NxHxWx1024
-                temp_conv = conv2d('conv{}'.format(block_idx), temp_conv, [3, 3, temp_conv.get_shape()[3], 512], stride=1, wd=self.weight_decay)
+                concat_block = tf.concat((temp_conv, cap_emb_expand), axis=-1)  # NxHxWx1024
+                concat_block = conv2d('conv{}'.format(block_idx), concat_block, [3, 3, concat_block.get_shape()[3], 512], stride=1, wd=self.weight_decay)
+                if res:
+                    add_on = concat_block
+                else:
+                    temp_conv = concat_block
 
         with tf.variable_scope('G'):
             # conv5
             block_idx += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
+            if add_on is not None:
+                temp_conv = temp_conv + add_on
             conv_num += 1    
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, dilation=2, wd=self.weight_decay)
             conv_num += 1
@@ -827,19 +841,26 @@ class Net(object):
             temp_conv = tf.nn.relu(temp_conv)
        
         with tf.variable_scope('Concat'):
+            add_on = None
             if block_idx in cap_layers:
                 print("Concat at block {}.".format(block_idx))
                 shape = tf.shape(temp_conv)
                 caption_feature = caption_features[-1] if same_lstm else caption_features[block_idx]
                 cap_emb_expand = caption_feature[:, tf.newaxis, tf.newaxis, :]
                 cap_emb_expand = tf.tile(cap_emb_expand, (1, shape[1], shape[2], 1))  # NxHxWx512
-                temp_conv = tf.concat((temp_conv, cap_emb_expand), axis=-1)  # NxHxWx1024
-                temp_conv = conv2d('conv{}'.format(block_idx), temp_conv, [3, 3, temp_conv.get_shape()[3], 512], stride=1, wd=self.weight_decay)
+                concat_block = tf.concat((temp_conv, cap_emb_expand), axis=-1)  # NxHxWx1024
+                concat_block = conv2d('conv{}'.format(block_idx), concat_block, [3, 3, concat_block.get_shape()[3], 512], stride=1, wd=self.weight_decay)
+                if res:
+                    add_on = concat_block
+                else:
+                    temp_conv = concat_block
 
         with tf.variable_scope('G'):
             # conv6
             block_idx += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, wd=self.weight_decay)
+            if add_on is not None:
+                temp_conv = temp_conv + add_on
             conv_num += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, wd=self.weight_decay)
             conv_num += 1
@@ -849,18 +870,26 @@ class Net(object):
             temp_conv = tf.nn.relu(temp_conv)
       
         with tf.variable_scope('Concat'):
+            add_on = None
             if block_idx in cap_layers:
                 print("Concat at block {}.".format(block_idx))
                 shape = tf.shape(temp_conv)
+                caption_feature = caption_features[-1] if same_lstm else caption_features[block_idx]
                 cap_emb_expand = caption_feature[:, tf.newaxis, tf.newaxis, :]
                 cap_emb_expand = tf.tile(cap_emb_expand, (1, shape[1], shape[2], 1))  # NxHxWx512
-                temp_conv = tf.concat((temp_conv, cap_emb_expand), axis=-1)  # NxHxWx1024
-                temp_conv = conv2d('conv{}'.format(block_idx), temp_conv, [3, 3, temp_conv.get_shape()[3], 512], stride=1, wd=self.weight_decay)
+                concat_block = tf.concat((temp_conv, cap_emb_expand), axis=-1)  # NxHxWx1024
+                concat_block = conv2d('conv{}'.format(block_idx), concat_block, [3, 3, concat_block.get_shape()[3], 512], stride=1, wd=self.weight_decay)
+                if res:
+                    add_on = concat_block
+                else:
+                    temp_conv = concat_block
 
         with tf.variable_scope('G'):
             # conv7
             block_idx += 1
             temp_conv = deconv2d('conv_{}'.format(conv_num), temp_conv, [4, 4, 512, 256], stride=2, wd=self.weight_decay)
+            if add_on is not None:
+                temp_conv = temp_conv + add_on
             conv_num += 1    
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 256, 256], stride=1, wd=self.weight_decay)
             conv_num += 1
@@ -1359,8 +1388,10 @@ class Net(object):
             encoded_captions = tf.nn.embedding_lookup(embedding, captions, name='lookup')
             encoded_captions = tf.nn.dropout(encoded_captions, 0.8 if self.train else 1.)
             initializer = tf.contrib.layers.variance_scaling_initializer(factor=2.0, mode='FAN_IN', uniform=True, dtype=tf.float32)
-            lstm_fw = tf.nn.rnn_cell.LSTMCell(self.lstm_hid_dim, reuse=tf.AUTO_REUSE, initializer=initializer, name='fw_{}'.format(idx))
-            lstm_bw = tf.nn.rnn_cell.LSTMCell(self.lstm_hid_dim, reuse=tf.AUTO_REUSE, initializer=initializer, name='bw_{}'.format(idx))
+            fw_name = '' if idx == -1 else 'fw_{}'.format(idx)
+            bw_name = '' if idx == -1 else 'bw_{}'.format(idx)
+            lstm_fw = tf.nn.rnn_cell.LSTMCell(self.lstm_hid_dim, reuse=tf.AUTO_REUSE, initializer=initializer, name=fw_name)
+            lstm_bw = tf.nn.rnn_cell.LSTMCell(self.lstm_hid_dim, reuse=tf.AUTO_REUSE, initializer=initializer, name=bw_name)
             _, (state_fw, state_bw) = tf.nn.bidirectional_dynamic_rnn(lstm_fw, lstm_bw, encoded_captions, sequence_length=lens, dtype='float32')
             hidden = tf.concat((state_fw.h, state_bw.h), 1)
             return hidden
