@@ -111,15 +111,15 @@ def scale_regions(region_file_name):
             h = reg['height']
             phrase = reg['phrase'].encode('utf-8')
 
-            print(img_id, reg_id, phrase, x, y, w, h)
-            region_img = original_img[y - h: y, x: x + w]
+            print(img_id, reg_id, phrase, x, y, w, h, original_img.shape)
+            region_img = original_img[y: y + h, x: x + w]
             io.imsave('/srv/glusterfs/xieya/tmp/{0}_{1}.jpg'.format(img_id, reg_id), region_img)
 
             nx = _scale_to_int(x, scale)
             ny = _scale_to_int(y, scale)
             nw = _scale_to_int(w, scale)
             nh = _scale_to_int(h, scale)
-            region_224 = original_224[ny - h: ny, nx: nx + nw]
+            region_224 = original_224[ny: ny + nh, nx: nx + nw]
             io.imsave('/srv/glusterfs/xieya/tmp/{0}_{1}_224.jpg'.format(img_id, reg_id), region_224)
             print(nx, ny, nw, nh)
             new_reg = {'region_id': reg['region_id'], 'x': nx, 'y': ny, 'width': nw, 'height': nh, 'phrase': reg['phrase']}
