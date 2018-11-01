@@ -3,7 +3,7 @@
 # ----- Parameters passed to the cluster -------
 ## <= 1h is short queue, <= 6h is middle queue, <= 48 h is long queue
 
-#$ -t 1:100
+#$ -t 1:50
 
 #$ -S /srv/glusterfs/xieya/anaconda2/bin/python
 
@@ -23,12 +23,12 @@ import json
 import numpy as np
 import os
 from skimage import io
-import spacy
+#import spacy
 
 _LOG_FREQ = 10
 _RESCALE_SIZE = 224
 _TASK_ID = os.environ.get('SGE_TASK_ID')
-_TASK_NUM = 100
+_TASK_NUM = 50
 if _TASK_ID is not None:
     print("Task id: {}".format(_TASK_ID))
     _TASK_ID = int(_TASK_ID) - 1
@@ -120,5 +120,5 @@ def scale_regions(region_file_name):
 
 if __name__ == "__main__":
     # build_vocabulary()
-    scale_images('/srv/glusterfs/xieya/data/visual_genome/100k_1.txt', '/srv/glusterfs/xieya/data/visual_genome/VG_100K_224')
+    scale_images('/srv/glusterfs/xieya/data/visual_genome/100k_2.txt', '/srv/glusterfs/xieya/data/visual_genome/VG_100K_224_2')
     # scale_regions('region_descriptions.json')
