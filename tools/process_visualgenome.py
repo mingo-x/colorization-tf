@@ -60,8 +60,11 @@ def build_vocabulary():
 def scale_images(img_path_file, out_dir):
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
+    
+    print('Task id: ', _TASK_ID)
     count = 0
     i = 0
+
     with open(img_path_file, 'r') as fin:
         for line in fin:
             if i % _TASK_NUM == _TASK_ID:
@@ -71,7 +74,7 @@ def scale_images(img_path_file, out_dir):
                 h = img.shape[0]
                 w = img.shape[1]
                 scale = 1. * _RESCALE_SIZE / min(h, w)
-                img = cv2.resize(img, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC if scale > 1. else cv2.INTER_AREA)
+                img = cv2.resize(img, None, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC if scale > 1. else cv2.INTER_AREA)
                 cv2.imwrite(os.path.join(out_dir, img_name), img)
                 count += 1
 
