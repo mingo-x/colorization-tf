@@ -25,7 +25,7 @@ import os
 from skimage import io
 import spacy
 
-_LOG_FREQ = 100
+_LOG_FREQ = 10
 _RESCALE_SIZE = 224
 _TASK_ID = os.environ.get('SGE_TASK_ID')
 if _TASK_ID is not None:
@@ -40,6 +40,7 @@ def _scale_to_int(x, scale):
 
 
 def build_vocabulary():
+    nlp = spacy.load('en_core_web_md')
     regions = json.load(open('/srv/glusterfs/xieya/data/visual_genome/region_descriptions.json', 'r'))
     voc = {}
     embedding = []
@@ -55,23 +56,29 @@ def build_vocabulary():
             raw_input('')
 
 
-def scale_images(img_path_list, out_dir):
-    # TODO: Build a image path list.
-    count = 0
-    for i in xrange(len(img_path_list)):
-        if i % _TASK_ID == 0:
-            img_path = img_path_list[i]
-            img_name = os.path.split(img_path)[1]
-            img = cv2.imread(img_path)
-            h = img.shape[0]
-            w = img.shape[1]
-            scale = 1. * _RESCALE_SIZE / min(h, w)
-            img = cv2.resize(img, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC if scale > 1. else cv2.INTER_AREA)
-            cv2.imwrite(os.path.join(out_dir, img_name), img)
-            count += 1
+def scale_images(img_path_file, out_dir):
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
 
-            if count % _LOG_FREQ == 0:
-                print(count)
+    count = 0
+    i = 0
+    
+    with open(img_path_file, 'r') as fin:
+        for line in fin:
+            if i % _TASK_ID == 0:
+                img_path = line.strip()
+                img_name = os.path.split(img_path)[1]
+                img = cv2.imread(img_path)
+                h = img.shape[0]
+                w = img.shape[1]
+                scale = 1. * _RESCALE_SIZE / min(h, w)
+                img = cv2.resize(img, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC if scale > 1. else cv2.INTER_AREA)
+                cv2.imwrite(os.path.join(out_dir, img_name), img)
+                count += 1
+
+                if count % _LOG_FREQ == 0:
+                    print(count)
+            i +=1 
 
 
 def scale_regions(region_file_name):
@@ -110,7 +117,6 @@ def scale_regions(region_file_name):
 
 
 if __name__ == "__main__":
-    nlp = spacy.load('en_core_web_md')
-    build_vocabulary()
-    # scale_images('', '/srv/glusterfs/xieya/data/visual_genome/VG_100K_224')
+    # build_vocabulary()
+    scale_images('/srv/glusterfs/xieya/data/visual_genome/100k_1.txt', '/srv/glusterfs/xieya/data/visual_genome/VG_100K_224')
     # scale_regions('region_descriptions.json')
