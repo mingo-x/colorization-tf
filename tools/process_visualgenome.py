@@ -28,6 +28,7 @@ import spacy
 _LOG_FREQ = 10
 _RESCALE_SIZE = 224
 _TASK_ID = os.environ.get('SGE_TASK_ID')
+_TASK_NUM = 100
 if _TASK_ID is not None:
     print("Task id: {}".format(_TASK_ID))
     _TASK_ID = int(_TASK_ID) - 1
@@ -59,13 +60,11 @@ def build_vocabulary():
 def scale_images(img_path_file, out_dir):
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
-
     count = 0
     i = 0
-    
     with open(img_path_file, 'r') as fin:
         for line in fin:
-            if i % _TASK_ID == 0:
+            if i % _TASK_NUM == _TASK_ID:
                 img_path = line.strip()
                 img_name = os.path.split(img_path)[1]
                 img = cv2.imread(img_path)
