@@ -95,9 +95,9 @@ def scale_regions(region_file_name):
         img_w = img_meta['width']
         img_h = img_meta['height']
         scale = min(img_w, img_h) / 224.
-        img_path = '/srv/glusterfs/xieya/data/visual_genome/VG_100K_224/{}.jpg'.format(img_id)
+        img_path = '/srv/glusterfs/xieya/data/visual_genome/VG_100K/{}.jpg'.format(img_id)
         if not os.path.exists(img_path):
-            img_path = '/srv/glusterfs/xieya/data/visual_genome/VG_100K_224_2/{}.jpg'.format(img_id)
+            img_path = '/srv/glusterfs/xieya/data/visual_genome/VG_100K_2/{}.jpg'.format(img_id)
         original_img = io.imread(img_path)
         new_regions = []
         for reg in img['regions']:

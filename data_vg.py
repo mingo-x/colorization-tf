@@ -3,7 +3,6 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import math
 import random
 import cv2
 import numpy as np
@@ -34,8 +33,6 @@ class DataSet(object):
         if common_params:
             self.image_size = int(common_params['image_size'])
             self.batch_size = int(common_params['batch_size'])
-            self.is_gan = True if common_params['is_gan'] == '1' else False
-            self.is_rgb = True if common_params['is_rgb'] == '1' else False
           
         if dataset_params:
             self.data_path = str(dataset_params['path'])
