@@ -85,7 +85,9 @@ def scale_images(img_path_file, out_dir):
 
 def scale_regions(region_file_name):
     regions = json.load(open(os.path.join('/srv/glusterfs/xieya/data/visual_genome', region_file_name), 'r'))
+    print('Region json loaded.')
     img_metas = json.load(open('/srv/glusterfs/xieya/data/visual_genome/image_data.json', 'r'))
+    print('Image json loaded.')
     new_data = []
     for img in regions:
         img_id = img['id']
@@ -105,7 +107,7 @@ def scale_regions(region_file_name):
             w = reg['width']
             h = reg['height']
 
-            print(img_id, reg_id, reg['phrase'])
+            print(img_id, reg_id, reg['phrase'], x, y, w, h)
             region_img = original_img[x: x + h, y: y + w]
             io.imsave('/srv/glusterfs/xieya/tmp/{0}_{1}.jpg'.format(img_id, reg_id), region_img)
 
@@ -113,6 +115,7 @@ def scale_regions(region_file_name):
             ny = _scale_to_int(y, scale)
             nw = _scale_to_int(w, scale)
             nh = _scale_to_int(h, scale)
+            print(nx, ny, nw, nh)
             new_reg = {'region_id': reg['region_id'], 'x': nx, 'y': ny, 'width': nw, 'height': nh, 'phrase': reg['phrase']}
             new_regions.append(new_reg)
 
