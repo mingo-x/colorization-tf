@@ -21,7 +21,7 @@ import utils
 
 _AUC_THRESHOLD = 150
 _BATCH_SIZE = 32
-_CAP_LAYERS = [5]
+_CAP_LAYERS = [6]
 #_CAP_LAYERS = [6]
 _COCO_PATH = '/srv/glusterfs/xieya/data/coco_colors.h5'
 _INPUT_SIZE = 224
@@ -30,9 +30,9 @@ _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
 _G_VERSION = 1
-_CKPT_PATH = '/srv/glusterfs/xieya/concat_1/models/model.ckpt-18000'
+_CKPT_PATH = '/srv/glusterfs/xieya/concat_6/models/model.ckpt-22000'
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
-_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/concat_1_18k'
+_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/concat_6_22k'
 _PRIOR_PATH = '/srv/glusterfs/xieya/prior/coco_313_soft.npy'
 #_PRIOR_PATH = 'resources/prior_probs_smoothed.npy'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
