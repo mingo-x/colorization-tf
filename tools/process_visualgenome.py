@@ -119,7 +119,7 @@ def scale_regions(region_file_name):
             ny = _scale_to_int(y, scale)
             nw = _scale_to_int(w, scale)
             nh = _scale_to_int(h, scale)
-            print(nx, ny, nw, nh, original_224.shape)
+            print(scale, img_w, img_h, nx, ny, nw, nh, original_224.shape)
             region_224 = original_224[ny: ny + nh, nx: nx + nw]
             io.imsave('/srv/glusterfs/xieya/tmp/{0}_{1}_224.jpg'.format(img_id, reg_id), region_224)
             new_reg = {'region_id': reg['region_id'], 'x': nx, 'y': ny, 'width': nw, 'height': nh, 'phrase': reg['phrase']}
