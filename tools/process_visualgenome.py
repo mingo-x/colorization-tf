@@ -24,6 +24,7 @@ import numpy as np
 import os
 import pickle
 from skimage import io
+import string
 
 _LANGUAGE_DIR = '/srv/glusterfs/xieya/data/language'
 _LOG_FREQ = 10
@@ -48,6 +49,7 @@ def build_vocabulary_by_glove(emb_name):
     for img in regions:
         for reg in img['regions']:
             phrase = reg['phrase'].encode('utf-8').lower()
+            phrase = phrase.translate(None, string.punctuation)
             words = phrase.strip().split()
             for w in words:
                 if w not in emb_dict:
