@@ -60,6 +60,7 @@ def build_vocabulary_by_glove(emb_file):
                     if w in emb_dict:
                         idx = len(voc_dict)
                         embeddings.append(emb_dict[w])
+                        voc_dict[w] = idx
                         print(w, idx)
                     else:
                         unknowns.add(w)
