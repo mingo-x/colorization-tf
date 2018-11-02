@@ -731,14 +731,14 @@ class Net(object):
         conv8_313 = temp_conv
         return conv8_313
 
-    def inference5(self, data_l, captions, lens, cap_layers=[0, 1, 2, 3, 4, 5, 6, 7], same_lstm=True, res=False):
+    def inference5(self, data_l, captions, lens, cap_layers=[0, 1, 2, 3, 4, 5, 6, 7], same_lstm=True, res=False, paper=False, lstm_version=0):
         '''Concat.'''
         if same_lstm:
-            caption_features = {-1: self.caption_encoding(captions, lens)}
+            caption_features = {-1: self.caption_encoding(lstm_version, captions, lens)}
         else:
             caption_features = {}
             for i in cap_layers:
-                caption_features[i] = self.caption_encoding(captions, lens, i) 
+                caption_features[i] = self.caption_encoding(lstm_version, captions, lens, i) 
 
         with tf.variable_scope('G'):
             # conv0
@@ -865,6 +865,7 @@ class Net(object):
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, wd=self.weight_decay)
             conv_num += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, relu=False, wd=self.weight_decay)
+            conv_6 = temp_conv
             conv_num += 1
             temp_conv = batch_norm('bn_7', temp_conv, train=self.train)
             temp_conv = tf.nn.relu(temp_conv)
@@ -877,8 +878,15 @@ class Net(object):
                 caption_feature = caption_features[-1] if same_lstm else caption_features[block_idx]
                 cap_emb_expand = caption_feature[:, tf.newaxis, tf.newaxis, :]
                 cap_emb_expand = tf.tile(cap_emb_expand, (1, shape[1], shape[2], 1))  # NxHxWx512
-                concat_block = tf.concat((temp_conv, cap_emb_expand), axis=-1)  # NxHxWx1024
-                concat_block = conv2d('conv{}'.format(block_idx), concat_block, [3, 3, concat_block.get_shape()[3], 512], stride=1, wd=self.weight_decay)
+                if paper:
+                    im_features = tf.nn.l2_normalize(conv_6, 3)
+                    lan_features = tf.nn.l2_normalize(cap_emb_expand, 3)
+                    concat_block = tf.concat((im_features, lan_features), axis=-1)  # NxHxWx1024
+                    concat_block = conv2d('conv{}_1'.format(block_idx), concat_block, [1, 1, concat_block.get_shape()[3], 512], stride=1, wd=self.weight_decay)
+                    concat_block = conv2d('conv{}_2'.format(block_idx), concat_block, [1, 1, 512, 512], stride=1, wd=self.weight_decay)
+                else:
+                    concat_block = tf.concat((temp_conv, cap_emb_expand), axis=-1)  # NxHxWx1024
+                    concat_block = conv2d('conv{}'.format(block_idx), concat_block, [3, 3, concat_block.get_shape()[3], 512], stride=1, wd=self.weight_decay)
                 if res:
                     add_on = concat_block
                 else:
@@ -903,7 +911,7 @@ class Net(object):
             conv_num += 1
 
         conv8_313 = temp_conv
-        return conv8_313
+        return conv8_313, caption_features[-1]
 
     def GAN_G(self, noise=None):
         dim = 64
@@ -1382,7 +1390,16 @@ class Net(object):
 
         return data_ab
 
-    def caption_encoding(self, captions, lens, idx=-1):
+    def caption_encoding(self, version, captions, lens, idx=-1):
+        print('Caption encoding version {}.'.format(version))
+        if version == 0:
+            return self.caption_encoding0(captions, lens, idx)
+        elif version == 1:
+            return self.caption_encoding1(captions, lens, idx)
+        elif version == 2:
+            return self.caption_encoding2(captions, lens, idx)
+
+    def caption_encoding0(self, captions, lens, idx=-1):
         with tf.variable_scope('LSTM', reuse=tf.AUTO_REUSE):
             embedding = tf.constant(self.word_embedding, name='word_embedding', dtype='float32')
             encoded_captions = tf.nn.embedding_lookup(embedding, captions, name='lookup')
@@ -1395,6 +1412,31 @@ class Net(object):
             _, (state_fw, state_bw) = tf.nn.bidirectional_dynamic_rnn(lstm_fw, lstm_bw, encoded_captions, sequence_length=lens, dtype='float32')
             hidden = tf.concat((state_fw.h, state_bw.h), 1)
             return hidden
+
+    def caption_encoding1(self, captions, lens, idx=-1):
+        with tf.variable_scope('LSTM', reuse=tf.AUTO_REUSE):
+            embedding = tf.constant(self.word_embedding, name='word_embedding', dtype='float32')
+            encoded_captions = tf.nn.embedding_lookup(embedding, captions, name='lookup')
+            encoded_captions = tf.nn.dropout(encoded_captions, 0.8 if self.train else 1.)
+            initializer = tf.contrib.layers.variance_scaling_initializer(factor=2.0, mode='FAN_IN', uniform=True, dtype=tf.float32)
+            fw_name = '' if idx == -1 else 'fw_{}'.format(idx)
+            lstm_fw = tf.nn.rnn_cell.LSTMCell(512, reuse=tf.AUTO_REUSE, initializer=initializer, name=fw_name)
+            _, state_fw = tf.nn.dynamic_rnn(lstm_fw, encoded_captions, sequence_length=lens, dtype='float32')
+            hidden = state_fw.h
+            return hidden
+    
+    def caption_encoding2(self, captions, lens, idx=-1):
+        '''GRU 1024'''
+        with tf.variable_scope('LSTM', reuse=tf.AUTO_REUSE):
+            embedding = tf.constant(self.word_embedding, name='word_embedding', dtype='float32')
+            encoded_captions = tf.nn.embedding_lookup(embedding, captions, name='lookup')
+            encoded_captions = tf.nn.dropout(encoded_captions, 0.8 if self.train else 1.)
+            initializer = tf.contrib.layers.variance_scaling_initializer(factor=2.0, mode='FAN_IN', uniform=True, dtype=tf.float32)
+            fw_name = '' if idx == -1 else 'fw_{}'.format(idx)
+            lstm_fw = tf.nn.rnn_cell.GRUCell(1024, reuse=tf.AUTO_REUSE, kernel_initializer=initializer, name=fw_name)
+            _, state = tf.nn.dynamic_rnn(lstm_fw, encoded_captions, sequence_length=lens, dtype='float32')
+            print(state.get_shape())
+            return state
 
     def sample_by_caption(self, captions, lens, l_ss, color_emb):
         with tf.variable_scope('Sampler', reuse=tf.AUTO_REUSE):
