@@ -83,6 +83,7 @@ class Solver_Language(object):
             self.concat = solver_params['concat'] == '1'
             self.same_lstm = solver_params['same_lstm'] == '1'
             self.residual = solver_params['residual'] == '1'
+            self.lstm_version = int(solver_params['lstm_version'])
             if self.with_caption:
                 if self.concat:
                     print('CONCAT.')
@@ -124,9 +125,9 @@ class Solver_Language(object):
 
             if self.with_caption:
                 # caption_layer = [0, 1, 2, 3, 4, 5, 6, 7]
-                caption_layers = [6]
+                caption_layers = [5]
                 if self.concat:
-                    self.conv8_313 = self.net.inference5(self.data_l, self.captions, self.lens, caption_layers, self.same_lstm, self.residual)
+                    self.conv8_313 = self.net.inference5(self.data_l, self.captions, self.lens, caption_layers, self.same_lstm, self.residual, lstm_version=self.lstm_version)
                 else:
                     # Restore gamma and beta of BN.
                     self.biases = [None] * 8
@@ -143,12 +144,12 @@ class Solver_Language(object):
                     if self.kernel_zero:
                         kernel = tf.zeros_initializer(dtype=tf.float32)
                         print('Film dense kernel initialized with zeros.')
-                    self.conv8_313, _ = self.net.inference4(self.data_l, self.captions, self.lens, self.biases, kernel, with_attention=self.with_attention)
+                    self.conv8_313 = self.net.inference4(self.data_l, self.captions, self.lens, self.biases, kernel, with_attention=self.with_attention)
             else:
                 self.conv8_313 = self.net.inference(self.data_l)
-                if len(self.conv8_313) == 2:
-                    self.conv8_313 = self.conv8_313[0]
             # self.colorized_ab = self.net.conv313_to_ab(conv8_313)
+            if len(self.conv8_313) == 2:
+                self.conv8_313 = self.conv8_313[0]
 
             new_loss, g_loss, wd_loss, rb_loss = self.net.loss(
                 scope, self.conv8_313, self.prior_boost_nongray,

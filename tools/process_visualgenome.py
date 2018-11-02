@@ -23,7 +23,6 @@ import json
 import numpy as np
 import os
 from skimage import io
-#import spacy
 
 _LOG_FREQ = 10
 _RESCALE_SIZE = 224
@@ -41,20 +40,49 @@ def _scale_to_int(x, scale):
 
 
 def build_vocabulary():
+    import spacy
     nlp = spacy.load('en_core_web_md')
+    print('Word embedding loaded.')
     regions = json.load(open('/srv/glusterfs/xieya/data/visual_genome/region_descriptions.json', 'r'))
+    print('Region json loaded.')
     voc = {}
     embedding = []
     for img in regions:
         for reg in img['regions']:
-            print(reg['phrase'].encode('utf-8'))
-            phrase = reg['phrase'].encode('utf-8')
+            #print(reg['phrase'].encode('utf-8'))
+            phrase = reg['phrase']
             emb = nlp(phrase)
             for w in emb:
-                print(w.text, w.vector)
+                # print(w.text, w.vector[0: 5])
                 if not w.has_vector:
-                    print('***********', w)
-            raw_input('')
+                    print('***********', w.text, w.vector[0: 5])
+            # raw_input('')
+
+
+def load_glove(filename):
+    dct = {}
+    vectors = array.array('d')
+        
+    # Read in the data.
+    with io.open(filename, 'r', encoding='utf-8') as savefile:
+        for i, line in enumerate(savefile):
+            tokens = line.split(' ')
+            word = tokens[0]
+            entries = tokens[1:]
+            dct[word] = i
+            vectors.extend(float(x) for x in entries)
+    # Infer word vectors dimensions.
+    no_components = len(entries)
+    no_vectors = len(dct)
+    # Set up the model instance.
+    instance = Glove()
+    instance.no_components = no_components
+    instance.word_vectors = (np.array(vectors)
+                            .reshape(no_vectors,
+                                  no_components))
+    instance.word_biases = np.zeros(no_vectors)
+    instance.add_dictionary(dct)
+    return instance
 
 
 def scale_images(img_path_file, out_dir):
@@ -136,6 +164,6 @@ def scale_regions(region_file_name):
 
 
 if __name__ == "__main__":
-    # build_vocabulary()
+    build_vocabulary()
     # scale_images('/srv/glusterfs/xieya/data/visual_genome/100k_2.txt', '/srv/glusterfs/xieya/data/visual_genome/VG_100K_224_2')
-    scale_regions('region_descriptions.json')
+    # scale_regions('region_descriptions.json')
