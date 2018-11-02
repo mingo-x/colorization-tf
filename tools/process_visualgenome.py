@@ -25,6 +25,7 @@ import os
 import pickle
 from skimage import io
 
+_LANGUAGE_DIR = '/srv/glusterfs/xieya/data/language'
 _LOG_FREQ = 10
 _RESCALE_SIZE = 224
 _TASK_ID = os.environ.get('SGE_TASK_ID')
@@ -38,6 +39,19 @@ else:
 
 def _scale_to_int(x, scale):
     return int(np.round(x / scale))
+
+
+def build_vocabulary_by_glove(emb_name):
+    emb_dict = pickle.load(open(os.path.join(_LANGUAGE_DIR, emb_name), 'rb'))
+    regions = json.load(open('/srv/glusterfs/xieya/data/visual_genome/region_descriptions.json', 'r'))
+    print('Region json loaded.')
+    for img in regions:
+        for reg in img['regions']:
+            phrase = reg['phrase'].encode('utf-8').lower()
+            words = phrase.strip().split()
+            for w in words:
+                if w not in emb_dict:
+                    print(w)
 
 
 def build_vocabulary_by_spacy():
@@ -74,9 +88,8 @@ def build_vocabulary_by_spacy():
 
 def load_glove(filename):
     emb_dict = {}
-    dir_path = '/srv/glusterfs/xieya/data/language'
     emb_name = os.path.splitext(filename)[0]
-    with open(os.path.join(dir_path, filename)) as fin:
+    with open(os.path.join(_LANGUAGE_DIR, filename)) as fin:
         for i, line in enumerate(fin):
             tokens = line.split(' ')
             word = tokens[0]
@@ -85,7 +98,7 @@ def load_glove(filename):
             emb_dict[word] = emb
             if i % 100 == 0:
                 print(i, word, emb[0: 5])
-    pickle.dump(emb_dict, open(os.path.join(dir_path, emb_name + '.p'), 'wb'))
+    pickle.dump(emb_dict, open(os.path.join(_LANGUAGE_DIR, emb_name + '.p'), 'wb'))
 
 
 def scale_images(img_path_file, out_dir):
