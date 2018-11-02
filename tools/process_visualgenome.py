@@ -22,6 +22,7 @@ import cv2
 import json
 import numpy as np
 import os
+import pickle
 from skimage import io
 
 _LOG_FREQ = 10
@@ -39,24 +40,36 @@ def _scale_to_int(x, scale):
     return int(np.round(x / scale))
 
 
-def build_vocabulary():
+def build_vocabulary_by_spacy(embedding):
     import spacy
     nlp = spacy.load('en_core_web_md')
     print('Word embedding loaded.')
     regions = json.load(open('/srv/glusterfs/xieya/data/visual_genome/region_descriptions.json', 'r'))
     print('Region json loaded.')
-    voc = {}
-    embedding = []
+    voc = {'unk': 0}
+    unk_phrase = unicode('bckground')
+    unk_token = nlp(unk_phrase)[0]
+    embedding = [unk_token.vector]
+    img_count = 0
     for img in regions:
         for reg in img['regions']:
-            #print(reg['phrase'].encode('utf-8'))
             phrase = reg['phrase']
             emb = nlp(phrase)
             for w in emb:
-                # print(w.text, w.vector[0: 5])
-                if not w.has_vector:
-                    print('***********', w.text, w.vector[0: 5])
-            # raw_input('')
+                word = w.text.encode('utf-8')
+                if word not in voc:
+                    if w.has_vector:
+                        idx = len(voc)
+                        embedding.append(w.vector)
+                        voc[word] = idx
+                        print(word, len(voc))
+        img_count += 1
+        if img_count % 100 == 0:
+            print("Image count: {}".format(img_count))
+
+    print("Vocabulary size: {}".format(len(voc)))
+    pickle.dump(voc, open('/srv/glusterfs/xieya/data/visual_genome/spacy_voc.p', 'wb'))
+    pickle.dump(embedding, open('/srv/glusterfs/xieya/data/visual_genome/spacy_emb.p', 'wb'))
 
 
 def load_glove(filename):
@@ -145,6 +158,6 @@ def scale_regions(region_file_name):
 
 
 if __name__ == "__main__":
-    build_vocabulary()
+    build_vocabulary_by_spacy()
     # scale_images('/srv/glusterfs/xieya/data/visual_genome/100k_2.txt', '/srv/glusterfs/xieya/data/visual_genome/VG_100K_224_2')
     # scale_regions('region_descriptions.json')
