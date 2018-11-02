@@ -86,25 +86,15 @@ def scale_images(img_path_file, out_dir):
 def scale_regions(region_file_name):
     regions = json.load(open(os.path.join('/srv/glusterfs/xieya/data/visual_genome', region_file_name), 'r'))
     print('Region json loaded.')
-    img_metas = json.load(open('/srv/glusterfs/xieya/data/visual_genome/image_data.json', 'r'))
-    img_map = {}
-    for i in xrange(len(img_metas)):
-        img_map[img_metas[i]['image_id']] = i
-    print('Image json loaded.')
+    # img_metas = json.load(open('/srv/glusterfs/xieya/data/visual_genome/image_data.json', 'r'))
+    # img_map = {}
+    # for i in xrange(len(img_metas)):
+    #     img_map[img_metas[i]['image_id']] = i
+    # print('Image json loaded.')
     new_data = []
     for img in regions:
         img_id = img['id']
-        img_meta = img_metas[img_map[img_id]]
-        img_w = img_meta['width']
-        img_h = img_meta['height']
         scale = min(img_w, img_h) / 224.
-        img_path = '/srv/glusterfs/xieya/data/visual_genome/VG_100K/{}.jpg'.format(img_id)
-        img_224_path = '/srv/glusterfs/xieya/data/visual_genome/VG_100K_224/{}.jpg'.format(img_id)
-        if not os.path.exists(img_path):
-            img_path = '/srv/glusterfs/xieya/data/visual_genome/VG_100K_2/{}.jpg'.format(img_id)
-            img_224_path = '/srv/glusterfs/xieya/data/visual_genome/VG_100K_224_2/{}.jpg'.format(img_id)
-        original_img = io.imread(img_path)
-        original_224 = io.imread(img_224_path)
         new_regions = []
         for reg in img['regions']:
             reg_id = reg['region_id']
@@ -112,27 +102,18 @@ def scale_regions(region_file_name):
             y = reg['y']
             w = reg['width']
             h = reg['height']
-            phrase = reg['phrase'].encode('utf-8')
-
-            print(img_id, reg_id, phrase, x, y, w, h, original_img.shape)
-            region_img = original_img[y: y + h, x: x + w]
-            io.imsave('/srv/glusterfs/xieya/tmp/{0}_{1}.jpg'.format(img_id, reg_id), region_img)
+            phrase = reg['phrase']
 
             nx = _scale_to_int(x, scale)
             ny = _scale_to_int(y, scale)
             nw = _scale_to_int(w, scale)
             nh = _scale_to_int(h, scale)
-            print(scale, img_w, img_h, nx, ny, nw, nh, original_224.shape)
-            region_224 = original_224[ny: ny + nh, nx: nx + nw]
-            io.imsave('/srv/glusterfs/xieya/tmp/{0}_{1}_224.jpg'.format(img_id, reg_id), region_224)
-            new_reg = {'region_id': reg['region_id'], 'x': nx, 'y': ny, 'width': nw, 'height': nh, 'phrase': reg['phrase']}
+            new_reg = {'region_id': reg_id, 'x': nx, 'y': ny, 'width': nw, 'height': nh, 'phrase': phrase}
             new_regions.append(new_reg)
 
         new_data.append({'id': img_id, 'regions': new_regions})
-        if len(new_data) == 10:
-            break
 
-    json.dump(new_data, open(os.path.join('/srv/glusterfs/xieya/data/visual_genome', 'scaled_' + region_file_name), 'w'))
+    json.dump(new_data, open(os.path.join('/srv/glusterfs/xieya/data/visual_genome', '224_' + region_file_name), 'w'))
 
 
 if __name__ == "__main__":
