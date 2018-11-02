@@ -53,7 +53,7 @@ def build_vocabulary_by_glove(emb_file):
     for img in regions:
         for reg in img['regions']:
             phrase = reg['phrase'].encode('utf-8').lower()
-            words = phrase_cln.strip().split()
+            words = phrase.strip().split()
             for w in words:
                 if w not in voc_dict:
                     if w in emb_dict:
@@ -62,7 +62,7 @@ def build_vocabulary_by_glove(emb_file):
                         voc_dict[w] = idx
                         print(w, idx)
                     else:
-                        nw = w.translate(None, '!"#$%&()*+,./:;<=>?@[\\]^_`{|}~-\'')
+                        nw = w.translate(None, string.punctuation)
                         if nw in emb_dict:
                             idx = len(voc_dict)
                             embeddings.append(emb_dict[nw])
