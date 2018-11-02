@@ -51,11 +51,11 @@ def build_vocabulary_by_glove(emb_name):
     for img in regions:
         for reg in img['regions']:
             phrase = reg['phrase'].encode('utf-8').lower()
-            phrase = phrase.translate(None, '!"#$%&()*+,./:;<=>?@[\\]^_`{|}~')
-            words = phrase.strip().split()
+            phrase_cln = phrase.translate(None, '!"#$%&()*+,./:;<=>?@[\\]^_`{|}~')
+            words = phrase_cln.strip().split()
             for w in words:
                 if w not in emb_dict:
-                    print(w)
+                    print(w, phrase)
         raw_input()
 
 
