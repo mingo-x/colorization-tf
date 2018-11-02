@@ -53,8 +53,8 @@ def build_vocabulary_by_glove(emb_file):
     for img in regions:
         for reg in img['regions']:
             phrase = reg['phrase'].encode('utf-8').lower()
-            phrase = phrase.translate(None, '!"#$%&()*+,./:;<=>?@[\\]^_`{|}~')
-            words = phrase.strip().split()
+            phrase_cln = phrase.translate(None, '!"#$%&()*+,./:;<=>?@[\\]^_`{|}~')
+            words = phrase_cln.strip().split()
             for w in words:
                 if w not in voc_dict:
                     if w in emb_dict:
@@ -180,6 +180,7 @@ def scale_regions(region_file_name):
 
 if __name__ == "__main__":
     # build_vocabulary_by_spacy()
-    load_glove('glove.6B.100d.txt')
+    build_vocabulary_by_glove('glove.6B.50d.p')
+    # load_glove('glove.6B.300d.txt')
     # scale_images('/srv/glusterfs/xieya/data/visual_genome/100k_2.txt', '/srv/glusterfs/xieya/data/visual_genome/VG_100K_224_2')
     # scale_regions('region_descriptions.json')
