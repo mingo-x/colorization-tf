@@ -46,10 +46,12 @@ def build_vocabulary_by_glove(emb_name):
     emb_dict = pickle.load(open(os.path.join(_LANGUAGE_DIR, emb_name), 'rb'))
     regions = json.load(open('/srv/glusterfs/xieya/data/visual_genome/region_descriptions.json', 'r'))
     print('Region json loaded.')
+    voc_dict = {}
+    embeddings = []
     for img in regions:
         for reg in img['regions']:
             phrase = reg['phrase'].encode('utf-8').lower()
-            phrase = phrase.translate(None, string.punctuation)
+            phrase = phrase.translate(None, '!"#$%&()*+,./:;<=>?@[\\]^_`{|}~')
             words = phrase.strip().split()
             for w in words:
                 if w not in emb_dict:
