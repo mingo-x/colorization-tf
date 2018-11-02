@@ -42,20 +42,34 @@ def _scale_to_int(x, scale):
     return int(np.round(x / scale))
 
 
-def build_vocabulary_by_glove(emb_name):
-    emb_dict = pickle.load(open(os.path.join(_LANGUAGE_DIR, emb_name), 'rb'))
+def build_vocabulary_by_glove(emb_file):
+    emb_name = os.path.splitext(emb_file)[0]
+    emb_dict = pickle.load(open(os.path.join(_LANGUAGE_DIR, emb_file), 'rb'))
     regions = json.load(open('/srv/glusterfs/xieya/data/visual_genome/region_descriptions.json', 'r'))
     print('Region json loaded.')
-    voc_dict = {}
-    embeddings = []
+    voc_dict = {'unk'}
+    embeddings = [emb_dict['unk']]
+    unknowns = set()
     for img in regions:
         for reg in img['regions']:
             phrase = reg['phrase'].encode('utf-8').lower()
             phrase = phrase.translate(None, '!"#$%&()*+,./:;<=>?@[\\]^_`{|}~')
             words = phrase.strip().split()
             for w in words:
-                if w not in emb_dict:
-                    print(w)
+                if w not in voc_dict:
+                    if w in emb_dict:
+                        idx = len(voc_dict)
+                        embeddings.append(emb_dict[w])
+                        print(w, idx)
+                    else:
+                        unknowns.add(w)
+    print("Vocabulary size: {}".format(len(voc_dict)))
+    pickle.dump(voc_dict, open('/srv/glusterfs/xieya/data/visual_genome/{}_voc.p'.format(emb_name), 'wb'))
+    pickle.dump(embeddings, open('/srv/glusterfs/xieya/data/visual_genome/{}_emb.p'.format(emb_name), 'wb'))
+    print("Unknown size: {}".format(len(unknowns)))
+    with open('/srv/glusterfs/xieya/data/visual_genome/{}_unknown.txt'.format(emb_name), 'w') as fout:
+        for w in unknowns:
+            fout.write(w + '\n')
 
 
 def build_vocabulary_by_spacy():
