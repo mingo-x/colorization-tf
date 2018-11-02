@@ -40,7 +40,7 @@ def _scale_to_int(x, scale):
     return int(np.round(x / scale))
 
 
-def build_vocabulary_by_spacy(embedding):
+def build_vocabulary_by_spacy():
     import spacy
     nlp = spacy.load('en_core_web_md')
     print('Word embedding loaded.')
