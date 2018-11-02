@@ -47,7 +47,7 @@ def build_vocabulary_by_glove(emb_file):
     emb_dict = pickle.load(open(os.path.join(_LANGUAGE_DIR, emb_file), 'rb'))
     regions = json.load(open('/srv/glusterfs/xieya/data/visual_genome/region_descriptions.json', 'r'))
     print('Region json loaded.')
-    voc_dict = {'unk'}
+    voc_dict = {'unk': 0}
     embeddings = [emb_dict['unk']]
     unknowns = set()
     for img in regions:
