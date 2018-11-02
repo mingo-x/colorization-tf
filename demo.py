@@ -21,7 +21,7 @@ import utils
 
 _AUC_THRESHOLD = 150
 _BATCH_SIZE = 32
-_CAP_LAYERS = [5, 6]
+_CAP_LAYERS = [6]
 #_CAP_LAYERS = [6]
 _COCO_PATH = '/srv/glusterfs/xieya/data/coco_colors.h5'
 _INPUT_SIZE = 224
@@ -30,9 +30,9 @@ _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
 _G_VERSION = 1
-_CKPT_PATH = '/srv/glusterfs/xieya/concat_2/models/model.ckpt-11000'
+_CKPT_PATH = '/srv/glusterfs/xieya/concat_7/models/model.ckpt-24000'
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
-_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/concat_2_11k'
+_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/concat_7_24k'
 _PRIOR_PATH = '/srv/glusterfs/xieya/prior/coco_313_soft.npy'
 #_PRIOR_PATH = 'resources/prior_probs_smoothed.npy'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
@@ -714,7 +714,7 @@ if __name__ == "__main__":
     # demo_wgan_rgb()
     # _colorize_high_res_img(_IMG_NAME)
     # cifar()
-    colorize_with_language(with_attention=False, concat=True, same_lstm=True, residual=False)
+    colorize_with_language(with_attention=False, concat=True, same_lstm=True, residual=False, paper=True)
     # colorize_video_with_language()
     # colorize_coco_without_language(evaluate=True)
     # save_ground_truth()
