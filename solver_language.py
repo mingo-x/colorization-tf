@@ -148,8 +148,8 @@ class Solver_Language(object):
             else:
                 self.conv8_313 = self.net.inference(self.data_l)
             # self.colorized_ab = self.net.conv313_to_ab(conv8_313)
-            if len(self.conv8_313) == 2:
-                self.conv8_313 = self.conv8_313[0]
+            # if len(self.conv8_313) == 2:
+                # self.conv8_313 = self.conv8_313[0]
 
             new_loss, g_loss, wd_loss, rb_loss = self.net.loss(
                 scope, self.conv8_313, self.prior_boost_nongray,

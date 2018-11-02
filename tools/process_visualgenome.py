@@ -52,6 +52,7 @@ def build_vocabulary_by_glove(emb_name):
             for w in words:
                 if w not in emb_dict:
                     print(w)
+        raw_input()
 
 
 def build_vocabulary_by_spacy():
@@ -162,6 +163,7 @@ def scale_regions(region_file_name):
 
 if __name__ == "__main__":
     # build_vocabulary_by_spacy()
-    load_glove('glove.6B.300d.txt')
+    build_vocabulary_by_glove('glove.6B.50d.p')
+    # load_glove('glove.6B.300d.txt')
     # scale_images('/srv/glusterfs/xieya/data/visual_genome/100k_2.txt', '/srv/glusterfs/xieya/data/visual_genome/VG_100K_224_2')
     # scale_regions('region_descriptions.json')
