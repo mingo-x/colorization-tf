@@ -3,13 +3,13 @@
 # ----- Parameters passed to the cluster -------
 ## <= 1h is short queue, <= 6h is middle queue, <= 48 h is long queue
 
-#$ -t 1:50
+#$ -t 1:1
 
 #$ -S /srv/glusterfs/xieya/anaconda2/bin/python
 
 #$ -l h_rt=5:59:59
 
-#$ -l h_vmem=8G
+#$ -l h_vmem=40G
 
 #$ -o /srv/glusterfs/xieya/log
 
@@ -76,7 +76,7 @@ def load_glove(filename):
     emb_dict = {}
     dir_path = '/srv/glusterfs/xieya/data/language'
     emb_name = os.path.splitext(filename)[0]
-    with open(os.path.join(dir_path, filename), 'r', encoding='utf-8') as fin:
+    with open(os.path.join(dir_path, filename)) as fin:
         for i, line in enumerate(fin):
             tokens = line.split(' ')
             word = tokens[0]
@@ -84,7 +84,7 @@ def load_glove(filename):
             emb = [float(x) for x in entries]
             emb_dict[word] = emb
             if i % 100 == 0:
-                print(i, word)
+                print(i, word, emb[0: 5])
     pickle.dump(emb_dict, open(os.path.join(dir_path, emb_name + '.p'), 'wb'))
 
 
@@ -148,7 +148,7 @@ def scale_regions(region_file_name):
 
 
 if __name__ == "__main__":
-    build_vocabulary_by_spacy()
-    load_glove('glove.6B.50d.txt')
+    # build_vocabulary_by_spacy()
+    load_glove('glove.6B.100d.txt')
     # scale_images('/srv/glusterfs/xieya/data/visual_genome/100k_2.txt', '/srv/glusterfs/xieya/data/visual_genome/VG_100K_224_2')
     # scale_regions('region_descriptions.json')

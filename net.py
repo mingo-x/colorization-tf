@@ -911,7 +911,7 @@ class Net(object):
             conv_num += 1
 
         conv8_313 = temp_conv
-        return conv8_313, caption_features[-1]
+        return conv8_313
 
     def GAN_G(self, noise=None):
         dim = 64
