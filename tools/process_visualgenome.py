@@ -112,45 +112,64 @@ def build_vocabulary_by_spacy():
     pickle.dump(embedding, open('/srv/glusterfs/xieya/data/visual_genome/spacy_emb.p', 'wb'))
 
 
-def filter_regions(emb_name):
+def filter_regions(emb_name, region_json_file):
     voc_dict = pickle.load(open('/srv/glusterfs/xieya/data/visual_genome/{}_voc.p'.format(emb_name), 'rb'))
-    embeddings = pickle.load(open('/srv/glusterfs/xieya/data/visual_genome/{}_voc.p'.format(emb_name), 'rb'))
-    print('Embedding loaded.')
-    regions = json.load(open('/srv/glusterfs/xieya/data/visual_genome/region_descriptions.json', 'r'))
+    regions = json.load(open(os.path.join('/srv/glusterfs/xieya/data/visual_genome/', region_json_file), 'r'))
     print('Region json loaded.')
+    color_voc = pickle.load(open('/srv/glusterfs/xieya/data/color/vocabulary.p', 'rb'))
+    color_set = set()
+    for c in color_voc:
+        if c in voc_dict:
+            color_set.add(voc_dict[c])
+        else:
+            print('{} not in vocabulary'.format(c))
     
     new_data = []
+    region_count = 0
+    has_color_count = 0
+    less_20_count = 0
 
     for img in regions:
         img_id = img['id']
         new_regs = []
         for reg in img['regions']:
+            region_count += 1
             phrase = reg['phrase'].encode('utf-8').lower()
-            phrase_cln = phrase.translate(None, '!"#$%&()*+,./:;<=>?@[\\]^_`{|}~')
-            words = phrase_cln.strip().split()
+            words = phrase.strip().split()
 
+            # Turn text into vector.
             phrase_len = len(words)
             if phrase_len > 20:
                 continue
-            vector = [0]
+            else:
+                less_20_count += 1
+            vector = [0] * 20
+            for i in xrange(phrase_len):
+                vector[i] = voc_dict.get(words[i], 0)
 
-            for w in words:
-                if w not in voc_dict:
-                    if w in emb_dict:
-                        idx = len(voc_dict)
-                        embeddings.append(emb_dict[w])
-                        voc_dict[w] = idx
-                        print(w, idx)
-                    else:
-                        unknowns.add(w)
-        new_img = {}
-    print("Vocabulary size: {}".format(len(voc_dict)))
-    pickle.dump(voc_dict, open('/srv/glusterfs/xieya/data/visual_genome/{}_voc.p'.format(emb_name), 'wb'))
-    pickle.dump(embeddings, open('/srv/glusterfs/xieya/data/visual_genome/{}_emb.p'.format(emb_name), 'wb'))
-    print("Unknown size: {}".format(len(unknowns)))
-    with open('/srv/glusterfs/xieya/data/visual_genome/{}_unknown.txt'.format(emb_name), 'w') as fout:
-        for w in unknowns:
-            fout.write(w + '\n')
+            # Filter out phrase without color.
+            has_color = False
+            for i in xrange(phrase_len):
+                w_id = vector[i]
+                if w_id in color_set:
+                    has_color = True
+                    break
+            if has_color:
+                has_color_count += 1
+            else:
+                print(phrase)
+                continue
+
+            new_reg = {'region_id': reg['region_id'], 'x': reg['x'], 'y': reg['y'], 'width': reg['width'], 'height': reg['height'], 'phrase': vector, 'phrase_len': phrase_len}
+            new_regs.append(new_reg)
+
+        new_data.append({'id': img_id, 'regions': new_regs})
+
+    print('Total regions: {}'.format(region_count))
+    print('Regions with color: {}'.format(has_color_count))
+    print('Regions with valid length: {}'.format(less_20_count))
+    json.dump(new_data, open(os.path.join('/srv/glusterfs/xieya/data/visual_genome', 'filtered_' + region_json_file), 'w'))
+
 
 def load_glove(filename):
     emb_dict = {}
@@ -228,7 +247,8 @@ def scale_regions(region_file_name):
 
 if __name__ == "__main__":
     # build_vocabulary_by_spacy()
-    build_vocabulary_by_glove('glove.6B.50d.p')
+    # build_vocabulary_by_glove('glove.6B.50d.p')
+    filter_regions('glove.6B.50d.p', 'region_descriptions.json')
     # load_glove('glove.6B.300d.txt')
     # scale_images('/srv/glusterfs/xieya/data/visual_genome/100k_2.txt', '/srv/glusterfs/xieya/data/visual_genome/VG_100K_224_2')
     # scale_regions('region_descriptions.json')
