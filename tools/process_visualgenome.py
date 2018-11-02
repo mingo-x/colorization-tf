@@ -56,7 +56,7 @@ def build_vocabulary_by_spacy():
             phrase = reg['phrase']
             emb = nlp(phrase)
             for w in emb:
-                word = w.text.encode('utf-8')
+                word = w.text.encode('utf-8').lower()
                 if word not in voc:
                     if w.has_vector:
                         idx = len(voc)
@@ -73,29 +73,19 @@ def build_vocabulary_by_spacy():
 
 
 def load_glove(filename):
-    dct = {}
-    vectors = array.array('d')
-        
-    # Read in the data.
-    with io.open(filename, 'r', encoding='utf-8') as savefile:
-        for i, line in enumerate(savefile):
+    emb_dict = {}
+    dir_path = '/srv/glusterfs/xieya/data/language'
+    emb_name = os.path.splitext(filename)[0]
+    with open(os.path.join(dir_path, filename), 'r', encoding='utf-8') as fin:
+        for i, line in enumerate(fin):
             tokens = line.split(' ')
             word = tokens[0]
             entries = tokens[1:]
-            dct[word] = i
-            vectors.extend(float(x) for x in entries)
-    # Infer word vectors dimensions.
-    no_components = len(entries)
-    no_vectors = len(dct)
-    # Set up the model instance.
-    instance = Glove()
-    instance.no_components = no_components
-    instance.word_vectors = (np.array(vectors)
-                            .reshape(no_vectors,
-                                  no_components))
-    instance.word_biases = np.zeros(no_vectors)
-    instance.add_dictionary(dct)
-    return instance
+            emb = [float(x) for x in entries]
+            emb_dict[word] = emb
+            if i % 100 == 0:
+                print(i, word)
+    pickle.dump(emb_dict, open(os.path.join(dir_path, emb_name + '.p'), 'wb'))
 
 
 def scale_images(img_path_file, out_dir):
@@ -159,5 +149,6 @@ def scale_regions(region_file_name):
 
 if __name__ == "__main__":
     build_vocabulary_by_spacy()
+    load_glove('glove.6B.50d.txt')
     # scale_images('/srv/glusterfs/xieya/data/visual_genome/100k_2.txt', '/srv/glusterfs/xieya/data/visual_genome/VG_100K_224_2')
     # scale_regions('region_descriptions.json')
