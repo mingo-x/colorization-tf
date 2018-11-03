@@ -128,8 +128,8 @@ def get_file_list():
             img_f = img_f.strip()
             filename_list.append(img_f)
         img_idx += 1
-        if img_idx >= 19200:
-            break
+        # if img_idx >= 19200:
+        #     break
     return filename_list
 
 
@@ -182,16 +182,22 @@ def cal_prob():
     np.save(out_path, probs)
 
 
-def cal_prob_soft(cond_l=False):
+def cal_prob_soft(cond_l=False, is_vg=False):
     if cond_l:
         print('Conditioning on luma.')
 
-    out_path = '/srv/glusterfs/xieya/prior/val_{0}_{2}soft_{1}.npy'.format(_N_CLASSES, _TASK_ID, 'abl_' if cond_l else '')
+    out_path = '/srv/glusterfs/xieya/prior/vg_{0}_{2}soft_{1}.npy'.format(_N_CLASSES, _TASK_ID, 'abl_' if cond_l else '')
     if os.path.isfile(out_path):
         print('Done.')
         return
 
-    filename_lists = get_file_list()
+    if is_vg:
+        filename_lists = []
+        dir_path = '/srv/glusterfs/xieya/data/visual_genome/VG_100K_224'
+        for f in os.listdir(dir_path):
+            filename_lists.append(os.path.join(dir_path, f))
+    else:
+        filename_lists = get_file_list()
     counter = 0
     nnenc = NNEncode(10, 5.0, km_filepath='./resources/pts_in_hull.npy')
     if cond_l:
@@ -200,14 +206,15 @@ def cal_prob_soft(cond_l=False):
         probs = np.zeros((_N_CLASSES), dtype=np.float64)
 
     for img_f in filename_lists:
-        img_f = img_f.strip()
+        # img_f = img_f.strip()
         if not os.path.isfile(img_f):
             print(img_f)
             continue
         img = imread(img_f)
         if len(img.shape) != 3 or img.shape[2] != 3:
             continue
-        img = resize(img, (224, 224))
+        if not is_vg:
+            img = resize(img, (224, 224))
         img_lab = color.rgb2lab(img)
         img_lab = img_lab.reshape((-1, 3))
         img_ab = img_lab[:, 1:]
@@ -368,9 +375,9 @@ if __name__ == "__main__":
     points = points.astype(np.float64)
     points = points[None, :, :]
     print("Number of classes: {}.".format(_N_CLASSES))
-    print("Imagenet.")
+    # print("Imagenet.")
     # cal_prob()
-    cal_prob_soft(False)
+    cal_prob_soft(False, is_vg=True)
     # cal_ab_hist_given_l()
     # print("Coco.")
     # cal_prob_coco()
