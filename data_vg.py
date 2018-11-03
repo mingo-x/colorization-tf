@@ -25,7 +25,7 @@ class DataSet(object):
       image_path
     """
 
-    def __init__(self, common_params=None, dataset_params=None, training=True, shuffle=True):
+    def __init__(self, common_params=None, dataset_params=None, training=True, shuffle=True, with_ab=False):
         """
         Args:
           common_params: A dict
@@ -54,7 +54,6 @@ class DataSet(object):
         # record and image_label queue
         self.record_queue = Queue(maxsize=30000)
         self.image_queue = Queue(maxsize=15000)
-
         self.batch_queue = Queue(maxsize=300)
 
         self.record_list = []  
@@ -168,8 +167,11 @@ class DataSet(object):
             captions = np.asarray(captions, dtype=np.int32)
             lens = np.asarray(lens, dtype=np.int32)
 
-            self.batch_queue.put(preprocess(images, c313=self.c313, is_gan=self.is_gan, 
-                is_rgb=self.is_rgb, cond_l=self.cond_l, prior_path=self.prior_path, gamma=self.gamma))
+            l, gt, prior, ab = preprocess(images, c313=True, prior_path=self.prior_path)
+            if self.with_ab:
+                self.batch_queue.put((l, gt, prior, captions, lens, ab, bboxes))
+            else:    
+                self.batch_queue.put((l, gt, prior, captions, lens, bboxes))
 
     def batch(self):
         """get batch

@@ -213,8 +213,7 @@ def cal_prob_soft(cond_l=False, is_vg=False):
         img = imread(img_f)
         if len(img.shape) != 3 or img.shape[2] != 3:
             continue
-        if not is_vg:
-            img = resize(img, (224, 224))
+        img = resize(img, (224, 224))
         img_lab = color.rgb2lab(img)
         img_lab = img_lab.reshape((-1, 3))
         img_ab = img_lab[:, 1:]
