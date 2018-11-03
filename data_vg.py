@@ -39,8 +39,6 @@ class DataSet(object):
             self.thread_num = int(int(dataset_params['thread_num']) / 2)
             self.thread_num2 = int(int(dataset_params['thread_num']) / 2)
             self.c313 = True if dataset_params['c313'] == '1' else False
-            self.gamma = float(dataset_params['gamma'])
-            print('Gamma in prior smoothing: {}.'.format(self.gamma))
 
         if train:
             self.split_file = '/srv/glusterfs/xieya/data/visual_genome/train.txt'
