@@ -26,7 +26,7 @@ class Net(object):
             self.output_dim = 3 if self.is_rgb else 2
             self.use_vg = common_params['use_vg'] == '1'
             if self.use_vg:
-                self.word_embedding = ppickle.load(open('/srv/glusterfs/xieya/data/visual_genome/glove.6B.100d_emb.p', 'r'))
+                self.word_embedding = pickle.load(open('/srv/glusterfs/xieya/data/visual_genome/glove.6B.100d_emb.p', 'r'))
             else:
                 self.word_embedding = pickle.load(open('/srv/glusterfs/xieya/data/w2v_embeddings_colors.p', 'r'))
         if net_params:
