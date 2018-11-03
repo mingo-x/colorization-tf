@@ -252,7 +252,7 @@ def scale_regions(region_file_name):
 
     json.dump(new_data, open(os.path.join('/srv/glusterfs/xieya/data/visual_genome', '224_' + region_file_name), 'w'))
     print('Total images: {}'.format(new_data))
-    print('Total regions： {}'.format(reg_count))
+    print('Total regions: {}'.format(reg_count))
 
 
 if __name__ == "__main__":
