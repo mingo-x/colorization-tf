@@ -162,13 +162,13 @@ def filter_regions(emb_name, region_json_file):
             if has_color:
                 has_color_count += 1
             else:
-                print(phrase)
                 continue
 
             new_reg = {'region_id': reg['region_id'], 'x': reg['x'], 'y': reg['y'], 'width': reg['width'], 'height': reg['height'], 'phrase': vector, 'phrase_len': phrase_len}
             new_regs.append(new_reg)
 
         new_data.append({'id': img_id, 'regions': new_regs})
+        print(has_color_count)
 
     print('Total regions: {}'.format(region_count))
     print('Total images: {}'.format(len(new_data)))
@@ -254,7 +254,7 @@ def scale_regions(region_file_name):
 if __name__ == "__main__":
     # build_vocabulary_by_spacy()
     # build_vocabulary_by_glove('glove.6B.50d.p')
-    filter_regions('glove.6B.50d.p', 'region_descriptions.json')
+    filter_regions('glove.6B.50d', 'region_descriptions.json')
     # load_glove('glove.6B.300d.txt')
     # scale_images('/srv/glusterfs/xieya/data/visual_genome/100k_2.txt', '/srv/glusterfs/xieya/data/visual_genome/VG_100K_224_2')
     # scale_regions('region_descriptions.json')
