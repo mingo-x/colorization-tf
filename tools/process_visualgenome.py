@@ -221,15 +221,16 @@ def scale_images(img_path_file, out_dir):
 def scale_regions(region_file_name):
     regions = json.load(open(os.path.join('/srv/glusterfs/xieya/data/visual_genome', region_file_name), 'r'))
     print('Region json loaded.')
-    # img_metas = json.load(open('/srv/glusterfs/xieya/data/visual_genome/image_data.json', 'r'))
-    # img_map = {}
-    # for i in xrange(len(img_metas)):
-    #     img_map[img_metas[i]['image_id']] = i
-    # print('Image json loaded.')
+    img_metas = json.load(open('/srv/glusterfs/xieya/data/visual_genome/image_data.json', 'r'))
+    img_map = {}
+    for i in xrange(len(img_metas)):
+        img_map[img_metas[i]['image_id']] = i
+    print('Image json loaded.')
     new_data = []
     reg_count = 0
     for img in regions:
         img_id = img['id']
+        img_meta = img_metas[img_map[img_id]]
         scale = min(img_w, img_h) / 224.
         new_regions = []
         for reg in img['regions']:

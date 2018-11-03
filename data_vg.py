@@ -63,8 +63,10 @@ class DataSet(object):
         # filling the record_list
         with open(self.split_file, 'r') as fin:
             for line in fin:
-                line = line.strip()
-                self.record_list.append(line)
+                img_id, img_idx, reg_num = line.strip().split(' ')
+                img_idx = int(img_idx)
+                for reg_idx in xrange(int(reg_num)):
+                    self.record_list.append((img_idx, reg_idx))
 
         self.record_point = 0
         self.record_number = len(self.record_list)
