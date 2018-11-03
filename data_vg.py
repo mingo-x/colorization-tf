@@ -101,32 +101,42 @@ class DataSet(object):
             self.record_queue.put(self.record_list[self.record_point])
             self.record_point += 1
 
-    def image_process(self, image):
+    def image_process(self, image, reg):
         """record process 
         Args: record 
         Returns:
           image: 3-D ndarray
+          bbox
         """
         h = image.shape[0]
         w = image.shape[1]
+        bbox = np.ones((h,w))
+        reg_x = reg['x']
+        reg_y = reg['y']
+        reg_w = reg['width']
+        reg_h = reg['height']
+
+        mirror = np.random.randint(0, 2)
+        if mirror and self.training:
+            image = np.fliplr(image)
+            # Flip bbox.
+            reg_x = w - reg_x - reg_w
 
         if w > h:
-            image = cv2.resize(image, (int(self.image_size * w / h), self.image_size))
-
-            mirror = np.random.randint(0, 2)
-            if mirror:
-                image = np.fliplr(image)
-            crop_start = np.random.randint(0, int(self.image_size * w / h) - self.image_size + 1)
-            image = image[:, crop_start:crop_start + self.image_size, :]
+            # Assume img_size == 224
+            # image = cv2.resize(image, (int(self.image_size * w / h), self.image_size))
+            crop_start = np.random.randint(0, min(int(self.image_size * w / h) - self.image_size + 1, reg_x + 1))
+            image = image[:, crop_start: crop_start + self.image_size, :]
+            reg_x -= crop_start
         else:
-            image = cv2.resize(image, (self.image_size, int(self.image_size * h / w)))
-            mirror = np.random.randint(0, 2)
-            if mirror:
-                image = np.fliplr(image)
-            crop_start = np.random.randint(0, int(self.image_size * h / w) - self.image_size + 1)
+            # image = cv2.resize(image, (self.image_size, int(self.image_size * h / w)))
+            crop_start = np.random.randint(0, min(int(self.image_size * h / w) - self.image_size + 1, reg_y + 1))
             image = image[crop_start:crop_start + self.image_size, :, :]
+            reg_y -= crop_start
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        return image
+        bbox[reg_y: reg_y + reg_h, reg_x: reg_x + reg_w] = 3.  # Weight 3 for in-box pixels.
+
+        return image, bbox
 
     def record_customer(self):
         """record queue's customer 
@@ -142,12 +152,21 @@ class DataSet(object):
 
     def image_customer(self):
         while True:
+            bboxes = []
+            captions = []
             images = []
+            lens = []
             for i in range(self.batch_size):
-                image = self.image_queue.get()
-                image = self.image_process(image)
+                image, reg = self.image_queue.get()
+                image, bbox = self.image_process(image, reg)
                 images.append(image)
+                bboxes.append(bbox)
+                captions.append(reg['phrase'])
+                lens.append(reg['phrase_len'])
             images = np.asarray(images, dtype=np.uint8)
+            bboxes = np.asarray(bboxes, dtype=np.float32)
+            captions = np.asarray(captions, dtype=np.int32)
+            lens = np.asarray(lens, dtype=np.int32)
 
             self.batch_queue.put(preprocess(images, c313=self.c313, is_gan=self.is_gan, 
                 is_rgb=self.is_rgb, cond_l=self.cond_l, prior_path=self.prior_path, gamma=self.gamma))
