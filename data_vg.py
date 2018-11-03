@@ -63,7 +63,7 @@ class DataSet(object):
                 img_id, img_idx, reg_num = line.strip().split(' ')
                 img_idx = int(img_idx)
                 img_path = os.path.join(self.data_dir, '{}.jpg'.format(img_id))
-                regs = regions[img_idx]['regions']
+                regs = self.regions[img_idx]['regions']
                 for reg_idx in xrange(int(reg_num)):
                     self.record_list.append((img_path, regs[reg_idx]))
 
