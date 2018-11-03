@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import json
 import os
 import random
 import cv2
@@ -35,19 +36,21 @@ class DataSet(object):
             self.batch_size = int(common_params['batch_size'])
           
         if dataset_params:
-            self.data_path = str(dataset_params['path'])
             self.thread_num = int(int(dataset_params['thread_num']) / 2)
             self.thread_num2 = int(int(dataset_params['thread_num']) / 2)
             self.c313 = True if dataset_params['c313'] == '1' else False
-            self.cond_l = True if dataset_params['cond_l'] == '1' else False
             self.gamma = float(dataset_params['gamma'])
             print('Gamma in prior smoothing: {}.'.format(self.gamma))
 
-        if not training:
-            self.data_path = '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val.txt'
+        if training:
+            self.split_file = '/srv/glusterfs/xieya/data/visual_genome/train.txt'
+        else:
+            self.split_file = '/srv/glusterfs/xieya/data/visual_genome/val.txt'
             self.thread_num = 2
             self.thread_num2 = 2
-            
+        
+        self.data_dir = '/srv/glusterfs/xieya/data/visual_genome/'
+        self.regions = json.load(open(os.path.join('/srv/glusterfs/xieya/data/visual_genome/.json'), 'r'))
         # record and image_label queue
         self.record_queue = Queue(maxsize=30000)
         self.image_queue = Queue(maxsize=15000)
@@ -55,14 +58,13 @@ class DataSet(object):
         self.batch_queue = Queue(maxsize=300)
 
         self.record_list = []  
-        self.prior_path = '/srv/glusterfs/xieya/prior/313_ab_1.npy' if self.cond_l else './resources/prior_probs_smoothed.npy'
+        self.prior_path = './resources/prior_probs_smoothed.npy'
 
         # filling the record_list
-        input_file = open(self.data_path, 'r')
-
-        for line in input_file:
-            line = line.strip()
-            self.record_list.append(line)
+        with open(self.split_file, 'r') as fin:
+            for line in fin:
+                line = line.strip()
+                self.record_list.append(line)
 
         self.record_point = 0
         self.record_number = len(self.record_list)
