@@ -231,6 +231,8 @@ def scale_regions(region_file_name):
     for img in regions:
         img_id = img['id']
         img_meta = img_metas[img_map[img_id]]
+        img_w = img_meta['width']
+        img_h = img_meta['height']
         scale = min(img_w, img_h) / 224.
         new_regions = []
         for reg in img['regions']:
