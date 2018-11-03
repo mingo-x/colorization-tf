@@ -47,7 +47,7 @@ class DataSet(object):
             self.thread_num = 2
             self.thread_num2 = 2
         
-        self.data_dir = '/srv/glusterfs/xieya/data/visual_genome/'
+        self.data_dir = '/srv/glusterfs/xieya/data/visual_genome/VG_100K_224'
         self.regions = json.load(open(os.path.join('/srv/glusterfs/xieya/data/visual_genome/224_filtered_region_descriptions.json'), 'r'))
         # record and image_label queue
         self.record_queue = Queue(maxsize=30000)
