@@ -284,7 +284,7 @@ def split_train_val_test(region_file_name):
                 val_reg_count += reg_num
             else:
                 fout = f_test
-                test_count += 1
+                test_img_count += 1
                 test_reg_count += reg_num
             fout.write('{0} {1} {2}\n'.format(img_id, img_idx, reg_num))
     print('Train set: image {0} region {1}'.format(train_img_count, train_reg_count))
