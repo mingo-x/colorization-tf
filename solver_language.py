@@ -11,6 +11,7 @@ import tensorflow as tf
 from ops import *
 from net import Net
 from data_coco import DataSet
+from data_vg import DataSet as DataSetVG
 import time
 from datetime import datetime
 import os
@@ -52,6 +53,7 @@ class Solver_Language(object):
             self.corr = True if common_params['correspondence'] == '1' else False
             self.with_caption = True if common_params['with_caption'] == '1' else False
             self.kernel_zero = True if common_params['kernel_zero'] == '1' else False
+            self.use_vg = common_params['use_vg'] == '1'
             if 'with_cap_prior' in common_params:
                 self.with_cap_prior = common_params['with_cap_prior'] == '1'
             if self.prior_boost:
@@ -98,9 +100,15 @@ class Solver_Language(object):
         self.train = train
         self.net = Net(
             train=train, common_params=common_params, net_params=net_params)
-        self.dataset = DataSet(
-            common_params=common_params, dataset_params=dataset_params)
-        self.val_dataset = DataSet(common_params=common_params, dataset_params=dataset_params, train=False)
+        if self.use_vg:
+            print('Using visual genome.')
+            self.dataset = DataSetVG(common_params=common_params, dataset_params=dataset_params)
+            self.val_dataset = DataSetVG(common_params=common_params, dataset_params=dataset_params, train=False)
+        else:
+            print('Using mscoco.')
+            self.dataset = DataSet(
+                common_params=common_params, dataset_params=dataset_params)
+            self.val_dataset = DataSet(common_params=common_params, dataset_params=dataset_params, train=False)
 
         print("Solver initialization done.")
 
@@ -108,6 +116,11 @@ class Solver_Language(object):
         with tf.device('/gpu:' + str(self.device_id)):
             self.data_l = tf.placeholder(
                 tf.float32, (self.batch_size, self.height, self.width, 1))
+            if self.use_vg:
+                self.bbox = tf.placeholder(
+                    tf.float32, (self.batch_size, self.height, self.width, 1))
+            else:
+                self.bbox = None
             self.captions = tf.placeholder(tf.int32, (self.batch_size, 20))
             self.lens = tf.placeholder(tf.int32, (self.batch_size))
             if self.with_cap_prior:
@@ -153,7 +166,7 @@ class Solver_Language(object):
 
             new_loss, g_loss, wd_loss, rb_loss = self.net.loss(
                 scope, self.conv8_313, self.prior_boost_nongray,
-                self.gt_ab_313, self.cap_priors)
+                self.gt_ab_313, self.cap_priors, self.bbox)
 
             tf.summary.scalar('new_loss', new_loss)
             tf.summary.scalar('total_loss', g_loss)
@@ -245,6 +258,8 @@ class Solver_Language(object):
             for step in xrange(start_step, self.max_steps, self.g_repeat):
                 if self.with_cap_prior:
                     data_l, gt_ab_313, prior_boost_nongray, captions, lens, cap_priors = self.dataset.batch()    
+                elif self.use_vg:
+                    data_l, gt_ab_313, prior_boost_nongray, captions, lens, bboxes = self.dataset.batch()
                 else:
                     data_l, gt_ab_313, prior_boost_nongray, captions, lens = self.dataset.batch()
                 feed_dict = {self.data_l: data_l, self.gt_ab_313: gt_ab_313, 
@@ -252,6 +267,8 @@ class Solver_Language(object):
                              self.captions: captions, self.lens: lens}
                 if self.with_cap_prior:
                     feed_dict[self.cap_priors] = cap_priors
+                if self.use_vg:
+                    feed_dict[self.bbox] = bboxes
                 if step % _LOG_FREQ == 0:
                     duration = time.time() - start_time
                     num_examples_per_step = self.batch_size * self.num_gpus * _LOG_FREQ
@@ -279,7 +296,9 @@ class Solver_Language(object):
                     eval_iters = 30
                     for _ in xrange(eval_iters):
                         if self.with_cap_prior:
-                            val_data_l, val_gt_ab_313, val_prior_boost_nongray, val_captions, val_lens, val_cap_priors = self.val_dataset.batch()    
+                            val_data_l, val_gt_ab_313, val_prior_boost_nongray, val_captions, val_lens, val_cap_priors = self.val_dataset.batch()
+                        elif self.use_vg:
+                            val_data_l, val_gt_ab_313, val_prior_boost_nongray, val_captions, val_lens, val_bboxes = self.val_dataset.batch()
                         else:
                             val_data_l, val_gt_ab_313, val_prior_boost_nongray, val_captions, val_lens = self.val_dataset.batch()
                         val_feed_dict = {
@@ -287,6 +306,8 @@ class Solver_Language(object):
                             self.captions: val_captions, self.lens: val_lens}
                         if self.with_cap_prior:
                             val_feed_dict[self.cap_priors] = val_cap_priors
+                        if self.use_vg:
+                            val_feed_dict[self.bbox] = val_bboxes
                         loss_value, rb_loss_value, img_313s = sess.run([self.total_loss, self.rb_loss, self.conv8_313], feed_dict=val_feed_dict)
                         eval_loss += loss_value
                         eval_loss_rb += rb_loss_value

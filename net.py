@@ -16,14 +16,19 @@ class Net(object):
         self.weight_decay = 0.0
         self.eps = 1e-8
         self.lstm_hid_dim = 256
-        self.word_embedding = pickle.load(open('/srv/glusterfs/xieya/data/w2v_embeddings_colors.p', 'r'))
         self.in_dims = [64, 128, 256, 512, 512, 512, 512, 256]
         self.batch_size = batch_size
+
         if common_params:
             gpu_nums = len(str(common_params['gpus']).split(','))
             self.batch_size = int(int(common_params['batch_size']) / gpu_nums)
             self.is_rgb = True if common_params['is_rgb'] == '1' else False
             self.output_dim = 3 if self.is_rgb else 2
+            self.use_vg = common_params['use_vg'] == '1'
+            if self.use_vg:
+                self.word_embedding = ppickle.load(open('/srv/glusterfs/xieya/data/visual_genome/glove.6B.100d_emb.p', 'r'))
+            else:
+                self.word_embedding = pickle.load(open('/srv/glusterfs/xieya/data/w2v_embeddings_colors.p', 'r'))
         if net_params:
             self.weight_decay = float(net_params['weight_decay'])
             self.alpha = float(net_params['alpha'])
@@ -971,7 +976,7 @@ class Net(object):
         return gen_cost, disc_cost, w_dist, tf.reduce_mean(slopes)
 
     def loss(self, scope, conv8_313, prior_boost_nongray,
-             gt_ab_313, cap_prior=None):
+             gt_ab_313, cap_prior=None, bbox=None):
         flat_conv8_313 = tf.reshape(conv8_313, [-1, 313])
         flat_gt_ab_313 = tf.reshape(gt_ab_313, [-1, 313])
         flat_gt_ab_313 = tf.stop_gradient(flat_gt_ab_313)
@@ -991,13 +996,15 @@ class Net(object):
             if 'kernel' in var.name:
                 l2_loss = l2_loss + tf.nn.l2_loss(var)
         l2_loss = l2_loss * self.weight_decay
-        # l2_losses = [tf.nn.l2_loss(tf_var) for tf_var in tf.trainable_variables() if "kernel" in tf_var.name]
-        # l2_loss = self.weight_decay * tf.add_n(l2_losses)
         wd_loss += l2_loss 
 
         new_loss = dl2c * conv8_313 * prior_boost_nongray
         if cap_prior is not None:
             new_loss = new_loss * cap_prior[:, tf.newaxis, tf.newaxis, tf.newaxis]
+        if bbox is not None:
+            print('Rebalancing loss with bbox.')
+            new_loss = new_loss * bbox
+            new_loss = new_loss / tf.reduce_sum(bbox, axis=(1, 2, 3), keepdims=True)
         new_loss = tf.reduce_sum(new_loss)
         new_loss = new_loss + wd_loss
 

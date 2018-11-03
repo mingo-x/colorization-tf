@@ -25,7 +25,7 @@ class DataSet(object):
       image_path
     """
 
-    def __init__(self, common_params=None, dataset_params=None, training=True, shuffle=True, with_ab=False):
+    def __init__(self, common_params=None, dataset_params=None, train=True, shuffle=True, with_ab=False):
         """
         Args:
           common_params: A dict
@@ -42,7 +42,7 @@ class DataSet(object):
             self.gamma = float(dataset_params['gamma'])
             print('Gamma in prior smoothing: {}.'.format(self.gamma))
 
-        if training:
+        if train:
             self.split_file = '/srv/glusterfs/xieya/data/visual_genome/train.txt'
         else:
             self.split_file = '/srv/glusterfs/xieya/data/visual_genome/val.txt'
@@ -109,14 +109,14 @@ class DataSet(object):
         """
         h = image.shape[0]
         w = image.shape[1]
-        bbox = np.ones((h,w))
+        bbox = np.ones((h,w, 1))
         reg_x = reg['x']
         reg_y = reg['y']
         reg_w = reg['width']
         reg_h = reg['height']
 
         mirror = np.random.randint(0, 2)
-        if mirror and self.training:
+        if mirror and self.train:
             image = np.fliplr(image)
             # Flip bbox.
             reg_x = w - reg_x - reg_w
