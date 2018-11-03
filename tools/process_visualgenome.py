@@ -258,6 +258,40 @@ def scale_regions(region_file_name):
     print('Total regions: {}'.format(reg_count))
 
 
+def split_train_val_test(region_file_name):
+    regions = json.load(open(os.path.join('/srv/glusterfs/xieya/data/visual_genome', region_file_name), 'r'))
+    print('Region json loaded.')
+    train_img_count = 0
+    train_reg_count = 0
+    val_img_count = 0
+    val_reg_count = 0
+    test_img_count = 0
+    test_reg_count = 0
+    with open('/srv/glusterfs/xieya/data/visual_genome/train.txt', 'w') as f_train, open('/srv/glusterfs/xieya/data/visual_genome/val.txt', 'w') as f_val, open('/srv/glusterfs/xieya/data/visual_genome/test.txt', 'w') as f_test:
+        for img_idx in xrange(len(regions)):
+            img = regions[img_idx]
+            img_id = img['id']
+            reg_num = len(img['regions'])
+            # 85-5-10
+            r = np.random.randint(100)
+            if r < 85:
+                fout = f_train
+                train_img_count += 1
+                train_reg_count += reg_num
+            elif r < 90:
+                fout = f_val
+                val_img_count += 1
+                val_reg_count += reg_num
+            else:
+                fout = f_test
+                test_count += 1
+                test_reg_count += reg_num
+            fout.write('{0} {1} {2}\n'.format(img_id, img_idx, reg_num))
+    print('Train set: image {0} region {1}'.format(train_img_count, train_reg_count))
+    print('Val set: image {0} region {1}'.format(val_img_count, val_reg_count))
+    print('Test set: image {0} region {1}'.format(test_img_count, test_reg_count))
+
+
 if __name__ == "__main__":
     # build_vocabulary_by_spacy()
     # build_vocabulary_by_glove('glove.6B.50d.p')
@@ -265,3 +299,4 @@ if __name__ == "__main__":
     # load_glove('glove.6B.300d.txt')
     # scale_images('/srv/glusterfs/xieya/data/visual_genome/100k_2.txt', '/srv/glusterfs/xieya/data/visual_genome/VG_100K_224_2')
     # scale_regions('region_descriptions.json')
+    split_train_val_test('224_filtered_region_descriptions.json')

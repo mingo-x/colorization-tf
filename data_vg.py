@@ -65,8 +65,10 @@ class DataSet(object):
             for line in fin:
                 img_id, img_idx, reg_num = line.strip().split(' ')
                 img_idx = int(img_idx)
+                img_path = os.path.join(self.data_dir, '{}.jpg'.format(img_id))
+                regs = regions[img_idx]['regions']
                 for reg_idx in xrange(int(reg_num)):
-                    self.record_list.append((img_idx, reg_idx))
+                    self.record_list.append((img_path, regs[reg_idx]))
 
         self.record_point = 0
         self.record_number = len(self.record_list)
@@ -130,13 +132,13 @@ class DataSet(object):
         """record queue's customer 
         """
         while True:
-            item = self.record_queue.get()
-            out = cv2.imread(item)
-            if out is None:
-                print(item, os.path.isfile(item))
+            img_path, reg = self.record_queue.get()
+            img = cv2.imread(img_path)
+            if img is None:
+                print(img_path, os.path.isfile(img_path))
                 continue
             if len(out.shape) == 3 and out.shape[2] == 3:
-                self.image_queue.put(out)
+                self.image_queue.put((img, reg))
 
     def image_customer(self):
         while True:
