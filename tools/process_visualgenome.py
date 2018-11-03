@@ -70,6 +70,11 @@ def build_vocabulary_by_glove(emb_file):
                             print(nw, idx)
                         else:
                             unknowns.add(w)
+    # Manual amendament.
+    if 'tshirt' not in voc_dict:
+        idx = len(voc_dict)
+        voc_dict['tshirt'] = idx
+        embeddings.append(emb_dict['t-shirt'])
 
     print("Vocabulary size: {}".format(len(voc_dict)))
     pickle.dump(voc_dict, open('/srv/glusterfs/xieya/data/visual_genome/{}_voc.p'.format(emb_name), 'wb'))
@@ -166,6 +171,7 @@ def filter_regions(emb_name, region_json_file):
         new_data.append({'id': img_id, 'regions': new_regs})
 
     print('Total regions: {}'.format(region_count))
+    print('Total images: {}'.format(len(new_data)))
     print('Regions with color: {}'.format(has_color_count))
     print('Regions with valid length: {}'.format(less_20_count))
     json.dump(new_data, open(os.path.join('/srv/glusterfs/xieya/data/visual_genome', 'filtered_' + region_json_file), 'w'))
