@@ -144,7 +144,7 @@ class DataSet(object):
             if img is None:
                 print(img_path, os.path.isfile(img_path))
                 continue
-            if len(out.shape) == 3 and out.shape[2] == 3:
+            if len(img.shape) == 3 and img.shape[2] == 3:
                 self.image_queue.put((img, reg))
 
     def image_customer(self):
