@@ -133,7 +133,7 @@ class DataSet(object):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         bbox[reg_y: reg_y + reg_h, reg_x: reg_x + reg_w] = 3.  # Weight 3 for in-box pixels.
 
-        return image, bbox
+        return image, bbox[::4, ::4]
 
     def record_customer(self):
         """record queue's customer 
