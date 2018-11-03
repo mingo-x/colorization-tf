@@ -118,7 +118,7 @@ class Solver_Language(object):
                 tf.float32, (self.batch_size, self.height, self.width, 1))
             if self.use_vg:
                 self.bbox = tf.placeholder(
-                    tf.float32, (self.batch_size, self.height, self.width, 1))
+                    tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 1))
             else:
                 self.bbox = None
             self.captions = tf.placeholder(tf.int32, (self.batch_size, 20))
