@@ -70,12 +70,13 @@ class DataSet(object):
                 regs = self.regions[img_idx]['regions']
                 for reg_idx in xrange(int(reg_num)):
                     reg = regs[reg_idx]
-                    if reg['x'] < 10 or reg['y'] < 10:
+                    if reg['width'] < 16 or reg['height'] < 16:
                         continue
                     self.record_list.append((img_path, reg))
 
         self.record_point = 0
         self.record_number = len(self.record_list)
+        print('Training samples: {}'.format(self.record_number))
 
         self.num_batch_per_epoch = int(self.record_number / self.batch_size)
 
