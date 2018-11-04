@@ -109,7 +109,6 @@ class DataSet(object):
         """
         h = image.shape[0]
         w = image.shape[1]
-        bbox = np.ones((h,w, 1))
         reg_x = reg['x']
         reg_y = reg['y']
         reg_w = reg['width']
@@ -133,6 +132,7 @@ class DataSet(object):
             image = image[crop_start:crop_start + self.image_size, :, :]
             reg_y -= crop_start
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        bbox = np.ones((self.image_size, self.image_size, 1))
         bbox[reg_y: reg_y + reg_h, reg_x: reg_x + reg_w] = 3.  # Weight 3 for in-box pixels.
 
         return image, bbox[::4, ::4]
