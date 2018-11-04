@@ -294,5 +294,5 @@ if __name__ == "__main__":
     # filter_regions('glove.6B.100d', 'region_descriptions.json')
     # load_glove('glove.6B.300d.txt')
     # scale_images('/srv/glusterfs/xieya/data/visual_genome/100k_2.txt', '/srv/glusterfs/xieya/data/visual_genome/VG_100K_224_2')
-    # scale_regions('filtered_region_descriptions.json')
-    split_train_val_test('224_filtered_region_descriptions.json')
+    scale_regions('filtered_region_descriptions.json')
+    # split_train_val_test('224_filtered_region_descriptions.json')
