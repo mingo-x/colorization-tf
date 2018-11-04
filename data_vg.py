@@ -145,6 +145,8 @@ class DataSet(object):
         """
         while True:
             img_path, reg = self.record_queue.get()
+            if reg['x'] * reg['y'] < 100:  # Skip small regions.
+                continue
             img = cv2.imread(img_path)
             if img is None:
                 print(img_path, os.path.isfile(img_path))

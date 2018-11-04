@@ -11,13 +11,14 @@ import pickle
 
 
 class Net(object):
-    def __init__(self, train=True, g_version=0, batch_size=1, common_params=None, net_params=None):
+    def __init__(self, train=True, g_version=0, batch_size=1, use_vg=False, common_params=None, net_params=None):
         self.train = train
         self.weight_decay = 0.0
         self.eps = 1e-8
         self.lstm_hid_dim = 256
         self.in_dims = [64, 128, 256, 512, 512, 512, 512, 256]
         self.batch_size = batch_size
+        self.use_vg = use_vg
 
         if common_params:
             gpu_nums = len(str(common_params['gpus']).split(','))
