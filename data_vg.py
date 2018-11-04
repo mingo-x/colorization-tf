@@ -57,7 +57,7 @@ class DataSet(object):
         self.batch_queue = Queue(maxsize=300)
 
         self.record_list = []  
-        self.prior_path = '/srv/glusterfs/xieya/prior/vg_313_sofa.npy'
+        self.prior_path = '/srv/glusterfs/xieya/prior/vg_313_soft.npy'
 
         # filling the record_list
         with open(self.split_file, 'r') as fin:
