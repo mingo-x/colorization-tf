@@ -397,12 +397,14 @@ def cross_entropy_loss(gt_313, conv8_313, prior_boost_nongray):
     return ce_loss, rb_loss
 
 
-def colorize_with_language(with_attention=False, concat=False, same_lstm=True, residual=False, paper=False, lstm_version=0):
+def colorize_with_language(with_attention=False, concat=False, same_lstm=True, residual=False, paper=False, lstm_version=0, use_vg=False):
     hf = h5py.File('/srv/glusterfs/xieya/data/coco_colors.h5', 'r')
     val_imgs = hf['val_ims']
     val_caps = hf['val_words']
     val_lens = hf['val_length']
 
+    train_vocab_vg = pickle.load(open('/srv/glusterfs/xieya/data/visual_genome/glove.6B.100d_voc.p', 'r'))
+    vrev_vg = dict((v, k) for (k, v) in train_vocab_vg.iteritems())
     train_vocab = pickle.load(open('/home/xieya/colorfromlanguage/priors/coco_colors_vocab.p', 'r'))
     vrev = dict((v, k) for (k, v) in train_vocab.iteritems())
 
@@ -417,7 +419,7 @@ def colorize_with_language(with_attention=False, concat=False, same_lstm=True, r
         l_tensor = tf.placeholder(tf.float32, (1, _INPUT_SIZE, _INPUT_SIZE, 1))
         cap_tensor = tf.placeholder(tf.int32, (1, 20))
         len_tensor = tf.placeholder(tf.int32, (1))
-        autocolor = Net(train=False)
+        autocolor = Net(train=False, use_vg=use_vg)
         if concat:
             c313_tensor = autocolor.inference5(l_tensor, cap_tensor, len_tensor, _CAP_LAYERS, same_lstm, residual, paper=paper, lstm_version=lstm_version)
         else:
@@ -449,12 +451,18 @@ def colorize_with_language(with_attention=False, concat=False, same_lstm=True, r
                         continue
                     img_l = (img_l.astype(dtype=np.float32) - 50.) / 50.
                     img_cap = val_caps[i: i + 1]
+                    if use_vg:
+                        for j in xrange(img_l):
+                            img_cap[0, j] = train_vocab_vg.get(vrev.get(img_cap[0, j], 'unk'))
                     img_len = val_lens[i: i + 1]
                     img_313 = sess.run(c313_tensor, feed_dict={l_tensor: img_l, cap_tensor: img_cap, len_tensor: img_len})
                     img_dec, _ = decode(img_l, img_313, 2.63)
 
                     word_list = list(img_cap[0, :img_len[0]])
-                    img_title = '_'.join(vrev.get(w, 'unk') for w in word_list) 
+                    if use_vg:
+                        img_title = '_'.join(vrev_vg.get(w, 'unk') for w in word_list)
+                    else:
+                        img_title = '_'.join(vrev.get(w, 'unk') for w in word_list) 
                     io.imsave(os.path.join(orig_dir, '{0}_{1}.jpg').format(i, img_title), img_dec)
                     # io.imsave(os.path.join(orig_dir, '{0}_{1}_att.jpg').format(i, img_title), cv2.resize(img_attention[0, :, :, 0], (224, 224)))
                     print(img_title)
@@ -465,13 +473,19 @@ def colorize_with_language(with_attention=False, concat=False, same_lstm=True, r
                         new_img_cap = np.zeros_like(img_cap)
                         new_img_len = np.zeros_like(img_len)
                         for j in xrange(len(new_words)):
-                            new_img_cap[0, j] = train_vocab.get(new_words[j], 0)
+                            if use_vg:
+                                new_img_cap[0, j] = train_vocab_vg.get(new_words[j], 0)
+                            else:
+                                new_img_cap[0, j] = train_vocab.get(new_words[j], 0)
                         new_img_len[0] = len(new_words)
                         new_img_313 = sess.run(c313_tensor, feed_dict={l_tensor: img_l, cap_tensor: new_img_cap, len_tensor: new_img_len})
                         new_img_dec, _ = decode(img_l, new_img_313, 2.63)
 
                         new_word_list = list(new_img_cap[0, :new_img_len[0]])
-                        new_img_title = '_'.join(vrev.get(w, 'unk') for w in new_word_list) 
+                        if use_vg:
+                            new_img_title = '_'.join(vrev_vg.get(w, 'unk') for w in new_word_list)
+                        else:
+                            new_img_title = '_'.join(vrev.get(w, 'unk') for w in new_word_list) 
                         io.imsave(os.path.join(new_dir, '{0}_{1}.jpg').format(i, new_img_title), new_img_dec)
                         # io.imsave(os.path.join(new_dir, '{0}_{1}_att.jpg').format(i, new_img_title), cv2.resize(new_img_attention[0, :, :, 0], (224, 224)))
             finally:
