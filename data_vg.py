@@ -69,7 +69,10 @@ class DataSet(object):
                 img_path = os.path.join(self.data_dir, '{}.jpg'.format(img_id))
                 regs = self.regions[img_idx]['regions']
                 for reg_idx in xrange(int(reg_num)):
-                    self.record_list.append((img_path, regs[reg_idx]))
+                    reg = regs[reg_idx]
+                    if reg['x'] * reg['y'] < 100:
+                        continue
+                    self.record_list.append((img_path, reg))
 
         self.record_point = 0
         self.record_number = len(self.record_list)
@@ -145,8 +148,6 @@ class DataSet(object):
         """
         while True:
             img_path, reg = self.record_queue.get()
-            if reg['x'] * reg['y'] < 100:  # Skip small regions.
-                continue
             img = cv2.imread(img_path)
             if img is None:
                 print(img_path, os.path.isfile(img_path))
