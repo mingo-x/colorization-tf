@@ -331,10 +331,11 @@ class Solver_Language(object):
                     img_l = val_data_l[0: 1]
                     img_rgb, _ = utils.decode(img_l, img_313, 2.63)
 
-                    img_rgb = img_rgb * bbox_mask[:, :, np.newaxis]
                     word_list = list(val_captions[0, :val_lens[0]])
                     img_caption = '_'.join(vrev.get(w, 'unk') for w in word_list) 
                     io.imsave(os.path.join(self.train_dir, '{0}_{1}.jpg').format(step, img_caption), img_rgb)
+                    img_rgb = img_rgb * bbox_mask[:, :, np.newaxis]
+                    io.imsave(os.path.join(self.train_dir, '{0}_{1}_bbox.jpg').format(step, img_caption), img_rgb)
 
                 # Save the model checkpoint periodically.
                 if step % 1000 == 0:
