@@ -31,7 +31,7 @@ class Net(object):
             self.word_embedding = pickle.load(open('/srv/glusterfs/xieya/data/visual_genome/glove.6B.100d_emb.p', 'r'))
         else:
             self.word_embedding = pickle.load(open('/srv/glusterfs/xieya/data/w2v_embeddings_colors.p', 'r'))
-            
+
         if net_params:
             self.weight_decay = float(net_params['weight_decay'])
             self.alpha = float(net_params['alpha'])
@@ -786,6 +786,7 @@ class Net(object):
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, wd=self.weight_decay)
             conv_num += 1
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [3, 3, 512, 512], stride=1, relu=False, wd=self.weight_decay)
+            conv3 = temp_conv
             conv_num += 1
             temp_conv = batch_norm('bn_4', temp_conv, train=self.train)
             temp_conv = tf.nn.relu(temp_conv)
@@ -887,7 +888,8 @@ class Net(object):
                 cap_emb_expand = caption_feature[:, tf.newaxis, tf.newaxis, :]
                 cap_emb_expand = tf.tile(cap_emb_expand, (1, shape[1], shape[2], 1))  # NxHxWx512
                 if paper:
-                    im_features = tf.nn.l2_normalize(conv_6, 3)
+                    print("Imitate structure from paper.")
+                    im_features = tf.nn.l2_normalize(tf.concat((conv3, conv_6), axis=-1), 3)
                     lan_features = tf.nn.l2_normalize(cap_emb_expand, 3)
                     concat_block = tf.concat((im_features, lan_features), axis=-1)  # NxHxWx1024
                     concat_block = conv2d('conv{}_1'.format(block_idx), concat_block, [1, 1, concat_block.get_shape()[3], 512], stride=1, wd=self.weight_decay)

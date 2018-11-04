@@ -87,6 +87,7 @@ class Solver_Language(object):
             self.same_lstm = solver_params['same_lstm'] == '1'
             self.residual = solver_params['residual'] == '1'
             self.lstm_version = int(solver_params['lstm_version'])
+            self.as_paper = solver_params['as_paper'] == '1'
             if self.with_caption:
                 if self.concat:
                     print('CONCAT.')
@@ -141,7 +142,7 @@ class Solver_Language(object):
                 # caption_layer = [0, 1, 2, 3, 4, 5, 6, 7]
                 caption_layers = [5]
                 if self.concat:
-                    self.conv8_313 = self.net.inference5(self.data_l, self.captions, self.lens, caption_layers, self.same_lstm, self.residual, lstm_version=self.lstm_version)
+                    self.conv8_313 = self.net.inference5(self.data_l, self.captions, self.lens, caption_layers, self.same_lstm, self.residual, lstm_version=self.lstm_version, paper=self.as_paper)
                 else:
                     # Restore gamma and beta of BN.
                     self.biases = [None] * 8
