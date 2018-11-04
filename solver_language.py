@@ -138,8 +138,8 @@ class Solver_Language(object):
             )
 
             if self.with_caption:
-                caption_layers = [0, 1, 2, 3, 4, 5, 6, 7]
-                # caption_layers = [5]
+#                caption_layers = [0, 1, 2, 3, 4, 5, 6, 7]
+                caption_layers = [5]
                 if self.concat:
                     self.conv8_313 = self.net.inference5(self.data_l, self.captions, self.lens, caption_layers, self.same_lstm, self.residual, lstm_version=self.lstm_version)
                 else:
