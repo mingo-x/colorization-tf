@@ -40,7 +40,9 @@ class DataSet(object):
             self.thread_num2 = int(int(dataset_params['thread_num']) / 2)
             self.c313 = True if dataset_params['c313'] == '1' else False
 
+        self.shuffle = shuffle
         self.train = train
+        self.with_ab = with_ab
 
         if train:
             self.split_file = '/srv/glusterfs/xieya/data/visual_genome/train.txt'
@@ -71,7 +73,6 @@ class DataSet(object):
 
         self.record_point = 0
         self.record_number = len(self.record_list)
-        self.shuffle = shuffle
 
         self.num_batch_per_epoch = int(self.record_number / self.batch_size)
 
