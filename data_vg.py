@@ -110,9 +110,8 @@ class DataSet(object):
         """
         h = image.shape[0]
         w = image.shape[1]
-        reg_x = reg['x']
-        org_x = reg_x
-        reg_y = reg['y']
+        reg_x = max(reg['x'], 0)
+        reg_y = max(reg['y'], 0)
         reg_w = min(reg['width'], w - reg_x)
         reg_h = min(reg['height'], h - reg_y)
 
@@ -122,7 +121,7 @@ class DataSet(object):
             # Flip bbox.
             reg_x = w - reg_x - reg_w
         if reg_x <0 :
-            print('reg x neg', reg_x, reg_w, w, org_x)
+            print('reg x neg', reg_x, reg_w, w)
 
         if w > h:
             # Assume img_size == 224
