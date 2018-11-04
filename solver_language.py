@@ -184,8 +184,10 @@ class Solver_Language(object):
                                                        self.decay_steps, self.lr_decay, staircase=True)
             learning_rate_cap = tf.train.exponential_decay(self.learning_rate_cap, self.global_step,
                                                            self.decay_steps, self.lr_decay, staircase=True)
-
-            train_vocab = pickle.load(open('/home/xieya/colorfromlanguage/priors/coco_colors_vocab.p', 'r'))
+            if self.use_vg:
+                train_vocab = pickle.load(open('/home/xieya/colorfromlanguage/priors/glove.6B.100d_voc.p', 'r'))
+            else:
+                train_vocab = pickle.load(open('/home/xieya/colorfromlanguage/priors/coco_colors_vocab.p', 'r'))
             vrev = dict((v, k) for (k, v) in train_vocab.iteritems())
 
             config = tf.ConfigProto(allow_soft_placement=True)
