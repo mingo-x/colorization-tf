@@ -120,8 +120,8 @@ class DataSet(object):
             image = np.fliplr(image)
             # Flip bbox.
             reg_x = w - reg_x - reg_w
-            if reg_x <0 :
-                print(reg_x, reg_w, w)
+        if reg_x <0 :
+            print('reg x neg', reg_x, reg_w, w)
 
         if w > h:
             # Assume img_size == 224
