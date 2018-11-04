@@ -323,6 +323,9 @@ class Solver_Language(object):
 
                     # Save sample image
                     img_313 = img_313s[0: 1]
+                    bbox_mask = np.zeros_like(val_bboxes[0: 1])
+                    bbox_mask[val_bboxes == 3] = 1
+                    img_313 *= bbox_mask
                     img_l = val_data_l[0: 1]
                     img_rgb, _ = utils.decode(img_l, img_313, 2.63)
                     word_list = list(val_captions[0, :val_lens[0]])
