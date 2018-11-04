@@ -1007,7 +1007,7 @@ class Net(object):
         if bbox is not None:
             print('Rebalancing loss with bbox.')
             new_loss = new_loss * bbox
-            new_loss = new_loss / tf.reduce_sum(bbox, axis=(1, 2, 3), keepdims=True)
+            # new_loss = new_loss / tf.reduce_sum(bbox, axis=(1, 2, 3), keepdims=True)
         new_loss = tf.reduce_sum(new_loss)
         new_loss = new_loss + wd_loss
 
