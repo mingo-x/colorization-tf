@@ -157,7 +157,7 @@ class Solver_Language(object):
                     if self.kernel_zero:
                         kernel = tf.zeros_initializer(dtype=tf.float32)
                         print('Film dense kernel initialized with zeros.')
-                    self.conv8_313 = self.net.inference4(self.data_l, self.captions, self.lens, self.biases, kernel, with_attention=self.with_attention)
+                    self.conv8_313 = self.net.inference4(self.data_l, self.captions, self.lens, self.biases, kernel, with_attention=self.with_attention, lstm_version=self.lstm_version)
             else:
                 self.conv8_313 = self.net.inference(self.data_l)
             # self.colorized_ab = self.net.conv313_to_ab(conv8_313)

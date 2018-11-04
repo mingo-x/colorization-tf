@@ -578,8 +578,8 @@ class Net(object):
         conv8_313 = temp_conv
         return conv8_313
 
-    def inference4(self, data_l, captions, lens, biases=None, kernel_initializer=None, with_attention=False):
-        caption_feature = self.caption_encoding(captions, lens)
+    def inference4(self, data_l, captions, lens, biases=None, kernel_initializer=None, with_attention=False, lstm_version=0):
+        caption_feature = self.caption_encoding(lstm_version, captions, lens)
         # caption_feature = tf.zeros_like(caption_feature)
         with tf.variable_scope('Film'):
             gammas = []
