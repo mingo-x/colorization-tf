@@ -246,8 +246,8 @@ def scale_regions(region_file_name):
             ny = _scale_to_int(y, scale)
             nw = _scale_to_int(w, scale)
             nh = _scale_to_int(h, scale)
-            reg['x'] = nx
-            reg['y'] = ny
+            reg['x'] = max(nx, 0)
+            reg['y'] = max(ny, 0)
             reg['width'] = nw
             reg['height'] = nh
         reg_count += len(img['regions'])
