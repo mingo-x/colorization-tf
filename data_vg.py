@@ -70,7 +70,7 @@ class DataSet(object):
                 regs = self.regions[img_idx]['regions']
                 for reg_idx in xrange(int(reg_num)):
                     reg = regs[reg_idx]
-                    if reg['x'] * reg['y'] < 100:
+                    if reg['x'] < 10 or reg['y'] < 10:
                         continue
                     self.record_list.append((img_path, reg))
 
@@ -123,8 +123,6 @@ class DataSet(object):
             image = np.fliplr(image)
             # Flip bbox.
             reg_x = w - reg_x - reg_w
-        if reg_x <0 :
-            print('reg x neg', reg_x, reg_w, w)
 
         if w > h:
             # Assume img_size == 224
