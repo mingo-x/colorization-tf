@@ -330,11 +330,11 @@ class Solver_Language(object):
                     word_list = list(val_captions[0, :val_lens[0]])
                     img_caption = '_'.join(vrev.get(w, 'unk') for w in word_list) 
                     io.imsave(os.path.join(self.train_dir, '{0}_{1}.jpg').format(step, img_caption), img_rgb)
-                    bbox_mask = np.zeros_like(val_bboxes[0])
-                    bbox_mask[val_bboxes[0] > 2.5] = 1
-                    bbox_mask = cv2.resize(bbox_mask, (224, 224), interpolation=cv2.INTER_NEAREST)
-                    img_rgb = img_rgb * bbox_mask[:, :, np.newaxis]
-                    io.imsave(os.path.join(self.train_dir, '{0}_{1}_bbox.jpg').format(step, img_caption), img_rgb)
+                    # bbox_mask = np.zeros_like(val_bboxes[0])
+                    # bbox_mask[val_bboxes[0] > 2.5] = 1
+                    # bbox_mask = cv2.resize(bbox_mask, (224, 224), interpolation=cv2.INTER_NEAREST)
+                    # img_rgb = img_rgb * bbox_mask[:, :, np.newaxis]
+                    # io.imsave(os.path.join(self.train_dir, '{0}_{1}_bbox.jpg').format(step, img_caption), img_rgb)
 
                 # Save the model checkpoint periodically.
                 if step % 1000 == 0:
