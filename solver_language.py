@@ -325,7 +325,7 @@ class Solver_Language(object):
                     # Save sample image
                     img_313 = img_313s[0: 1]
                     bbox_mask = np.zeros_like(val_bboxes[0])
-                    bbox_mask[val_bboxes == 3] = 1
+                    bbox_mask[val_bboxes[0] == 3] = 1
                     bbox_mask = cv2.resize(bbox_mask, (224, 224), interpolation=cv2.INTER_NEAREST)
 
                     img_l = val_data_l[0: 1]
