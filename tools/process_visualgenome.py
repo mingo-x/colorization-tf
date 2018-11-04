@@ -3,13 +3,13 @@
 # ----- Parameters passed to the cluster -------
 ## <= 1h is short queue, <= 6h is middle queue, <= 48 h is long queue
 
-#$ -t 1:1
+#$ -t 1:50
 
 #$ -S /srv/glusterfs/xieya/anaconda2/bin/python
 
 #$ -l h_rt=5:59:59
 
-#$ -l h_vmem=40G
+#$ -l h_vmem=8G
 
 #$ -o /srv/glusterfs/xieya/log
 
@@ -205,12 +205,15 @@ def scale_images(img_path_file, out_dir):
             if i % _TASK_NUM == _TASK_ID:
                 img_path = line.strip()
                 img_name = os.path.split(img_path)[1]
+                out_path = os.path.join(out_dir, img_name)
+                if os.path.exists(out_path):
+                    continue
                 img = cv2.imread(img_path)
                 h = img.shape[0]
                 w = img.shape[1]
                 scale = 1. * _RESCALE_SIZE / min(h, w)
                 img = cv2.resize(img, None, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC if scale > 1. else cv2.INTER_AREA)
-                cv2.imwrite(os.path.join(out_dir, img_name), img)
+                cv2.imwrite(out_path, img)
                 count += 1
 
                 if count % _LOG_FREQ == 0:
@@ -293,6 +296,6 @@ if __name__ == "__main__":
     # build_vocabulary_by_glove('glove.6B.100d.p')
     # filter_regions('glove.6B.100d', 'region_descriptions.json')
     # load_glove('glove.6B.300d.txt')
-    # scale_images('/srv/glusterfs/xieya/data/visual_genome/100k_2.txt', '/srv/glusterfs/xieya/data/visual_genome/VG_100K_224_2')
-    scale_regions('filtered_region_descriptions.json')
+    # scale_regions('filtered_region_descriptions.json')
+    scale_images('/srv/glusterfs/xieya/data/visual_genome/100k_1.txt', '/srv/glusterfs/xieya/data/visual_genome/VG_100K_224')
     # split_train_val_test('224_filtered_region_descriptions.json')
