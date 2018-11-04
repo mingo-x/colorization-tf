@@ -112,8 +112,8 @@ class DataSet(object):
         w = image.shape[1]
         reg_x = reg['x']
         reg_y = reg['y']
-        reg_w = reg['width']
-        reg_h = reg['height']
+        reg_w = min(reg['width'], w - reg_x)
+        reg_h = min(reg['height'], h - reg_y)
 
         mirror = np.random.randint(0, 2)
         if mirror and self.train:
