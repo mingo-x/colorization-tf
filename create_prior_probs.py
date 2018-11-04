@@ -299,14 +299,14 @@ def cal_prob_coco_soft(cond_l=False):
 def merge():
     print("Merging...")
     probs = np.zeros((_N_CLASSES), dtype=np.float64)
-    path_pattern = '/srv/glusterfs/xieya/prior/{0}_onehot_{1}_soft.npy'
+    path_pattern = '/srv/glusterfs/xieya/prior/vg_{0}_soft_{1}.npy'
     for i in xrange(_TASK_NUM):
         file_path = path_pattern.format(_N_CLASSES, i)
         p = np.load(file_path)
         probs += p
         print(i)
     probs = probs / np.sum(probs)
-    np.save('/srv/glusterfs/xieya/prior/{}_soft'.format(_N_CLASSES), probs)
+    np.save('/srv/glusterfs/xieya/prior/vg_{}_soft'.format(_N_CLASSES), probs)
 
 
 def cal_ab_hist_given_l():
@@ -376,10 +376,10 @@ if __name__ == "__main__":
     print("Number of classes: {}.".format(_N_CLASSES))
     # print("Imagenet.")
     # cal_prob()
-    cal_prob_soft(False, is_vg=True)
+    # cal_prob_soft(False, is_vg=True)
     # cal_ab_hist_given_l()
     # print("Coco.")
     # cal_prob_coco()
     # cal_prob_coco_soft(True)
-    # merge()
+    merge()
     # merge_abl()
