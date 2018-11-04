@@ -196,12 +196,12 @@ def scale_images(img_path_file, out_dir):
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
     
-    print('Task id: ', _TASK_ID)
     count = 0
-    i = 0
+    i = -1
 
     with open(img_path_file, 'r') as fin:
         for line in fin:
+            i += 1
             if i % _TASK_NUM == _TASK_ID:
                 img_path = line.strip()
                 img_name = os.path.split(img_path)[1]
@@ -209,6 +209,9 @@ def scale_images(img_path_file, out_dir):
                 if os.path.exists(out_path):
                     continue
                 img = cv2.imread(img_path)
+                if img is None:
+                    print(img_path, os.path.isfile(img_path))
+                    continue
                 h = img.shape[0]
                 w = img.shape[1]
                 scale = 1. * _RESCALE_SIZE / min(h, w)
@@ -218,7 +221,6 @@ def scale_images(img_path_file, out_dir):
 
                 if count % _LOG_FREQ == 0:
                     print(count)
-            i +=1 
 
 
 def scale_regions(region_file_name):
@@ -297,5 +299,5 @@ if __name__ == "__main__":
     # filter_regions('glove.6B.100d', 'region_descriptions.json')
     # load_glove('glove.6B.300d.txt')
     # scale_regions('filtered_region_descriptions.json')
-    scale_images('/srv/glusterfs/xieya/data/visual_genome/100k_1.txt', '/srv/glusterfs/xieya/data/visual_genome/VG_100K_224')
+    scale_images('/srv/glusterfs/xieya/data/visual_genome/100k_2.txt', '/srv/glusterfs/xieya/data/visual_genome/VG_100K_224')
     # split_train_val_test('224_filtered_region_descriptions.json')
