@@ -452,7 +452,7 @@ def colorize_with_language(with_attention=False, concat=False, same_lstm=True, r
                     img_l = (img_l.astype(dtype=np.float32) - 50.) / 50.
                     img_cap = val_caps[i: i + 1]
                     if use_vg:
-                        for j in xrange(img_l):
+                        for j in xrange(img_l[0]):
                             img_cap[0, j] = train_vocab_vg.get(vrev.get(img_cap[0, j], 'unk'))
                     img_len = val_lens[i: i + 1]
                     img_313 = sess.run(c313_tensor, feed_dict={l_tensor: img_l, cap_tensor: img_cap, len_tensor: img_len})
