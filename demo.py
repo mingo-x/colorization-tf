@@ -43,6 +43,45 @@ _NEW_CAPTION = True
 T = 2.63
 
 
+def JBU(ab_ss, l, k=3, scale=4):
+    h, w, c = ab_ss.shape
+    h *= scale
+    w *= scale
+    ab = np.zeros((h, w, c))
+    for i in xrange(h):
+        for j in xrange(w):
+            ab[i, j] = JBU_pix(ab_ss, l, i, j, k=k, scale=scale)
+            
+    return ab
+
+
+def JBU_pix(ab_ss, l, pi, pj, k=3, scale=4):
+    r = k / 2
+    a = 0.
+    b = 0.
+    f = 0.
+    for i in xrange(-r, r):
+        for j in xrange(-r, r):
+            qi = pi + i
+            qj = pj + j
+            w = _bilateral_weight(pi, pj, qi, qj, l[pi, pj], l[qi, qj], scale=scale)
+            a_s, b_s = ab_ss[qi / 4, qj / 4]
+            a += a_s * w
+            b += b_s * w
+            f += w
+
+    a /= f
+    b /= f
+
+    return (a, b)
+
+
+def _bilateral_weight(pi, pj, qi, qj, lp, lq, sig_d=3., sig_r=15., scale=4.0):
+    domain_term = ((pi / scale - qi / scale) ** 2 + (pj / scale - qj / scale) ** 2) / (2 * sig_d ** 2)
+    range_term = (lp - lq) ** 2 / (2 * sig_r ** 2)
+    return math.exp(-(domain_term + range_term))
+
+    
 def _resize(image):
     h = image.shape[0]
     w = image.shape[1]
@@ -693,7 +732,7 @@ def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True, wit
                     if use_vg:
                         for k in xrange(_BATCH_SIZE):
                             for j in xrange(img_len[k]):
-                                img_cap[k, j] = train_vocab_vg.get(vrev.get(img_cap[k, j], 'unk'))
+                                img_cap[k, j] = train_vocab_vg.get(vrev.get(img_cap[k, j], 'unk'), 0)
                     feed_dict = {l_tensor: img_l, cap_tensor: img_cap, len_tensor: img_len, gt_313_tensor: gt_313, prior_tensor: prior_boost_nongray}
                 else:
                     img_l, gt_313, prior_boost_nongray, img_ab = dataset.batch()
