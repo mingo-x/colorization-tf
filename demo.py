@@ -8,8 +8,8 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 import pickle
-# import tensorflow as tf
-# from net import Net
+import tensorflow as tf
+from net import Net
 from skimage import io, color, transform
 import cv2
 
@@ -762,8 +762,8 @@ def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True, wit
 
 if __name__ == "__main__":
     subprocess.check_call(['mkdir', '-p', _OUTPUT_DIR])
-    # main(jbu=True)
-    reconstruct(jbu=True)
+    main(jbu=True)
+    # reconstruct(jbu=True)
     # places365()
     # demo_wgan_ab()
     # demo_wgan_rgb()
