@@ -460,7 +460,7 @@ def decode(data_l, conv8_313, rebalance=1, return_313=False, sfm=True, jbu=False
     else:
         data_ab_us = cv2.resize(data_ab, (width, height), interpolation=cv2.INTER_CUBIC)
 
-    img_lab = np.concatenate((data_l, data_ab_us), axis=-1)
+    img_lab = np.concatenate((data_l, data_ab_us), axis=-1).astype('float64')
     img_rgb = color.lab2rgb(img_lab)
     if return_313:
         return img_rgb, data_ab, class8_313_rh, softmax(conv8_313)
