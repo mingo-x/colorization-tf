@@ -43,10 +43,11 @@ _NEW_CAPTION = True
 T = 2.63
 
     
-def _resize(image):
+def _resize(image, resize_size=None):
     h = image.shape[0]
     w = image.shape[1]
-    resize_size = min(h, w)
+    if resize_size is None:
+        resize_size = min(h, w)
 
     if w > h:
         image = cv2.resize(image, (int(resize_size * w / h), resize_size))
@@ -146,26 +147,29 @@ def _colorize_single_img(img_name, model, input_tensor, sess, jbu=False):
     img_l_rs = (img_l_rs.astype(dtype=np.float32)) / 255.0 * 2 - 1
     img_313_rs = sess.run(model, feed_dict={input_tensor: img_l_rs})
     # img_l_rs_rs = np.zeros((1, 56, 56, 1))
-    img_rgb, _ = decode(img_l_rs, img_313_rs, T, jbu=jbu)
+    img_rgb, _ = utils.decode(img_l_rs, img_313_rs, T, jbu=jbu)
     io.imsave(os.path.join(_OUTPUT_DIR, os.path.split(img_name)[1]), img_rgb)
 
 
-def _reconstruct_single_img(img_name):
+def _reconstruct_single_img(img_name, jbu=False):
     img_path = os.path.join(IMG_DIR, img_name)
+    img_id = os.path.splitext(img_name)[0]
     img_rgb = io.imread(img_path)
     if len(img_rgb.shape) != 3 or img_rgb.shape[2] != 3:
         return
+    img_rgb = _resize(img_rgb, 224)
     img_lab = color.rgb2lab(img_rgb)
     img_l = img_lab[None, :, :, 0: 1]
-    img_rgb_rs = cv2.resize(img_rgb, (_INPUT_SIZE, _INPUT_SIZE))
-    img_lab_rs = color.rgb2lab(img_rgb_rs)
-    img_ab_rs = img_lab_rs[None, :, :, 1:]
-    img_ab_ss = transform.downscale_local_mean(img_ab_rs, (1, 4, 4, 1))
+    # img_rgb_rs = cv2.resize(img_rgb, (_INPUT_SIZE, _INPUT_SIZE))
+    # img_lab_rs = color.rgb2lab(img_rgb_rs)
+    # img_ab_rs = img_lab_rs[None, :, :, 1:]
+    img_ab = img_lab[None, :, :, 1:]
+    img_ab_ss = transform.downscale_local_mean(img_ab, (1, 4, 4, 1))
     gt_313 = utils._nnencode(img_ab_ss)
 
     img_l = (img_l.astype(dtype=np.float32)) / 50. - 1
-    img_rgb, _ = utils.decode(img_l, gt_313, T, sfm=False)
-    io.imsave(os.path.join(_OUTPUT_DIR, os.path.split(img_name)[1]), img_rgb)
+    img_rgb, _ = utils.decode(img_l, gt_313, T, sfm=False, jbu=jbu)
+    io.imsave(os.path.join(_OUTPUT_DIR, img_id + '{}.jpg'.format('_jbu' if jbu else '')), img_rgb)
 
 
 def _colorize_ab_canvas(model, input_tensor, sess):
