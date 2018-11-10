@@ -169,7 +169,7 @@ def _reconstruct_single_img(img_name, jbu=False):
     gt_313 = utils._nnencode(img_ab_ss)
 
     img_l = (img_l.astype(dtype=np.float32)) / 50. - 1
-    img_dec, _ = utils.decode(img_l, gt_313, T, sfm=False, jbu=jbu)
+    img_dec, _ = utils.decode(img_l, gt_313, T, sfm=False, jbu=jbu, jbu_k=_JBU_K)
     io.imsave(os.path.join(_OUTPUT_DIR, img_id + '{}.jpg'.format('_jbu' if jbu else '')), img_dec)
 
 
@@ -330,11 +330,11 @@ def main(jbu=False):
     sess.close()
 
 
-def reconstruct():
+def reconstruct(jbu=False):
     for img_name in os.listdir(IMG_DIR):
         if img_name.endswith('.jpg') or img_name.endswith('.JPEG'):
             print(img_name)
-            _reconstruct_single_img(img_name)
+            _reconstruct_single_img(img_name, jbu=jbu)
 
 
 def demo_wgan_ab():
@@ -762,8 +762,8 @@ def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True, wit
 
 if __name__ == "__main__":
     subprocess.check_call(['mkdir', '-p', _OUTPUT_DIR])
-    main(jbu=True)
-    # reconstruct()
+    # main(jbu=True)
+    reconstruct(jbu=True)
     # places365()
     # demo_wgan_ab()
     # demo_wgan_rgb()
