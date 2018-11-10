@@ -396,6 +396,7 @@ def JBU(ab_ss, l, k=3, scale=4):
 
 
 def _JBU_pix(ab_ss, l, pi, pj, k=3, scale=4):
+    h, w, _ = l.shape
     r = k / 2
     a = 0.
     b = 0.
@@ -404,7 +405,9 @@ def _JBU_pix(ab_ss, l, pi, pj, k=3, scale=4):
         for j in xrange(-r, r):
             qi = pi + i
             qj = pj + j
-            w = _bilateral_weight(pi, pj, qi, qj, l[pi, pj], l[qi, qj], scale=scale)
+            if qi < 0 or qi > h or qj < 0 or qj > w:
+                continue
+            w = _bilateral_weight(pi, pj, qi, qj, l[pi, pj, 0], l[qi, qj, 0], scale=scale)
             a_s, b_s = ab_ss[qi / 4, qj / 4]
             a += a_s * w
             b += b_s * w

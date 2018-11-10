@@ -8,8 +8,8 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 import pickle
-import tensorflow as tf
-from net import Net
+# import tensorflow as tf
+# from net import Net
 from skimage import io, color, transform
 import cv2
 
@@ -168,8 +168,8 @@ def _reconstruct_single_img(img_name, jbu=False):
     gt_313 = utils._nnencode(img_ab_ss)
 
     img_l = (img_l.astype(dtype=np.float32)) / 50. - 1
-    img_rgb, _ = utils.decode(img_l, gt_313, T, sfm=False, jbu=jbu)
-    io.imsave(os.path.join(_OUTPUT_DIR, img_id + '{}.jpg'.format('_jbu' if jbu else '')), img_rgb)
+    img_dec, _ = utils.decode(img_l, gt_313, T, sfm=False, jbu=jbu)
+    io.imsave(os.path.join(_OUTPUT_DIR, img_id + '{}.jpg'.format('_jbu' if jbu else '')), img_dec)
 
 
 def _colorize_ab_canvas(model, input_tensor, sess):
@@ -761,8 +761,8 @@ def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True, wit
 
 if __name__ == "__main__":
     subprocess.check_call(['mkdir', '-p', _OUTPUT_DIR])
-    main(jbu=False)
-    # reconstruct()
+    # main(jbu=False)
+    reconstruct(jbu=True)
     # places365()
     # demo_wgan_ab()
     # demo_wgan_rgb()
