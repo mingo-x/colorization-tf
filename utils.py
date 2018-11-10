@@ -2,6 +2,7 @@ import cv2
 from skimage import color
 from skimage.transform import downscale_local_mean, resize
 from skimage.io import imread, imsave
+import math
 import numpy as np
 import os
 import sklearn.neighbors as nn
@@ -422,7 +423,7 @@ def _bilateral_weight(pi, pj, qi, qj, lp, lq, sig_d=3., sig_r=15., scale=4.0):
     return math.exp(-(domain_term + range_term))
 
 
-def decode(data_l, conv8_313, rebalance=1, return_313=False, sfm=True, jbu=False):
+def decode(data_l, conv8_313, rebalance=1, return_313=False, sfm=True, jbu=False, jbu_k=3):
     """
     Args:
       data_l   : [1, height, width, 1]
@@ -447,7 +448,7 @@ def decode(data_l, conv8_313, rebalance=1, return_313=False, sfm=True, jbu=False
     data_ab = np.dot(class8_313_rh, cc)
     # data_ab = resize(data_ab, (height, width))
     if jbu:
-        data_ab_us = JBU(data_ab, data_l)
+        data_ab_us = JBU(data_ab, data_l, k=jbu_k)
     else:
         data_ab_us = cv2.resize(data_ab, (width, height), interpolation=cv2.INTER_CUBIC)
 

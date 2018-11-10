@@ -32,7 +32,8 @@ _G_VERSION = 1
 _CKPT_PATH = '/srv/glusterfs/xieya/tf_224_1/models/model.ckpt-476000'
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
 # IMG_DIR = '/srv/glusterfs/xieya/data/deoldify/test_images'
-_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/tmp'
+_JBU_K = 5
+_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/jbu_5'
 _PRIOR_PATH = '/srv/glusterfs/xieya/prior/coco_313_soft.npy'
 #_PRIOR_PATH = 'resources/prior_probs_smoothed.npy'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
@@ -147,7 +148,7 @@ def _colorize_single_img(img_name, model, input_tensor, sess, jbu=False):
     img_l_rs = (img_l_rs.astype(dtype=np.float32)) / 255.0 * 2 - 1
     img_313_rs = sess.run(model, feed_dict={input_tensor: img_l_rs})
     # img_l_rs_rs = np.zeros((1, 56, 56, 1))
-    img_rgb, _ = utils.decode(img_l_rs, img_313_rs, T, jbu=jbu)
+    img_rgb, _ = utils.decode(img_l_rs, img_313_rs, T, jbu=jbu, jbu_k=_JBU_K)
     io.imsave(os.path.join(_OUTPUT_DIR, os.path.split(img_name)[1]), img_rgb)
 
 
@@ -761,7 +762,7 @@ def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True, wit
 
 if __name__ == "__main__":
     subprocess.check_call(['mkdir', '-p', _OUTPUT_DIR])
-    main(jbu=False)
+    main(jbu=True)
     # reconstruct()
     # places365()
     # demo_wgan_ab()
