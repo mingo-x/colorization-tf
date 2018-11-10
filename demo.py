@@ -32,8 +32,8 @@ _G_VERSION = 1
 _CKPT_PATH = '/srv/glusterfs/xieya/tf_224_1/models/model.ckpt-476000'
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
 # IMG_DIR = '/srv/glusterfs/xieya/data/deoldify/test_images'
-_JBU_K = 5
-_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/jbu_5'
+_JBU_K = 10
+_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/jbu_10'
 _PRIOR_PATH = '/srv/glusterfs/xieya/prior/coco_313_soft.npy'
 #_PRIOR_PATH = 'resources/prior_probs_smoothed.npy'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
@@ -331,7 +331,7 @@ def main(jbu=False):
 
 
 def reconstruct(jbu=False):
-    for i in xrange(49800, 49900):
+    for i in xrange(49800, 49850):
         img_name = 'ILSVRC2012_val_000{}.JPEG'.format(i)
         print(img_name)
         _reconstruct_single_img(img_name, jbu=jbu)
