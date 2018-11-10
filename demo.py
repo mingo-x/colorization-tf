@@ -8,8 +8,8 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 import pickle
-# import tensorflow as tf
-# from net import Net
+import tensorflow as tf
+from net import Net
 from skimage import io, color, transform
 import cv2
 
@@ -117,7 +117,7 @@ def compare_c313_pixelwise():
     plt.savefig(os.path.join(_OUTPUT_DIR, '{0}_rb.jpg'.format(img_prefix)))
 
 
-def _colorize_single_img(img_name, model, input_tensor, sess):
+def _colorize_single_img(img_name, model, input_tensor, sess, jbu=False):
     img_path = os.path.join(IMG_DIR, img_name)
     img = cv2.imread(img_path)
     img = _resize(img)
@@ -146,7 +146,7 @@ def _colorize_single_img(img_name, model, input_tensor, sess):
     img_l_rs = (img_l_rs.astype(dtype=np.float32)) / 255.0 * 2 - 1
     img_313_rs = sess.run(model, feed_dict={input_tensor: img_l_rs})
     # img_l_rs_rs = np.zeros((1, 56, 56, 1))
-    img_rgb, _ = decode(img_l_rs, img_313_rs, T)
+    img_rgb, _ = decode(img_l_rs, img_313_rs, T, jbu=jbu)
     io.imsave(os.path.join(_OUTPUT_DIR, os.path.split(img_name)[1]), img_rgb)
 
 
@@ -307,7 +307,7 @@ def _colorize_high_res_img(img_name):
         imsave(os.path.join(_OUTPUT_DIR, img_name), img_rgb)
     
 
-def main():
+def main(jbu=False):
     input_tensor = tf.placeholder(
         tf.float32, shape=(1, _INPUT_SIZE, _INPUT_SIZE, 1))
     model = _get_model(input_tensor)
@@ -320,7 +320,7 @@ def main():
     # for img_name in img_list:
         if img_name.endswith('.jpg') or img_name.endswith('.JPEG'):
             print(img_name)
-            _colorize_single_img(img_name, model, input_tensor, sess)
+            _colorize_single_img(img_name, model, input_tensor, sess, jbu=jbu)
      
     sess.close()
 
@@ -757,8 +757,8 @@ def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True, wit
 
 if __name__ == "__main__":
     subprocess.check_call(['mkdir', '-p', _OUTPUT_DIR])
-    # main()
-    reconstruct()
+    main(jbu=False)
+    # reconstruct()
     # places365()
     # demo_wgan_ab()
     # demo_wgan_rgb()
