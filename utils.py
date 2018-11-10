@@ -456,7 +456,7 @@ def decode(data_l, conv8_313, rebalance=1, return_313=False, sfm=True, jbu=False
     data_ab = np.dot(class8_313_rh, cc)
     # data_ab = resize(data_ab, (height, width))
     if jbu:
-        data_ab_us = JBU(data_ab, data_l, k=jbu_k)
+        data_ab_us = JBU(data_ab.astype('float32'), data_l.astype('float32'), k=jbu_k)
     else:
         data_ab_us = cv2.resize(data_ab, (width, height), interpolation=cv2.INTER_CUBIC)
 
