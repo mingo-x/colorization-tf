@@ -134,7 +134,7 @@ def _topk_match_nsamples(gt, pred, k):
     return count
 
 
-def annotate(model_names, file_id, annotate=True, with_gt=False):
+def annotate(model_names, file_id='', annotate=True, with_gt=False):
     n_models = len(model_names)
     if with_gt:
         hf = h5py.File('/srv/glusterfs/xieya/data/coco_colors.h5', 'r')
@@ -160,7 +160,7 @@ def annotate(model_names, file_id, annotate=True, with_gt=False):
                 fout.flush()
             else:
                 img = _compose_imgs(model_names, i, gt=gt)
-                io.imsave('/srv/glusterfs/xieya/image/color/compare/language/{}.jpg'.format(i), img)
+                io.imsave('/srv/glusterfs/xieya/image/color/compare/language1/{}.jpg'.format(i), img)
 
 
 def annotate_random_pair(model_names, file_id, annotate=True, with_gt=False):
@@ -313,12 +313,12 @@ def evaluate_from_rgb(in_dir):
 
 
 if __name__ == "__main__":
-    model_names = ['language_1_14k', 'language_2_18k', 'language_4_9k', 'language_5_31k', 'language_6_45k']
+    model_names = ['language_1_14k', 'language_4_9k', 'concat_8_16k', 'concat_11_42k']
     # model_names = ['tf_224_1_476k', 'tf_coco_24k', 'language_2_18k']
     lookup = utils.LookupEncode('resources/pts_in_hull.npy')
-    # annotate(model_names, False, True)
-    compare_metrics(model_names, 'ce.txt', [1, 1])
-    compare_metrics(model_names, 'metrics.txt', [-1, -1, -1, -1, 1])
-    compare_metrics(model_names, 'pdist.txt', [1])
-    compare_metrics(model_names, 'pdist_56.txt', [1])
-    # evaluate_from_rgb('/srv/glusterfs/xieya/image/color/language_6_45k')
+    annotate(model_names, annotate=False, with_gt=True)
+    # compare_metrics(model_names, 'ce.txt', [1, 1])
+    # compare_metrics(model_names, 'metrics.txt', [-1, -1, -1, -1, 1])
+    # compare_metrics(model_names, 'pdist.txt', [1])
+    # compare_metrics(model_names, 'pdist_56.txt', [1])
+    # evaluate_from_rgb('/srv/glusterfs/xieya/image/color/concat_8_16k')

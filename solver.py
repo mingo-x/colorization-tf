@@ -90,38 +90,18 @@ class Solver(object):
                 tf.float32,
                 (self.batch_size, int(self.height / 4), int(self.width / 4), 1)
             )
-            self.data_l_ss = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 1))
 
             conv8_313 = self.net.inference(self.data_l)
-            if self.dataset.c313:
-                conv8_313_prob = tf.nn.softmax(conv8_313)
-                self.data_fake = tf.concat([self.data_l_ss, conv8_313_prob], axis=-1)
-                self.data_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 314))
-            else:
-                ab_fake_ss = self.net.conv313_to_ab(conv8_313)
-                self.data_fake = tf.concat([self.data_l_ss, ab_fake_ss / 110.], axis=-1)
-                self.data_real = tf.placeholder(tf.float32, (self.batch_size, int(self.height / 4), int(self.width / 4), 3))
-                # self.test_real = tf.concat([(self.data_real[0, :, :, 0:1] + 1) * 50, self.data_real[0, :, :, 1:] * 110.], axis=-1)
-                # self.test_fake = tf.concat([(self.data_l_ss [0, :, :, :]+ 1.) * 50., ab_fake_ss[0, :, :, :]], axis=-1)
 
-            new_loss, g_loss, adv_loss, rb_loss = self.net.loss(
+            new_loss, g_loss, wd_loss, rb_loss = self.net.loss(
                 scope, conv8_313, self.prior_boost_nongray,
-                self.gt_ab_313, self.data_fake, self.gan,
-                self.prior_boost)
+                self.gt_ab_313)
             tf.summary.scalar('new_loss', new_loss)
             tf.summary.scalar('rb_loss', rb_loss)
+            tf.summary.scalar('wd_loss', wd_loss)
             tf.summary.scalar('total_loss', g_loss)
 
-            if self.gan:
-                D_loss, real_score, fake_score, mixed_norm = self.net.discriminator_loss(self.data_real, self.data_fake)
-                tf.summary.scalar('D loss', D_loss)
-                tf.summary.scalar('real_score', real_score)
-                tf.summary.scalar('fake_score', fake_score)
-                tf.summary.scalar('distance', real_score - fake_score)
-                tf.summary.scalar('mixed_norm', mixed_norm)
-                return (new_loss, g_loss, adv_loss, rb_loss, D_loss, real_score, fake_score, mixed_norm)
-            else:
-                return (new_loss, g_loss, adv_loss, rb_loss, None, None, None, None)
+            return (new_loss, g_loss, rb_loss)
 
     def lr_decay_on_plateau(self, sess, curr_loss, threshold=3):
         if curr_loss >= self.prev_loss:
@@ -141,18 +121,10 @@ class Solver(object):
         with tf.device('/gpu:' + str(self.device_id)):
             self.global_step = tf.get_variable('global_step', [], initializer=tf.constant_initializer(0), trainable=False)
             
-            if self.gan:
-                self.learning_rate_tensor = self.learning_rate
-                D_learning_rate = self.D_learning_rate
-            else:
-                self.learning_rate_tensor = tf.train.exponential_decay(self.learning_rate, self.global_step,
-                                                                       self.decay_steps, self.lr_decay, staircase=True)
-                # self.learning_rate_tensor = tf.get_variable('learning_rate', [], initializer=tf.constant_initializer(self.learning_rate), trainable=False)
-                # self.prev_loss = 1e9
-                # self.increasing_count = 0
-
+            self.learning_rate_tensor = tf.train.exponential_decay(self.learning_rate, self.global_step,
+                                                                   self.decay_steps, self.lr_decay, staircase=True)
             with tf.name_scope('gpu') as scope:
-                self.new_loss, self.total_loss, self.adv_loss, self.rb_loss, self.D_loss, self.real_score, self.fake_score, self.mixed_norm = self.construct_graph(scope)
+                self.new_loss, self.total_loss, self.rb_loss = self.construct_graph(scope)
                 self.summaries = tf.get_collection(
                     tf.GraphKeys.SUMMARIES, scope)
 
@@ -162,33 +134,7 @@ class Solver(object):
             opt = tf.train.AdamOptimizer(
                 learning_rate=self.learning_rate_tensor, beta1=self.moment, beta2=0.99)
             G_vars = tf.trainable_variables(scope='G')
-            F_vars = tf.trainable_variables(scope='Film')
-            T_vars = tf.trainable_variables(scope='T')
-
-            with tf.variable_scope('T', reuse=True):
-                if not self.dataset.c313:
-                    T = tf.get_variable('T')
-                    T_loss = tf.multiply(tf.nn.l2_loss(T - 2.63), 1e-3, name='weight_loss')
-                    self.summaries.append(tf.summary.scalar(T.op.name, T[0]))
-                else:
-                    T_loss = 0.
-
-            if self.gan:
-                grads = opt.compute_gradients(self.new_loss * self.net.alpha + self.adv_loss + T_loss, var_list=G_vars + T_vars)
-            else:
-                grads = opt.compute_gradients(self.new_loss, var_list=G_vars + F_vars)
-            # grads_adv = opt.compute_gradients(self.adv_loss + T_loss, var_list=G_vars + T_vars)
-
-            # for grad, var in grads:
-            #     if grad is not None:
-            #         self.summaries.append(tf.summary.histogram(var.op.name + '/gradients', grad))
-
-            # for grad, var in grads_adv:
-            #     if grad is not None:
-            #         self.summaries.append(tf.summary.histogram(var.op.name + '/gradients_adv', grad))
-
-            # for var in tf.global_variables(scope='G'):
-            #     self.summaries.append(tf.summary.histogram(var.op.name, var))
+            grads = opt.compute_gradients(self.new_loss, var_list=G_vars)
 
             total_param = 0
             for var in tf.global_variables(scope='G'):
@@ -198,24 +144,12 @@ class Solver(object):
 
             apply_gradient_op = opt.apply_gradients(
                 grads, global_step=self.global_step)
-            # apply_gradient_adv_op = opt.apply_gradients(
-            #     grads_adv)
             variable_averages = tf.train.ExponentialMovingAverage(
                 0.999, self.global_step)
-            variables_averages_op = variable_averages.apply(G_vars + T_vars + F_vars)
+            variables_averages_op = variable_averages.apply(G_vars)
             train_op = tf.group(apply_gradient_op, variables_averages_op)
 
-            if self.gan:
-                D_opt = tf.train.AdamOptimizer(
-                    learning_rate=D_learning_rate, beta1=self.moment, beta2=0.9)
-                D_vars = tf.trainable_variables(scope='D')
-                # for var in D_vars:
-                #     self.summaries.append(tf.summary.histogram(var.op.name, var))
-                D_grads = D_opt.compute_gradients(self.D_loss, var_list=D_vars)
-                D_apply_gradient_op = D_opt.apply_gradients(D_grads)
-
             savable_vars = tf.global_variables()
-            # savable_vars = [var for var in savable_vars if 'learning_rate' not in var.name]
             saver = tf.train.Saver(savable_vars, write_version=tf.train.SaverDef.V2, max_to_keep=5, keep_checkpoint_every_n_hours=1)
             summary_op = tf.summary.merge(self.summaries)
             init = tf.global_variables_initializer()
@@ -249,35 +183,16 @@ class Solver(object):
                     init_saver.restore(sess, self.init_ckpt)
                     print('Init generator with {}.'.format(self.init_ckpt))
 
-            if not self.dataset.c313:
-                start_temp = sess.run(T)
-                print("Temp {}.".format(start_temp))
-
             summary_writer = tf.summary.FileWriter(self.train_dir, sess.graph)
             start_time = time.time()
 
             start_step = int(start_step)
             for step in xrange(start_step, self.max_steps, self.g_repeat):
-                if self.gan:
-                    for _ in xrange(self.d_repeat):
-                        data_l, _, _, data_real = self.dataset.batch()
-                        data_l_ss = data_real[:, :, :, 0: 1]
-                        if not self.corr:
-                            _, _, _, data_real = self.dataset.batch()
-                        # Discriminator training.
-                        sess.run([D_apply_gradient_op],
-                                  feed_dict={self.data_l: data_l, self.data_real: data_real, self.data_l_ss: data_l_ss})
-
-                    if step % _LOG_FREQ < self.g_repeat:
-                        d_loss_value, real_score_value, fake_score_value = sess.run([self.D_loss, self.real_score, self.fake_score], 
-                            feed_dict={self.data_l:data_l, self.data_real: data_real, self.data_l_ss: data_l_ss})
-
                 # Generator training.
                 for _ in xrange(self.g_repeat):
-                    data_l, gt_ab_313, prior_boost_nongray, data_real = self.dataset.batch()
-                    data_l_ss = data_real[:, :, :, 0: 1]
+                    data_l, gt_ab_313, prior_boost_nongray, _ = self.dataset.batch()
                     sess.run([train_op], 
-                              feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_l_ss: data_l_ss})
+                             feed_dict={self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray})
 
                 if step % _LOG_FREQ < self.g_repeat:
                     duration = time.time() - start_time
@@ -285,65 +200,38 @@ class Solver(object):
                     examples_per_sec = num_examples_per_step / duration
                     sec_per_batch = duration / (self.num_gpus * _LOG_FREQ)
 
-                    if self.gan:
-                        loss_value, new_loss_value, adv_loss_value= sess.run(
-                          [self.total_loss, self.new_loss, self.adv_loss], 
-                          feed_dict={self.data_l:data_l, self.gt_ab_313:gt_ab_313, self.prior_boost_nongray:prior_boost_nongray, self.data_l_ss: data_l_ss})
-                        format_str = ('%s: step %d, G loss = %.2f, new loss = %.2f, adv = %0.5f, D = %0.5f, div = %0.3f(%.1f examples/sec; %.3f '
-                                      'sec/batch)')
-                        # assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
-                        # assert not np.isnan(adv_loss_value), 'Adversarial diverged with loss = NaN'
-                        # assert not np.isnan(D_loss_value), 'Discriminator diverged with loss = NaN'
-                        print (format_str % (datetime.now(), step, loss_value, new_loss_value, real_score_value + adv_loss_value, d_loss_value, real_score_value - fake_score_value,
-                                             examples_per_sec, sec_per_batch))
-                        # print(np.min(data_fake[:, :, :, 0]), np.max(data_fake[:, :, :, 0]), np.min(data_fake[:, :, :, 1]), np.max(data_fake[:, :, :, 2]))
-                        # print(np.min(data_real[:, :, :, 0]), np.max(data_real[:, :, :, 0]), np.min(data_real[:, :, :, 1]), np.max(data_real[:, :, :, 2]))
-                        # if step % 100 == 0:
-                        #     img_lab = np.array(test_real, dtype=np.float64)
-                        #     data_rgb = color.lab2rgb(img_lab)
-                        #     io.imsave(os.path.join(self.train_dir, "{}_real.jpg".format(step)), data_rgb)
-                        #     img_lab = np.array(test_fake, dtype=np.float64)
-                        #     data_rgb = color.lab2rgb(img_lab)
-                        #     io.imsave(os.path.join(self.train_dir, "{}_fake.jpg".format(step)), data_rgb)
-
-                    else:
-                        loss_value, new_loss_value, rb_loss_value = sess.run(
-                            [self.total_loss, self.new_loss, self.rb_loss],
-                            feed_dict={self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray})
-                        format_str = ('%s: step %d, G loss = %.2f, new loss = %.2f rb loss = %.2f (%.1f examples/sec; %.3f '
-                                      'sec/batch)')
-                        # assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
-                        # assert not np.isnan(adv_loss_value), 'Adversarial diverged with loss = NaN'
-                        # assert not np.isnan(D_loss_value), 'Discriminator diverged with loss = NaN'
-                        print (format_str % (datetime.now(),
-                                             step, loss_value, new_loss_value, rb_loss_value,
-                                             examples_per_sec, sec_per_batch))
+                    loss_value, new_loss_value, rb_loss_value = sess.run(
+                        [self.total_loss, self.new_loss, self.rb_loss],
+                        feed_dict={self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray})
+                    format_str = ('%s: step %d, G loss = %.2f, new loss = %.2f rb loss = %.2f (%.1f examples/sec; %.3f '
+                                  'sec/batch)')
+                    # assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
+                    # assert not np.isnan(adv_loss_value), 'Adversarial diverged with loss = NaN'
+                    # assert not np.isnan(D_loss_value), 'Discriminator diverged with loss = NaN'
+                    print (format_str % (datetime.now(),
+                                         step, loss_value, new_loss_value, rb_loss_value,
+                                         examples_per_sec, sec_per_batch))
                     start_time = time.time()
 
                 if step % 100 < self.g_repeat:
-                    if self.gan:
-                        summary_str = sess.run(summary_op, feed_dict={self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray, 
-                                                                      self.data_real: data_real, self.data_l_ss: data_l_ss})
-                    else:
-                        summary_str = sess.run(summary_op, feed_dict={
-                            self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray})
-                        eval_loss = 0.0
-                        eval_loss_rb = 0.0
-                        eval_iters = 30
-                        for _ in xrange(eval_iters):
-                            val_data_l, val_gt_ab_313, val_prior_boost_nongray, _ = self.val_dataset.batch()
-                            loss_value, rb_loss_value = sess.run([self.total_loss, self.rb_loss], feed_dict={
-                                self.data_l: val_data_l, self.gt_ab_313: val_gt_ab_313, self.prior_boost_nongray: val_prior_boost_nongray})
-                            eval_loss += loss_value
-                            eval_loss_rb += rb_loss_value
-                        eval_loss /= eval_iters
-                        eval_loss_rb /= eval_iters
-                        eval_loss_sum = scalar_summary('eval/loss', eval_loss)
-                        eval_loss_rb_sum = scalar_summary('eval/loss_rb', eval_loss_rb)
-                        summary_writer.add_summary(eval_loss_sum, step)
-                        summary_writer.add_summary(eval_loss_rb_sum, step)
-                        print('Evaluation at step {0}: loss {1}, rebalanced loss {2}.'.format(step, eval_loss, eval_loss_rb))
-                        # self.lr_decay_on_plateau(sess, eval_loss_rb, 3)
+                    summary_str = sess.run(summary_op, feed_dict={
+                        self.data_l: data_l, self.gt_ab_313: gt_ab_313, self.prior_boost_nongray: prior_boost_nongray})
+                    eval_loss = 0.0
+                    eval_loss_rb = 0.0
+                    eval_iters = 30
+                    for _ in xrange(eval_iters):
+                        val_data_l, val_gt_ab_313, val_prior_boost_nongray, _ = self.val_dataset.batch()
+                        loss_value, rb_loss_value = sess.run([self.total_loss, self.rb_loss], feed_dict={
+                            self.data_l: val_data_l, self.gt_ab_313: val_gt_ab_313, self.prior_boost_nongray: val_prior_boost_nongray})
+                        eval_loss += loss_value
+                        eval_loss_rb += rb_loss_value
+                    eval_loss /= eval_iters
+                    eval_loss_rb /= eval_iters
+                    eval_loss_sum = scalar_summary('eval/loss', eval_loss)
+                    eval_loss_rb_sum = scalar_summary('eval/loss_rb', eval_loss_rb)
+                    summary_writer.add_summary(eval_loss_sum, step)
+                    summary_writer.add_summary(eval_loss_rb_sum, step)
+                    print('Evaluation at step {0}: loss {1}, rebalanced loss {2}.'.format(step, eval_loss, eval_loss_rb))
                     summary_writer.add_summary(summary_str, step)
 
                 # Save the model checkpoint periodically.

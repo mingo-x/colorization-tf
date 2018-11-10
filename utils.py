@@ -9,6 +9,8 @@ import warnings
 import configparser
 
 import pickle
+import random
+
 # *****************************
 # ***** Utility functions *****
 # *****************************
@@ -77,8 +79,8 @@ def unflatten_2d_array(pts_flt,pts_nd,axis=1,squeeze=False):
 
 class NNEncode():
     ''' Encode points using NN search and Gaussian kernel '''
-    def __init__(self,NN,sigma,km_filepath='',cc=-1):
-        if(check_value(cc,-1)):
+    def __init__(self, NN, sigma, km_filepath='', cc=-1):
+        if(check_value(cc, -1)):
             self.cc = np.load(km_filepath)
         else:
             self.cc = cc
@@ -89,24 +91,24 @@ class NNEncode():
 
         self.alreadyUsed = False
 
-    def encode_points_mtx_nd(self,pts_nd,axis=1, sameBlock=True, flatten=False):
+    def encode_points_mtx_nd(self, pts_nd, axis=1, sameBlock=True, flatten=False):
         if not flatten:
-            pts_flt = flatten_nd_array(pts_nd,axis=axis)
+            pts_flt = flatten_nd_array(pts_nd, axis=axis)
         else:
             pts_flt = pts_nd
 
         P = pts_flt.shape[0]
         if(sameBlock and self.alreadyUsed):
-            self.pts_enc_flt[...] = 0 # already pre-allocated
+            self.pts_enc_flt[...] = 0  # already pre-allocated
         else:
             self.alreadyUsed = True
-            self.pts_enc_flt = np.zeros((P,self.K))
-            self.p_inds = np.arange(0,P,dtype='int')[:,na()]
+            self.pts_enc_flt = np.zeros((P, self.K))
+            self.p_inds = np.arange(0, P, dtype='int')[:, na()]
 
         (dists, inds) = self.nbrs.kneighbors(pts_flt)
 
-        wts = np.exp(-dists**2/(2*self.sigma**2))
-        wts = wts/np.sum(wts,axis=1)[:,na()]
+        wts = np.exp(-dists**2 / (2 * self.sigma**2))
+        wts = wts / np.sum(wts, axis=1)[:, na()]
 
         self.pts_enc_flt[self.p_inds, inds] = wts
         if not flatten:
@@ -298,7 +300,7 @@ def get_prior(data_ab):
     return prior
 
 
-def preprocess(data, training=True, c313=False, is_gan=False, is_rgb=True, prior_path='./resources/prior_probs_smoothed.npy', mask_gray=True, cond_l=False, gamma=0.5, sampler=False):
+def preprocess(data, training=True, c313=False, is_gan=False, is_rgb=True, prior_path='./resources/prior_probs_smoothed.npy', mask_gray=True, cond_l=False, gamma=0.5, sampler=False, augment=False):
     '''Preprocess
     Args: 
       data: RGB batch (N * H * W * 3)
@@ -337,6 +339,8 @@ def preprocess(data, training=True, c313=False, is_gan=False, is_rgb=True, prior
     data_l_ss = downscale_local_mean(img_l, (1, 4, 4, 1))
     # scale img_l to [-1, 1]
     data_l = (img_l - 50.) / 50.
+    if augment:
+        data_l = random_lighting(data_l)
     
     # subsample 1/4  (N * H/4 * W/4 * 2)
     # data_ab_ss = data_ab[:, ::4, ::4, :]
@@ -379,7 +383,7 @@ def softmax(x):
     return e_x / np.expand_dims(e_x.sum(axis=-1), axis=-1)  # only difference
 
 
-def decode(data_l, conv8_313, rebalance=1, return_313=False):
+def decode(data_l, conv8_313, rebalance=1, return_313=False, sfm=True):
     """
     Args:
       data_l   : [1, height, width, 1]
@@ -393,14 +397,17 @@ def decode(data_l, conv8_313, rebalance=1, return_313=False):
     data_l = data_l[0, :, :, :]
     conv8_313 = conv8_313[0, :, :, :]
     enc_dir = './resources'
-    conv8_313_rh = conv8_313 * rebalance
-    class8_313_rh = softmax(conv8_313_rh)
+    if sfm:
+        conv8_313_rh = conv8_313 * rebalance
+        class8_313_rh = softmax(conv8_313_rh)
+    else:
+        class8_313_rh = conv8_313
 
     cc = np.load(os.path.join(enc_dir, 'pts_in_hull.npy'))
     
     data_ab = np.dot(class8_313_rh, cc)
     # data_ab = resize(data_ab, (height, width))
-    data_ab_us = cv2.resize(data_ab, (height, width), interpolation=cv2.INTER_CUBIC)
+    data_ab_us = cv2.resize(data_ab, (width, height), interpolation=cv2.INTER_CUBIC)
 
     img_lab = np.concatenate((data_l, data_ab_us), axis=-1)
     img_rgb = color.lab2rgb(img_lab)
@@ -536,3 +543,19 @@ class CaptionPrior():
             return weights
         elif n_dims == 1:
             return self._get_weight(captions)
+
+
+def rand0(x):
+    # [-x, x)
+    return (random.random() * 2 - 1) * x
+
+
+def random_lighting(img_l):
+    # input: [-1, 1]
+    # Random lighting by FastAI
+    b = rand0(0.2)
+    c = rand0(0.1)
+    c = -1 / (c - 1) if c < 0 else c + 1
+    mu = np.mean(img_l)
+
+    return np.clip((img_l - mu) * c + mu + b, -1, 1).astype('float32')

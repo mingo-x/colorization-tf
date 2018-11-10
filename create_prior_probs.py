@@ -194,8 +194,13 @@ def cal_prob_soft(cond_l=False, is_vg=False):
     if is_vg:
         filename_lists = []
         dir_path = '/srv/glusterfs/xieya/data/visual_genome/VG_100K_224'
-        for f in os.listdir(dir_path):
-            filename_lists.append(os.path.join(dir_path, f))
+        fs = os.listdir(dir_path)
+        fs.sort()
+        print('Sorted.')
+        for i in xrange(len(fs)):
+            if i % _TASK_NUM == 0:
+                f = fs[i]
+                filename_lists.append(os.path.join(dir_path, f))
     else:
         filename_lists = get_file_list()
     counter = 0
