@@ -42,45 +42,6 @@ _NEW_CAPTION = True
 # T = 2.63
 T = 2.63
 
-
-def JBU(ab_ss, l, k=3, scale=4):
-    h, w, c = ab_ss.shape
-    h *= scale
-    w *= scale
-    ab = np.zeros((h, w, c))
-    for i in xrange(h):
-        for j in xrange(w):
-            ab[i, j] = JBU_pix(ab_ss, l, i, j, k=k, scale=scale)
-            
-    return ab
-
-
-def JBU_pix(ab_ss, l, pi, pj, k=3, scale=4):
-    r = k / 2
-    a = 0.
-    b = 0.
-    f = 0.
-    for i in xrange(-r, r):
-        for j in xrange(-r, r):
-            qi = pi + i
-            qj = pj + j
-            w = _bilateral_weight(pi, pj, qi, qj, l[pi, pj], l[qi, qj], scale=scale)
-            a_s, b_s = ab_ss[qi / 4, qj / 4]
-            a += a_s * w
-            b += b_s * w
-            f += w
-
-    a /= f
-    b /= f
-
-    return (a, b)
-
-
-def _bilateral_weight(pi, pj, qi, qj, lp, lq, sig_d=3., sig_r=15., scale=4.0):
-    domain_term = ((pi / scale - qi / scale) ** 2 + (pj / scale - qj / scale) ** 2) / (2 * sig_d ** 2)
-    range_term = (lp - lq) ** 2 / (2 * sig_r ** 2)
-    return math.exp(-(domain_term + range_term))
-
     
 def _resize(image):
     h = image.shape[0]
@@ -159,7 +120,7 @@ def compare_c313_pixelwise():
 def _colorize_single_img(img_name, model, input_tensor, sess):
     img_path = os.path.join(IMG_DIR, img_name)
     img = cv2.imread(img_path)
-    # img = _resize(img)
+    img = _resize(img)
     img_rs = cv2.resize(img, (_INPUT_SIZE, _INPUT_SIZE))
     if len(img.shape) == 3:
         img_l = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -185,7 +146,7 @@ def _colorize_single_img(img_name, model, input_tensor, sess):
     img_l_rs = (img_l_rs.astype(dtype=np.float32)) / 255.0 * 2 - 1
     img_313_rs = sess.run(model, feed_dict={input_tensor: img_l_rs})
     # img_l_rs_rs = np.zeros((1, 56, 56, 1))
-    img_rgb, _ = decode(img_l, img_313_rs, T)
+    img_rgb, _ = decode(img_l_rs, img_313_rs, T)
     io.imsave(os.path.join(_OUTPUT_DIR, os.path.split(img_name)[1]), img_rgb)
 
 

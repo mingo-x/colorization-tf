@@ -383,7 +383,46 @@ def softmax(x):
     return e_x / np.expand_dims(e_x.sum(axis=-1), axis=-1)  # only difference
 
 
-def decode(data_l, conv8_313, rebalance=1, return_313=False, sfm=True):
+def JBU(ab_ss, l, k=3, scale=4):
+    h, w, c = ab_ss.shape
+    h *= scale
+    w *= scale
+    ab = np.zeros((h, w, c))
+    for i in xrange(h):
+        for j in xrange(w):
+            ab[i, j] = _JBU_pix(ab_ss, l, i, j, k=k, scale=scale)
+            
+    return ab
+
+
+def _JBU_pix(ab_ss, l, pi, pj, k=3, scale=4):
+    r = k / 2
+    a = 0.
+    b = 0.
+    f = 0.
+    for i in xrange(-r, r):
+        for j in xrange(-r, r):
+            qi = pi + i
+            qj = pj + j
+            w = _bilateral_weight(pi, pj, qi, qj, l[pi, pj], l[qi, qj], scale=scale)
+            a_s, b_s = ab_ss[qi / 4, qj / 4]
+            a += a_s * w
+            b += b_s * w
+            f += w
+
+    a /= f
+    b /= f
+
+    return (a, b)
+
+
+def _bilateral_weight(pi, pj, qi, qj, lp, lq, sig_d=3., sig_r=15., scale=4.0):
+    domain_term = ((pi / scale - qi / scale) ** 2 + (pj / scale - qj / scale) ** 2) / (2 * sig_d ** 2)
+    range_term = (lp - lq) ** 2 / (2 * sig_r ** 2)
+    return math.exp(-(domain_term + range_term))
+
+
+def decode(data_l, conv8_313, rebalance=1, return_313=False, sfm=True, jbu=False):
     """
     Args:
       data_l   : [1, height, width, 1]
@@ -407,7 +446,10 @@ def decode(data_l, conv8_313, rebalance=1, return_313=False, sfm=True):
     
     data_ab = np.dot(class8_313_rh, cc)
     # data_ab = resize(data_ab, (height, width))
-    data_ab_us = cv2.resize(data_ab, (width, height), interpolation=cv2.INTER_CUBIC)
+    if jbu:
+        data_ab_us = JBU(data_ab, data_l)
+    else:
+        data_ab_us = cv2.resize(data_ab, (width, height), interpolation=cv2.INTER_CUBIC)
 
     img_lab = np.concatenate((data_l, data_ab_us), axis=-1)
     img_rgb = color.lab2rgb(img_lab)
