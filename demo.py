@@ -331,10 +331,10 @@ def main(jbu=False):
 
 
 def reconstruct(jbu=False):
-    for img_name in os.listdir(IMG_DIR):
-        if img_name.endswith('.jpg') or img_name.endswith('.JPEG'):
-            print(img_name)
-            _reconstruct_single_img(img_name, jbu=jbu)
+    for i in xrange(49800, 49900):
+        img_name = 'ILSVRC2012_val_000{}.JPEG'.format(i)
+        print(img_name)
+        _reconstruct_single_img(img_name, jbu=jbu)
 
 
 def demo_wgan_ab():
