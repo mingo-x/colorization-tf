@@ -3,19 +3,14 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import math
 import random
 import cv2
 import numpy as np
 from Queue import Queue
 from threading import Thread as Process
-#from multiprocessing import Process,Queue
-import time
+# import time
 
 from utils import *
-
-from skimage.io import imread
-from skimage.transform import resize
 
 
 class DataSet(object):
@@ -45,8 +40,13 @@ class DataSet(object):
             self.cond_l = True if dataset_params['cond_l'] == '1' else False
             self.gamma = float(dataset_params['gamma'])
             print('Gamma in prior smoothing: {}.'.format(self.gamma))
+            self.augment = dataset_params['augment'] == '1'
+            if self.augment:
+                print('Random lighting augmentation used.')
 
-        if not training:
+        self.training = training
+
+        if not self.training:
             self.data_path = '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val.txt'
             self.thread_num = 2
             self.thread_num2 = 2
@@ -107,19 +107,17 @@ class DataSet(object):
         h = image.shape[0]
         w = image.shape[1]
 
+        # Random flip
+        mirror = np.random.randint(0, 2)
+        if mirror and self.training:
+            image = np.fliplr(image)
+
         if w > h:
             image = cv2.resize(image, (int(self.image_size * w / h), self.image_size))
-
-            mirror = np.random.randint(0, 2)
-            if mirror:
-                image = np.fliplr(image)
             crop_start = np.random.randint(0, int(self.image_size * w / h) - self.image_size + 1)
             image = image[:, crop_start:crop_start + self.image_size, :]
         else:
             image = cv2.resize(image, (self.image_size, int(self.image_size * h / w)))
-            mirror = np.random.randint(0, 2)
-            if mirror:
-                image = np.fliplr(image)
             crop_start = np.random.randint(0, int(self.image_size * h / w) - self.image_size + 1)
             image = image[crop_start:crop_start + self.image_size, :, :]
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -147,7 +145,7 @@ class DataSet(object):
             images = np.asarray(images, dtype=np.uint8)
 
             self.batch_queue.put(preprocess(images, c313=self.c313, is_gan=self.is_gan, 
-                is_rgb=self.is_rgb, cond_l=self.cond_l, prior_path=self.prior_path, gamma=self.gamma))
+                                 is_rgb=self.is_rgb, cond_l=self.cond_l, prior_path=self.prior_path, gamma=self.gamma, augment=self.augment))
 
     def batch(self):
         """get batch

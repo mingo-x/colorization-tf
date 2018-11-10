@@ -1,4 +1,4 @@
-import math
+import os
 import random
 import subprocess
 
@@ -8,9 +8,8 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 import pickle
-import tensorflow as tf
-from utils import *
-from net import Net
+# import tensorflow as tf
+# from net import Net
 from skimage import io, color, transform
 import cv2
 
@@ -21,7 +20,7 @@ import utils
 
 _AUC_THRESHOLD = 150
 _BATCH_SIZE = 32
-_CAP_LAYERS = [6]
+_CAP_LAYERS = [5]
 #_CAP_LAYERS = [6]
 _COCO_PATH = '/srv/glusterfs/xieya/data/coco_colors.h5'
 _INPUT_SIZE = 224
@@ -30,9 +29,10 @@ _CIFAR_IMG_SIZE = 32
 _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
 _G_VERSION = 1
-_CKPT_PATH = '/srv/glusterfs/xieya/concat_10/models/model.ckpt-13000'
+_CKPT_PATH = '/srv/glusterfs/xieya/tf_224_1/models/model.ckpt-476000'
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
-_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/concat_10_13k'
+# IMG_DIR = '/srv/glusterfs/xieya/data/deoldify/test_images'
+_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/tmp'
 _PRIOR_PATH = '/srv/glusterfs/xieya/prior/coco_313_soft.npy'
 #_PRIOR_PATH = 'resources/prior_probs_smoothed.npy'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
@@ -120,7 +120,7 @@ def compare_c313_pixelwise():
 def _colorize_single_img(img_name, model, input_tensor, sess):
     img_path = os.path.join(IMG_DIR, img_name)
     img = cv2.imread(img_path)
-    img = _resize(img)
+    # img = _resize(img)
     img_rs = cv2.resize(img, (_INPUT_SIZE, _INPUT_SIZE))
     if len(img.shape) == 3:
         img_l = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -146,7 +146,25 @@ def _colorize_single_img(img_name, model, input_tensor, sess):
     img_l_rs = (img_l_rs.astype(dtype=np.float32)) / 255.0 * 2 - 1
     img_313_rs = sess.run(model, feed_dict={input_tensor: img_l_rs})
     # img_l_rs_rs = np.zeros((1, 56, 56, 1))
-    img_rgb, _ = decode(img_l_rs, img_313_rs, T)
+    img_rgb, _ = decode(img_l, img_313_rs, T)
+    io.imsave(os.path.join(_OUTPUT_DIR, os.path.split(img_name)[1]), img_rgb)
+
+
+def _reconstruct_single_img(img_name):
+    img_path = os.path.join(IMG_DIR, img_name)
+    img_rgb = io.imread(img_path)
+    if len(img_rgb.shape) != 3 or img_rgb.shape[2] != 3:
+        return
+    img_lab = color.rgb2lab(img_rgb)
+    img_l = img_lab[None, :, :, 0: 1]
+    img_rgb_rs = cv2.resize(img_rgb, (_INPUT_SIZE, _INPUT_SIZE))
+    img_lab_rs = color.rgb2lab(img_rgb_rs)
+    img_ab_rs = img_lab_rs[None, :, :, 1:]
+    img_ab_ss = transform.downscale_local_mean(img_ab_rs, (1, 4, 4, 1))
+    gt_313 = utils._nnencode(img_ab_ss)
+
+    img_l = (img_l.astype(dtype=np.float32)) / 50. - 1
+    img_rgb, _ = utils.decode(img_l, gt_313, T, sfm=False)
     io.imsave(os.path.join(_OUTPUT_DIR, os.path.split(img_name)[1]), img_rgb)
 
 
@@ -305,6 +323,13 @@ def main():
             _colorize_single_img(img_name, model, input_tensor, sess)
      
     sess.close()
+
+
+def reconstruct():
+    for img_name in os.listdir(IMG_DIR):
+        if img_name.endswith('.jpg') or img_name.endswith('.JPEG'):
+            print(img_name)
+            _reconstruct_single_img(img_name)
 
 
 def demo_wgan_ab():
@@ -636,7 +661,7 @@ def merge(cic_dir, coco_dir, cap_dir, new_cap_dir):
         print(idx)
 
 
-def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True, with_attention=False, resize=False):
+def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True, with_attention=False, resize=False, concat=False, use_vg=False, lstm_version=0):
     if is_coco:
         dataset_params = {'path': _COCO_PATH, 'thread_num': 1, 'prior_path': _PRIOR_PATH}
         common_params = {'batch_size': _BATCH_SIZE, 'with_caption': '1', 'sampler': '0', }  # with_caption -> False: ignore grayscale images.
@@ -647,6 +672,8 @@ def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True, wit
         common_params = {'image_size': _INPUT_SIZE, 'batch_size': _BATCH_SIZE, 'is_gan': '0', 'is_rgb': '0'}
         dataset = DataSet(common_params, dataset_params, True, False)  # No shuffle.
 
+    train_vocab_vg = pickle.load(open('/srv/glusterfs/xieya/data/visual_genome/glove.6B.100d_voc.p', 'r'))
+    vrev_vg = dict((v, k) for (k, v) in train_vocab_vg.iteritems())
     train_vocab = pickle.load(open('/home/xieya/colorfromlanguage/priors/coco_colors_vocab.p', 'r'))
     vrev = dict((v, k) for (k, v) in train_vocab.iteritems())
 
@@ -654,12 +681,15 @@ def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True, wit
         l_tensor = tf.placeholder(tf.float32, (_BATCH_SIZE, _INPUT_SIZE, _INPUT_SIZE, 1))
         cap_tensor = tf.placeholder(tf.int32, (_BATCH_SIZE, 20))
         len_tensor = tf.placeholder(tf.int32, (_BATCH_SIZE))
-        autocolor = Net(train=False, g_version=_G_VERSION)
+        autocolor = Net(train=False, g_version=_G_VERSION, use_vg=use_vg)
         if with_caption:
-            biases = [None] * 8
-            for l in _CAP_LAYERS:
-                biases[l] = 1.
-            c313_tensor = autocolor.inference4(l_tensor, cap_tensor, len_tensor, biases, with_attention=with_attention)
+            if concat:
+                c313_tensor = autocolor.inference5(l_tensor, cap_tensor, len_tensor, _CAP_LAYERS, lstm_version=lstm_version)
+            else:
+                biases = [None] * 8
+                for l in _CAP_LAYERS:
+                    biases[l] = 1.
+                c313_tensor = autocolor.inference4(l_tensor, cap_tensor, len_tensor, biases, with_attention=with_attention)
         else:
             c313_tensor = autocolor.inference(l_tensor)
             if len(c313_tensor) > 1:
@@ -685,6 +715,10 @@ def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True, wit
             for i in xrange(batch_num):
                 if is_coco:
                     img_l, gt_313, prior_boost_nongray, img_cap, img_len = dataset.batch()
+                    if use_vg:
+                        for k in xrange(_BATCH_SIZE):
+                            for j in xrange(img_len[k]):
+                                img_cap[k, j] = train_vocab_vg.get(vrev.get(img_cap[k, j], 'unk'), 0)
                     feed_dict = {l_tensor: img_l, cap_tensor: img_cap, len_tensor: img_len, gt_313_tensor: gt_313, prior_tensor: prior_boost_nongray}
                 else:
                     img_l, gt_313, prior_boost_nongray, img_ab = dataset.batch()
@@ -705,7 +739,10 @@ def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True, wit
                     io.imsave(os.path.join(_OUTPUT_DIR, "{0}{1}.jpg".format(img_count, '_rs' if resize else '')), rgb)
                     if cross_entropy:
                         word_list = list(img_cap[j, :img_len[j]])
-                        img_title = '_'.join(vrev.get(w, 'unk') for w in word_list)
+                        if use_vg:
+                            img_title = '_'.join(vrev_vg.get(w, 'unk') for w in word_list)
+                        else:
+                            img_title = '_'.join(vrev.get(w, 'unk') for w in word_list)
                         fout.write("{0}_{3}\t{1}\t{2}\n".format(img_count, ce[img_count], rb[img_count], img_title))
                     img_count += 1
                             
@@ -721,12 +758,13 @@ def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True, wit
 if __name__ == "__main__":
     subprocess.check_call(['mkdir', '-p', _OUTPUT_DIR])
     # main()
+    reconstruct()
     # places365()
     # demo_wgan_ab()
     # demo_wgan_rgb()
     # _colorize_high_res_img(_IMG_NAME)
     # cifar()
-    colorize_with_language(with_attention=False, concat=True, same_lstm=True, residual=False, paper=True, lstm_version=2, use_vg=False)
+    # colorize_with_language(with_attention=False, concat=True, same_lstm=True, residual=False, paper=True, lstm_version=2, use_vg=False)
     # colorize_video_with_language()
     # colorize_coco_without_language(evaluate=True)
     # save_ground_truth()
@@ -734,6 +772,6 @@ if __name__ == "__main__":
     #       '/srv/glusterfs/xieya/image/color/tf_coco_5_38k', 
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/original', 
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/new')
-    # evaluate(with_caption=False, cross_entropy=False, batch_num=600, is_coco=False, with_attention=False, resize=False)
+    # evaluate(with_caption=True, cross_entropy=True, batch_num=600, is_coco=True, with_attention=False, resize=False, concat=True, use_vg=True, lstm_version=2)
     # print("Model {}.".format(_CKPT_PATH))
     # compare_c313_pixelwise()
