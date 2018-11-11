@@ -87,7 +87,7 @@ def compare_c313_pixelwise():
 
     img_name = 'ILSVRC2012_val_00049829.JPEG'
     img_prefix = os.path.splitext(img_name)[0]
-    pos = [(0, 55), (0, 0)]
+    pos = [(1, 55), (1, 1)]
 
     img_path = os.path.join(IMG_DIR, img_name)
     img = cv2.imread(img_path)
