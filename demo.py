@@ -33,7 +33,7 @@ _CKPT_PATH = '/srv/glusterfs/xieya/tf_224_1/models/model.ckpt-476000'
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
 # IMG_DIR = '/srv/glusterfs/xieya/data/deoldify/test_images'
 _JBU_K = 10
-_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/jbu_10'
+_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/tmp'
 _PRIOR_PATH = '/srv/glusterfs/xieya/prior/coco_313_soft.npy'
 #_PRIOR_PATH = 'resources/prior_probs_smoothed.npy'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
@@ -762,7 +762,7 @@ def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True, wit
 
 if __name__ == "__main__":
     subprocess.check_call(['mkdir', '-p', _OUTPUT_DIR])
-    main(jbu=True)
+    main(jbu=False)
     # reconstruct(jbu=True)
     # places365()
     # demo_wgan_ab()
