@@ -386,7 +386,7 @@ def softmax(x):
 
 def JBU(ab_ss, l, k=3, scale=4):
     h, w, _ = l.shape
-    ab_ic = cv2.resize(ab_ss, (w, h), interpolation=cv2.INTER_CUBIC)
+    ab_ic = cv2.resize(ab_ss, (w, h), interpolation=cv2.INTER_NEAREST)
     a = cv2.jointBilateralFilter(l, ab_ic[:, :, 0: 1], d=-1, sigmaColor=15., sigmaSpace=3.)
     b = cv2.jointBilateralFilter(l, ab_ic[:, :, 1:], d=-1, sigmaColor=15., sigmaSpace=3.)
     ab = np.dstack((a, b))
