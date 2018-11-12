@@ -33,7 +33,7 @@ _CKPT_PATH = '/srv/glusterfs/xieya/tf_224_1/models/model.ckpt-476000'
 IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
 # IMG_DIR = '/srv/glusterfs/xieya/data/deoldify/test_images'
 _JBU_K = 10
-_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/jbu_10_8'
+_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/c313'
 _PRIOR_PATH = '/srv/glusterfs/xieya/prior/coco_313_soft.npy'
 #_PRIOR_PATH = 'resources/prior_probs_smoothed.npy'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
@@ -73,8 +73,20 @@ def _get_model(input_tensor):
     return conv8_313
 
 
+def _b_dist(a, b):
+    return -np.log(np.sum(np.sqrt(a * b)))
+
+
 def _cosine(a, b):
     return np.dot(a, b) / np.sqrt(np.dot(a, a) * np.dot(b, b))
+
+
+def _cross_entropy(a, b):
+    return np.sum(-a * np.log(b)), np.sum(-b * np.log(a))
+
+
+def _kl_dist(a, b):
+    return np.sum(a * np.log(a / b)), np.sum(b * np.log(b / a))
 
 
 def compare_c313_pixelwise():
@@ -85,9 +97,9 @@ def compare_c313_pixelwise():
     sess = tf.Session()
     saver.restore(sess, _CKPT_PATH)
 
-    img_name = 'ILSVRC2012_val_00049829.JPEG'
+    img_name = 'ILSVRC2012_val_00049823.JPEG'  # 823, 815, 923
     img_prefix = os.path.splitext(img_name)[0]
-    pos = [(1, 55), (1, 1)]
+    pos = [(10, 45), (45, 10), (26, 24)]
 
     img_path = os.path.join(IMG_DIR, img_name)
     img = cv2.imread(img_path)
@@ -102,21 +114,28 @@ def compare_c313_pixelwise():
     img_l_rs = (img_l_rs.astype(dtype=np.float32)) / 255.0 * 2 - 1
     img_l_rs_rs = transform.downscale_local_mean(img_l_rs, (1, 4, 4, 1))
     img_313_rs = sess.run(model, feed_dict={input_tensor: img_l_rs})
-    img_rgb, _, c313_rb, c313 = decode(img_l_rs_rs, img_313_rs, T, return_313=True)
+    img_rgb, _, c313_rb, c313 = utils.decode(img_l_rs_rs, img_313_rs, T, return_313=True)
     io.imsave(os.path.join(_OUTPUT_DIR, os.path.split(img_name)[1]), img_rgb)
-    for p in pos:
+    for p in pos[0: -1]:
         color = img_rgb[p]
         x = c313[p]
         plt.plot(x, c=color)
-        ab_tools.weights_to_image(x, '{0}_{1}_{2}'.format(img_prefix, p[0], p[1]), fill=0.5, out_dir=_OUTPUT_DIR)
+        # ab_tools.weights_to_image(x, '{0}_{1}_{2}'.format(img_prefix, p[0], p[1]), fill=0.5, out_dir=_OUTPUT_DIR)
     plt.savefig(os.path.join(_OUTPUT_DIR, '{0}.jpg'.format(img_prefix)))
     plt.clf()
-    for p in pos:
+    for p in pos[: -1]:
         color = img_rgb[p]
         x_rb = c313_rb[p]
         plt.plot(x_rb, c=color)
-        ab_tools.weights_to_image(x_rb, '{0}_{1}_{2}_rb'.format(img_prefix, p[0], p[1]), fill=0.5, out_dir=_OUTPUT_DIR)
+        # ab_tools.weights_to_image(x_rb, '{0}_{1}_{2}_rb'.format(img_prefix, p[0], p[1]), fill=0.5, out_dir=_OUTPUT_DIR)
     plt.savefig(os.path.join(_OUTPUT_DIR, '{0}_rb.jpg'.format(img_prefix)))
+
+    for i in xrange(len(pos)):
+        for j in xrange(i + 1, len(pos)):
+            print('bhatta dist', i, j, _b_dist(c313[pos[i]], c313[pos[j]]), _b_dist(c313_rb[pos[i]], c313_rb[pos[j]]))
+            print('cosine', i, j, _cosine(c313[pos[i]], c313[pos[j]]), _cosine(c313_rb[pos[i]], c313_rb[pos[j]]))
+            print('cross entropy', i, j, _cross_entropy(c313[pos[i]], c313[pos[j]]), _cross_entropy(c313_rb[pos[i]], c313_rb[pos[j]]))
+            print('kl', i, j, _kl_dist(c313[pos[i]], c313[pos[j]]), _kl_dist(c313_rb[pos[i]], c313_rb[pos[j]]))
 
 
 def _colorize_single_img(img_name, model, input_tensor, sess, jbu=False):
@@ -762,7 +781,7 @@ def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True, wit
 
 if __name__ == "__main__":
     subprocess.check_call(['mkdir', '-p', _OUTPUT_DIR])
-    main(jbu=True)
+    # main(jbu=True)
     # reconstruct(jbu=True)
     # places365()
     # demo_wgan_ab()
@@ -779,4 +798,4 @@ if __name__ == "__main__":
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/new')
     # evaluate(with_caption=True, cross_entropy=True, batch_num=600, is_coco=True, with_attention=False, resize=False, concat=True, use_vg=True, lstm_version=2)
     # print("Model {}.".format(_CKPT_PATH))
-    # compare_c313_pixelwise()
+    compare_c313_pixelwise()
