@@ -174,6 +174,7 @@ def _compare_c313_single_image(img_name, model, input_tensor, sess):
     print(s, s_rb)
     return (s, s_rb)
 
+
 def compare_c313():
     input_tensor = tf.placeholder(
         tf.float32, shape=(1, _INPUT_SIZE, _INPUT_SIZE, 1))
@@ -195,6 +196,9 @@ def compare_c313():
     score_rb = np.mean(scores_rb)
 
     print('average:', score, score_rb)
+    r = np.random.normal(size=(313))
+    r /= np.sum(r)
+    print('Sanity check: ', _intersection_of_hist(r, r))
 
 
 def _colorize_single_img(img_name, model, input_tensor, sess, jbu=False):
