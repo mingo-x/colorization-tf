@@ -182,19 +182,19 @@ def compare_c313():
     
     sess = tf.Session()
     saver.restore(sess, _CKPT_PATH)
-    img_name_p = 'ILSVRC2012_val_00049{}.JPEG'
     scores, scores_rb = [], []
-    for i in xrange(800, 900):
-        img_name = img_name_p.format(i)
-        s, s_rb = _compare_c313_single_image(img_name, model, input_tensor, sess)
-        scores.append(s)
-        scores_rb.append(s_rb)
+    for img_name in os.listdir(IMG_DIR):
+        if img_name.endswith('.jpg') or img_name.endswith('.JPEG'):
+            print(img_name)
+            s, s_rb = _compare_c313_single_image(img_name, model, input_tensor, sess)
+            scores.append(s)
+            scores_rb.append(s_rb)
     sess.close()
 
     score = np.mean(scores)
     score_rb = np.mean(scores_rb)
 
-    print(score, score_rb)
+    print('average:', score, score_rb)
 
 
 def _colorize_single_img(img_name, model, input_tensor, sess, jbu=False):
