@@ -138,6 +138,65 @@ def compare_c313_pixelwise():
             print('kl', i, j, _kl_dist(c313[pos[i]], c313[pos[j]]), _kl_dist(c313_rb[pos[i]], c313_rb[pos[j]]))
 
 
+def _intersection_of_hist(a, b):
+    return np.sum(np.minimum(a, b))
+
+
+def _compare_c313_single_image(img_name, model, input_tensor, sess):
+    # Randomly sample points
+    pos = [(random.randint(0, 55), random.randint(0, 55)) for _ in xrange(10)]
+
+    img_path = os.path.join(IMG_DIR, img_name)
+    img = cv2.imread(img_path)
+    img = _resize(img)
+    img_rs = cv2.resize(img, (_INPUT_SIZE, _INPUT_SIZE))
+    if len(img.shape) == 3:
+        img_l_rs = cv2.cvtColor(img_rs, cv2.COLOR_BGR2GRAY)
+        img_l_rs = img_l_rs[None, :, :, None]
+    else:
+        img_l_rs = img_rs[None, :, :, None]
+
+    img_l_rs = (img_l_rs.astype(dtype=np.float32)) / 255.0 * 2 - 1
+    img_l_rs_rs = transform.downscale_local_mean(img_l_rs, (1, 4, 4, 1))
+    img_313_rs = sess.run(model, feed_dict={input_tensor: img_l_rs})
+    img_rgb, _, c313_rb, c313 = utils.decode(img_l_rs_rs, img_313_rs, T, return_313=True)
+    io.imsave(os.path.join(_OUTPUT_DIR, os.path.split(img_name)[1]), img_rgb)
+
+    scores, scores_rb = [], []
+    for p in pos:
+        q = (p[0] + 1 if p[0] < 55 else p[0] - 1, p[1] + 1 if p[1] < 55 else p[1] - 1)
+        cp, cq = c313[p], c313[q]
+        scores.append(_intersection_of_hist(cp, cq))
+        cp_rb, cq_rb = c313_rb[p], c313_rb[q]
+        scores_rb.append(_intersection_of_hist(cp_rb, cq_rb))
+    s = np.mean(scores)
+    s_rb = np.mean(scores_rb)
+    print(s, s_rb)
+    return (s, s_rb)
+
+def compare_c313():
+    input_tensor = tf.placeholder(
+        tf.float32, shape=(1, _INPUT_SIZE, _INPUT_SIZE, 1))
+    model = _get_model(input_tensor)
+    saver = tf.train.Saver()
+    
+    sess = tf.Session()
+    saver.restore(sess, _CKPT_PATH)
+    img_name_p = 'ILSVRC2012_val_00049{}.JPEG'
+    scores, scores_rb = [], []
+    for i in xrange(800, 900):
+        img_name = img_name_p.format(i)
+        s, s_rb = _compare_c313_single_image(img_name, model, input_tensor, sess)
+        scores.append(s)
+        scores_rb.append(s_rb)
+    sess.close()
+
+    score = np.mean(scores)
+    score_rb = np.mean(scores_rb)
+
+    print(score, score_rb)
+
+
 def _colorize_single_img(img_name, model, input_tensor, sess, jbu=False):
     img_path = os.path.join(IMG_DIR, img_name)
     img = cv2.imread(img_path)
@@ -798,4 +857,5 @@ if __name__ == "__main__":
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/new')
     # evaluate(with_caption=True, cross_entropy=True, batch_num=600, is_coco=True, with_attention=False, resize=False, concat=True, use_vg=True, lstm_version=2)
     # print("Model {}.".format(_CKPT_PATH))
-    compare_c313_pixelwise()
+    # compare_c313_pixelwise()
+    compare_c313()
