@@ -3,7 +3,7 @@
 # ----- Parameters passed to the cluster -------
 ## <= 1h is short queue, <= 6h is middle queue, <= 48 h is long queue
 
-#$ -t 1:100
+#$ -t 1:50
 
 #$ -S /srv/glusterfs/xieya/anaconda2/bin/python
 
@@ -32,7 +32,7 @@ import sys
 _GRID_PATH = ''
 _LOG_FREQ = 100
 _N_CLASSES = 313
-_TASK_NUM = 100
+_TASK_NUM = 50
 _TASK_ID = os.environ.get('SGE_TASK_ID')
 if _TASK_ID is not None:
     print("Task id: {}".format(_TASK_ID))
@@ -211,7 +211,7 @@ def cal_prob_soft(cond_l=False, is_vg=False, list_file='', in_dir=''):
 
     for img_f in filename_lists:
         # img_f = img_f.strip()
-        img_p = pos.path.join(in_dir, img_f)
+        img_p = os.path.join(in_dir, img_f)
         if not os.path.isfile(img_p):
             print(img_f)
             continue
@@ -436,7 +436,7 @@ if __name__ == "__main__":
     print("Number of classes: {}.".format(_N_CLASSES))
     # print("Imagenet.")
     # cal_prob()
-    cal_prob_soft(False, is_vg=False, list_file='', in_dir='/srv/glusterfs/xieya/data/coco_seg/images/train2017')
+    cal_prob_soft(False, is_vg=False, list_file='/srv/glusterfs/xieya/data/coco_seg/images/train2017.txt', in_dir='/srv/glusterfs/xieya/data/coco_seg/images/train2017')
     # cal_ab_hist_given_l()
     # print("Coco.")
     # cal_prob_coco()
