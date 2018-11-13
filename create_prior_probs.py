@@ -19,6 +19,7 @@
 
 #$ -cwd
 
+import cv2
 import h5py
 import numpy as np
 from skimage.io import imread
@@ -240,51 +241,30 @@ def cal_prob_soft(cond_l=False, is_vg=False, list_file='', in_dir=''):
 
 
 def cal_class(list_file='', in_dir=''):
-    out_path = '/srv/glusterfs/xieya/prior/coco2017_{0}_{2}soft_{1}.npy'.format(_N_CLASSES, _TASK_ID, 'abl_' if cond_l else '')
+    out_path = '/srv/glusterfs/xieya/prior/label_{}.npy'.format(_TASK_ID)
     if os.path.isfile(out_path):
         print('Done.')
         return
 
-    if is_vg:
-        filename_lists = []
-        dir_path = '/srv/glusterfs/xieya/data/visual_genome/VG_100K_224'
-        fs = os.listdir(dir_path)
-        fs.sort()
-        print('Sorted.')
-        for i in xrange(len(fs)):
-            if i % _TASK_NUM == 0:
-                f = fs[i]
-                filename_lists.append(os.path.join(dir_path, f))
-    else:
-        filename_lists = get_file_list(list_file)
+    filename_lists = get_file_list(list_file)
     counter = 0
-    nnenc = NNEncode(10, 5.0, km_filepath='./resources/pts_in_hull.npy')
-    if cond_l:
-        probs = np.zeros((101, _N_CLASSES), dtype=np.float64)    
-    else:
-        probs = np.zeros((_N_CLASSES), dtype=np.float64)
+    probs = np.zeros((256), dtype=np.float64)
 
     for img_f in filename_lists:
-        # img_f = img_f.strip()
-        img_p = pos.path.join(in_dir, img_f)
+        img_id = os.path.splitext(img_f)[0]
+        img_p = os.path.join(in_dir, img_id + '.png')
         if not os.path.isfile(img_p):
-            print(img_f)
+            print(img_id)
             continue
-        img = imread(img_p)
-        if len(img.shape) != 3 or img.shape[2] != 3:
-            continue
-        img = resize(img, (224, 224))
-        img_lab = color.rgb2lab(img)
-        img_lab = img_lab.reshape((-1, 3))
-        img_ab = img_lab[:, 1:]
-        img_313 = nnenc.encode_points_mtx_nd(img_ab, axis=1)  # [H*W, 313]
-        if cond_l:
-            img_l = img_lab[:, 0]
-            l_idx = np.round(img_l).astype(np.int32)
-            for l in xrange(101):
-                probs[l] += np.sum(img_313[l_idx == l], axis=0)
+        label = cv2.imread(img_p, cv2.IMREAD_GRAYSCALE).astype(np.int64)
+        raw_h, raw_w = label.shape
+        if raw_h > raw_w:
+            base_size = (int(224 * raw_w / raw_h), 224)
         else:
-            probs += np.sum(img_313, axis=0)
+            base_size = (224, int(224 * raw_h / raw_w))
+        label = cv2.resize(label, base_size, interpolation=cv2.INTER_NEAREST)
+        for i in label:
+            probs[i] += 1
 
         if counter % _LOG_FREQ == 0:
             print(counter)
