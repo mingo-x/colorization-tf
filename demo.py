@@ -30,8 +30,8 @@ _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
 _G_VERSION = 1
 _CKPT_PATH = '/srv/glusterfs/xieya/tf_224_1/models/model.ckpt-476000'
-IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
-# IMG_DIR = '/srv/glusterfs/xieya/data/deoldify/test_images'
+# IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
+IMG_DIR = '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val'
 _JBU_K = 10
 _OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/c313'
 _PRIOR_PATH = '/srv/glusterfs/xieya/prior/coco_313_soft.npy'
@@ -142,9 +142,9 @@ def _intersection_of_hist(a, b):
     return np.sum(np.minimum(a, b))
 
 
-def _compare_c313_single_image(img_name, model, input_tensor, sess):
+def _compare_c313_single_image(img_name, model, input_tensor, sess, r_num=5):
     # Randomly sample points
-    pos = [(random.randint(0, 55), random.randint(0, 55)) for _ in xrange(10)]
+    pos = [(random.randint(0, 55), random.randint(0, 55)) for _ in xrange(r_num)]
 
     img_path = os.path.join(IMG_DIR, img_name)
     img = cv2.imread(img_path)
@@ -164,7 +164,10 @@ def _compare_c313_single_image(img_name, model, input_tensor, sess):
 
     scores, scores_rb = [], []
     for p in pos:
-        q = (p[0] + 1 if p[0] < 55 else p[0] - 1, p[1] + 1 if p[1] < 55 else p[1] - 1)
+        if random.random() < 0.5:
+            q = (p[0] + 1 if p[0] < 55 else p[0] - 1, p[1])
+        else:
+            q = (p[0], p[1] + 1 if p[1] < 55 else p[1] - 1)
         cp, cq = c313[p], c313[q]
         scores.append(_intersection_of_hist(cp, cq))
         cp_rb, cq_rb = c313_rb[p], c313_rb[q]
@@ -184,8 +187,10 @@ def compare_c313():
     sess = tf.Session()
     saver.restore(sess, _CKPT_PATH)
     scores, scores_rb = [], []
-    for img_name in os.listdir(IMG_DIR):
-        if img_name.endswith('.jpg') or img_name.endswith('.JPEG'):
+    img_name_p = 'ILSVRC2012_val_0004{:04}.JPEG'
+    for i in xrange(0, 10000):
+        img_name = img_name_p.format(i)
+        if os.path.exists(os.path.join(IMG_DIR, img_name)):
             print(img_name)
             s, s_rb = _compare_c313_single_image(img_name, model, input_tensor, sess)
             scores.append(s)
