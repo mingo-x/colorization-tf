@@ -120,16 +120,15 @@ def get_index(ab):
     return index
 
 
-def get_file_list():
+def get_file_list(list_file):
     filename_list = []
     img_idx = 0
-    for img_f in lists_f:
-        if img_idx % _TASK_NUM == _TASK_ID:
-            img_f = img_f.strip()
-            filename_list.append(img_f)
-        img_idx += 1
-        # if img_idx >= 19200:
-        #     break
+    with open(list_file, 'r') as fin:
+        for line in fin:
+            if img_idx % _TASK_NUM == _TASK_ID:
+                img_f = line.strip()
+                filename_list.append(img_f)
+            img_idx += 1
     return filename_list
 
 
@@ -182,11 +181,11 @@ def cal_prob():
     np.save(out_path, probs)
 
 
-def cal_prob_soft(cond_l=False, is_vg=False):
+def cal_prob_soft(cond_l=False, is_vg=False, list_file='', in_dir=''):
     if cond_l:
         print('Conditioning on luma.')
 
-    out_path = '/srv/glusterfs/xieya/prior/vg_{0}_{2}soft_{1}.npy'.format(_N_CLASSES, _TASK_ID, 'abl_' if cond_l else '')
+    out_path = '/srv/glusterfs/xieya/prior/coco2017_{0}_{2}soft_{1}.npy'.format(_N_CLASSES, _TASK_ID, 'abl_' if cond_l else '')
     if os.path.isfile(out_path):
         print('Done.')
         return
@@ -202,7 +201,7 @@ def cal_prob_soft(cond_l=False, is_vg=False):
                 f = fs[i]
                 filename_lists.append(os.path.join(dir_path, f))
     else:
-        filename_lists = get_file_list()
+        filename_lists = get_file_list(list_file)
     counter = 0
     nnenc = NNEncode(10, 5.0, km_filepath='./resources/pts_in_hull.npy')
     if cond_l:
@@ -212,10 +211,66 @@ def cal_prob_soft(cond_l=False, is_vg=False):
 
     for img_f in filename_lists:
         # img_f = img_f.strip()
-        if not os.path.isfile(img_f):
+        img_p = pos.path.join(in_dir, img_f)
+        if not os.path.isfile(img_p):
             print(img_f)
             continue
-        img = imread(img_f)
+        img = imread(img_p)
+        if len(img.shape) != 3 or img.shape[2] != 3:
+            continue
+        img = resize(img, (224, 224))
+        img_lab = color.rgb2lab(img)
+        img_lab = img_lab.reshape((-1, 3))
+        img_ab = img_lab[:, 1:]
+        img_313 = nnenc.encode_points_mtx_nd(img_ab, axis=1)  # [H*W, 313]
+        if cond_l:
+            img_l = img_lab[:, 0]
+            l_idx = np.round(img_l).astype(np.int32)
+            for l in xrange(101):
+                probs[l] += np.sum(img_313[l_idx == l], axis=0)
+        else:
+            probs += np.sum(img_313, axis=0)
+
+        if counter % _LOG_FREQ == 0:
+            print(counter)
+            sys.stdout.flush()
+        counter += 1
+
+    np.save(out_path, probs)
+
+
+def cal_class(list_file='', in_dir=''):
+    out_path = '/srv/glusterfs/xieya/prior/coco2017_{0}_{2}soft_{1}.npy'.format(_N_CLASSES, _TASK_ID, 'abl_' if cond_l else '')
+    if os.path.isfile(out_path):
+        print('Done.')
+        return
+
+    if is_vg:
+        filename_lists = []
+        dir_path = '/srv/glusterfs/xieya/data/visual_genome/VG_100K_224'
+        fs = os.listdir(dir_path)
+        fs.sort()
+        print('Sorted.')
+        for i in xrange(len(fs)):
+            if i % _TASK_NUM == 0:
+                f = fs[i]
+                filename_lists.append(os.path.join(dir_path, f))
+    else:
+        filename_lists = get_file_list(list_file)
+    counter = 0
+    nnenc = NNEncode(10, 5.0, km_filepath='./resources/pts_in_hull.npy')
+    if cond_l:
+        probs = np.zeros((101, _N_CLASSES), dtype=np.float64)    
+    else:
+        probs = np.zeros((_N_CLASSES), dtype=np.float64)
+
+    for img_f in filename_lists:
+        # img_f = img_f.strip()
+        img_p = pos.path.join(in_dir, img_f)
+        if not os.path.isfile(img_p):
+            print(img_f)
+            continue
+        img = imread(img_p)
         if len(img.shape) != 3 or img.shape[2] != 3:
             continue
         img = resize(img, (224, 224))
@@ -381,10 +436,10 @@ if __name__ == "__main__":
     print("Number of classes: {}.".format(_N_CLASSES))
     # print("Imagenet.")
     # cal_prob()
-    # cal_prob_soft(False, is_vg=True)
+    cal_prob_soft(False, is_vg=False, list_file='', in_dir='/srv/glusterfs/xieya/data/coco_seg/images/train2017')
     # cal_ab_hist_given_l()
     # print("Coco.")
     # cal_prob_coco()
     # cal_prob_coco_soft(True)
-    merge()
+    # merge()
     # merge_abl()
