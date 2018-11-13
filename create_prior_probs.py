@@ -336,17 +336,17 @@ def cal_prob_coco_soft(cond_l=False):
     np.save('/srv/glusterfs/xieya/prior/coco_{0}_{2}_soft_{1}'.format(_N_CLASSES, _TASK_ID, 'abl' if cond_l else ''), probs)
 
 
-def merge():
+def merge(n_classes=_N_CLASSES):
     print("Merging...")
-    probs = np.zeros((_N_CLASSES), dtype=np.float64)
-    path_pattern = '/srv/glusterfs/xieya/prior/vg_{0}_soft_{1}.npy'
+    probs = np.zeros((n_classes), dtype=np.float64)
+    path_pattern = '/srv/glusterfs/xieya/prior/coco2017_{0}_soft_{1}.npy'
     for i in xrange(_TASK_NUM):
-        file_path = path_pattern.format(_N_CLASSES, i)
+        file_path = path_pattern.format(n_classes, i)
         p = np.load(file_path)
         probs += p
         print(i)
     probs = probs / np.sum(probs)
-    np.save('/srv/glusterfs/xieya/prior/vg_{}_soft'.format(_N_CLASSES), probs)
+    np.save('/srv/glusterfs/xieya/prior/coco2017_{}_soft'.format(n_classes), probs)
 
 
 def cal_ab_hist_given_l():
@@ -417,10 +417,10 @@ if __name__ == "__main__":
     # print("Imagenet.")
     # cal_prob()
     # cal_prob_soft(False, is_vg=False, list_file='/srv/glusterfs/xieya/data/coco_seg/images/train2017.txt', in_dir='/srv/glusterfs/xieya/data/coco_seg/images/train2017')
-    cal_class(list_file='/srv/glusterfs/xieya/data/coco_seg/images/train2017.txt', in_dir='/srv/glusterfs/xieya/data/coco_seg/annotations/train2017')
+    # cal_class(list_file='/srv/glusterfs/xieya/data/coco_seg/images/train2017.txt', in_dir='/srv/glusterfs/xieya/data/coco_seg/annotations/train2017')
     # cal_ab_hist_given_l()
     # print("Coco.")
     # cal_prob_coco()
     # cal_prob_coco_soft(True)
-    # merge()
+    merge()
     # merge_abl()
