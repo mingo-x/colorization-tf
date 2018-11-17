@@ -15,7 +15,6 @@ import cv2
 
 from data import DataSet
 from data_coco import DataSet as DataSetCOCO
-import tools.ab as ab_tools
 import utils
 
 _AUC_THRESHOLD = 150
@@ -136,6 +135,7 @@ def compare_c313_pixelwise():
             print('cosine', i, j, _cosine(c313[pos[i]], c313[pos[j]]), _cosine(c313_rb[pos[i]], c313_rb[pos[j]]))
             print('cross entropy', i, j, _cross_entropy(c313[pos[i]], c313[pos[j]]), _cross_entropy(c313_rb[pos[i]], c313_rb[pos[j]]))
             print('kl', i, j, _kl_dist(c313[pos[i]], c313[pos[j]]), _kl_dist(c313_rb[pos[i]], c313_rb[pos[j]]))
+            print('overlap', i, j, _intersection_of_hist(c313[pos[i]], c313[pos[j]]))
 
 
 def _intersection_of_hist(a, b):
@@ -866,5 +866,5 @@ if __name__ == "__main__":
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/new')
     # evaluate(with_caption=True, cross_entropy=True, batch_num=600, is_coco=True, with_attention=False, resize=False, concat=True, use_vg=True, lstm_version=2)
     # print("Model {}.".format(_CKPT_PATH))
-    # compare_c313_pixelwise()
-    compare_c313()
+    compare_c313_pixelwise()
+    # compare_c313()
