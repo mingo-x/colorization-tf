@@ -164,10 +164,11 @@ def _compare_c313_single_image(img_name, model, input_tensor, sess, r_num=5):
 
     scores, scores_rb = [], []
     for p in pos:
-        if random.random() < 0.5:
-            q = (p[0] + 1 if p[0] < 55 else p[0] - 1, p[1])
-        else:
-            q = (p[0], p[1] + 1 if p[1] < 55 else p[1] - 1)
+        # if random.random() < 0.5:
+        #     q = (p[0] + 1 if p[0] < 55 else p[0] - 1, p[1])
+        # else:
+        #     q = (p[0], p[1] + 1 if p[1] < 55 else p[1] - 1)
+        q = (random.randint(0, 55), random.randint(0, 55))
         cp, cq = c313[p], c313[q]
         scores.append(_intersection_of_hist(cp, cq))
         cp_rb, cq_rb = c313_rb[p], c313_rb[q]
@@ -866,5 +867,5 @@ if __name__ == "__main__":
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/new')
     # evaluate(with_caption=True, cross_entropy=True, batch_num=600, is_coco=True, with_attention=False, resize=False, concat=True, use_vg=True, lstm_version=2)
     # print("Model {}.".format(_CKPT_PATH))
-    compare_c313_pixelwise()
-    # compare_c313()
+    # compare_c313_pixelwise()
+    compare_c313()
