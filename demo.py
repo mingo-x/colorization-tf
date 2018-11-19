@@ -29,10 +29,10 @@ _CIFAR_BATCH_SIZE = 20
 _CIFAR_COUNT = 0
 _G_VERSION = 1
 _CKPT_PATH = '/srv/glusterfs/xieya/tf_224_1/models/model.ckpt-476000'
-# IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
-IMG_DIR = '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val'
+IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
+# IMG_DIR = '/srv/glusterfs/xieya/data/imagenet1k_uncompressed/val'
 _JBU_K = 10
-_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/c313'
+_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/tf_224_1_476k'
 _PRIOR_PATH = '/srv/glusterfs/xieya/prior/coco_313_soft.npy'
 #_PRIOR_PATH = 'resources/prior_probs_smoothed.npy'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
@@ -53,13 +53,13 @@ def _resize(image, resize_size=None):
         image = cv2.resize(image, (int(resize_size * w / h), resize_size))
 
         # crop_start = np.random.randint(0, int(resize_size * w / h) - resize_size + 1)
-        crop_start = 0
+        crop_start = (int(resize_size * w / h) - resize_size + 1) / 2
         image = image[:, crop_start:crop_start + resize_size, :]
     else:
         image = cv2.resize(image, (resize_size, int(resize_size * h / w)))
 
         # crop_start = np.random.randint(0, int(resize_size * h / w) - resize_size + 1)
-        crop_start = 0
+        crop_start = (int(resize_size * h / w) - resize_size + 1) / 2
         image = image[crop_start:crop_start + resize_size, :, :]
     return image
 
@@ -850,7 +850,7 @@ def evaluate(with_caption, cross_entropy=False, batch_num=300, is_coco=True, wit
 
 if __name__ == "__main__":
     subprocess.check_call(['mkdir', '-p', _OUTPUT_DIR])
-    # main(jbu=True)
+    main(jbu=False)
     # reconstruct(jbu=True)
     # places365()
     # demo_wgan_ab()
@@ -868,4 +868,4 @@ if __name__ == "__main__":
     # evaluate(with_caption=True, cross_entropy=True, batch_num=600, is_coco=True, with_attention=False, resize=False, concat=True, use_vg=True, lstm_version=2)
     # print("Model {}.".format(_CKPT_PATH))
     # compare_c313_pixelwise()
-    compare_c313()
+    # compare_c313()
