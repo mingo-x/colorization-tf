@@ -251,14 +251,13 @@ class Net(object):
             temp_conv = tf.nn.relu(temp_conv)
             conv_num += 1
             batch_num += 1  
-            block8 = temp_conv 
 
             # Unary prediction
             temp_conv = conv2d('conv_{}'.format(conv_num), temp_conv, [1, 1, 256, 313], stride=1, relu=False, wd=self.weight_decay)
             conv_num += 1
 
         conv8_313 = temp_conv
-        return conv8_313, block8
+        return conv8_313
 
     def inference2(self, data_l):
         ''' U-net'''
