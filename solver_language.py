@@ -210,6 +210,8 @@ class Solver_Language(object):
             if self.with_caption:
                 opt_cap = tf.train.AdamOptimizer(
                     learning_rate=learning_rate_cap, beta1=self.moment, beta2=0.99)
+            else:
+                opt_cap = None
             film_vars = tf.trainable_variables(scope='Film')
             lstm_vars = tf.trainable_variables(scope='LSTM')
             attetion_vars = tf.trainable_variables(scope='Attention')
@@ -224,7 +226,10 @@ class Solver_Language(object):
                 for var in attetion_vars:
                     print(var)
             else:
-                grads = opt.compute_gradients(self.new_loss, var_list=g_vars) + opt_cap.compute_gradients(self.new_loss, var_list=film_vars + lstm_vars + attetion_vars + concat_vars)
+                grads = opt.compute_gradients(self.new_loss, var_list=g_vars)
+                if opt_cap is not None:
+                    grads += opt_cap.compute_gradients(self.new_loss, var_list=film_vars + lstm_vars + attetion_vars + concat_vars)
+                    
                 for var in tf.trainable_variables():
                     print(var)
 
