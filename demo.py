@@ -778,16 +778,14 @@ def merge(cic_dir, coco_dir, cap_dir, new_cap_dir):
         print(idx)
 
 
-def _replace_color(caps, lens, color_set, color_list):
-    for i in xrange(len(caps)):
-        for j in xrange(lens[i]):
-            if caps[i, j] in color_set:
-                # Replace with a random color
-                r = random.choice(color_list)
-                while r == caps[i, j]:
-                    r = random.choice(color_list)
-                # print(vrev.get(word_list[j], 'unk'), vrev.get(r))
-                caps[i, j] = r
+def _replace_color(idx, caps, lens, train_vocab):
+    path = glob('/srv/glusterfs/xieya/image/color/segcap_21_new/{}_*.jpg'.format(idx))[0]
+    fname = os.path.split(path)[1]
+    iname = os.path.splitext(fname)[0]
+    word_list = iname.split('_')[1:]
+    assert len(word_list) == lens[0]
+    for i in xrange(len(word_list)):
+        caps[0, i] = train_vocab.get(word_list[i], 0)
     return caps
 
 
@@ -818,14 +816,6 @@ def evaluate(
     # vrev_vg = dict((v, k) for (k, v) in train_vocab_vg.iteritems())
     train_vocab = pickle.load(open('/home/xieya/colorfromlanguage/priors/coco_colors_vocab.p', 'r'))
     vrev = dict((v, k) for (k, v) in train_vocab.iteritems())
-    if random_color:
-        color_sub_list = ['red', 'green', 'blue', 'yellow', 'orange', 'purple', 'pink', 'brown', 'black', 'white']
-        color_sub_list = [train_vocab[c] for c in color_sub_list]
-        color_voc = pickle.load(open('/srv/glusterfs/xieya/data/color/vocabulary.p', 'rb'))
-        color_set = set()
-        for c in color_voc:
-            if c in train_vocab:
-                color_set.add(train_vocab[c])
     with tf.device('/gpu:0'):
         l_tensor = tf.placeholder(tf.float32, (_BATCH_SIZE, _INPUT_SIZE, _INPUT_SIZE, 1))
         cap_tensor = tf.placeholder(tf.int32, (_BATCH_SIZE, 20))
@@ -867,7 +857,7 @@ def evaluate(
                 if is_coco:
                     img_l, gt_313, prior_boost_nongray, img_cap, img_len = dataset.batch()
                     if random_color:
-                        img_cap = _replace_color(img_cap, img_len, color_set, color_sub_list)
+                        img_cap = _replace_color(img_cap, img_len, train_vocab)
                     if use_vg:
                         for k in xrange(_BATCH_SIZE):
                             for j in xrange(img_len[k]):
