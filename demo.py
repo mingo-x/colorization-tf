@@ -778,6 +778,19 @@ def merge(cic_dir, coco_dir, cap_dir, new_cap_dir):
         print(idx)
 
 
+def _replace_color(caps, lens, color_set, color_list):
+    for i in xrange(len(caps)):
+        for j in xrange(lens[i]):
+            if caps[i, j] in color_set:
+                # Replace with a random color
+                r = random.choice(color_list)
+                while r == caps[i, j]:
+                    r = random.choice(color_list)
+                # print(vrev.get(word_list[j], 'unk'), vrev.get(r))
+                caps[i, j] = r
+    return caps
+
+
 def evaluate(
     with_caption, 
     cross_entropy=False, 
@@ -788,7 +801,8 @@ def evaluate(
     concat=False, 
     use_vg=False, 
     lstm_version=0, 
-    with_cocoseg=False
+    with_cocoseg=False,
+    random_color=False,
 ):
     if is_coco:
         dataset_params = {'path': _COCO_PATH, 'thread_num': 1, 'prior_path': _PRIOR_PATH}
@@ -804,7 +818,14 @@ def evaluate(
     # vrev_vg = dict((v, k) for (k, v) in train_vocab_vg.iteritems())
     train_vocab = pickle.load(open('/home/xieya/colorfromlanguage/priors/coco_colors_vocab.p', 'r'))
     vrev = dict((v, k) for (k, v) in train_vocab.iteritems())
-
+    if random_color:
+        color_sub_list = ['red', 'green', 'blue', 'yellow', 'orange', 'purple', 'pink', 'brown', 'black', 'white']
+        color_sub_list = [train_vocab[c] for c in color_sub_list]
+        color_voc = pickle.load(open('/srv/glusterfs/xieya/data/color/vocabulary.p', 'rb'))
+        color_set = set()
+        for c in color_voc:
+            if c in train_vocab:
+                color_set.add(train_vocab[c])
     with tf.device('/gpu:0'):
         l_tensor = tf.placeholder(tf.float32, (_BATCH_SIZE, _INPUT_SIZE, _INPUT_SIZE, 1))
         cap_tensor = tf.placeholder(tf.int32, (_BATCH_SIZE, 20))
@@ -845,6 +866,8 @@ def evaluate(
                 print(i)
                 if is_coco:
                     img_l, gt_313, prior_boost_nongray, img_cap, img_len = dataset.batch()
+                    if random_color:
+                        img_cap = _replace_color(img_cap, img_len, color_set, color_sub_list)
                     if use_vg:
                         for k in xrange(_BATCH_SIZE):
                             for j in xrange(img_len[k]):
@@ -862,6 +885,7 @@ def evaluate(
                     img_313 = sess.run(c313_tensor, feed_dict=feed_dict)
                 
                 for j in xrange(_BATCH_SIZE):
+                    img_count += 1
                     luma = img_l[j: j + 1]
                     if resize:
                         luma = transform.downscale_local_mean(luma, (1, 4, 4, 1))
@@ -871,7 +895,7 @@ def evaluate(
                         img_title = '_'.join(vrev.get(w, 'unk') for w in word_list)
                     else:
                         img_title = ''
-                    io.imsave(os.path.join(_OUTPUT_DIR, "{}_{}_{}.jpg".format(img_count, img_title, '_rs' if resize else '')), rgb)
+                    io.imsave(os.path.join(_OUTPUT_DIR, "{}{}.jpg".format(img_count, img_title, '_rs' if resize else '')), rgb)
                     # if cross_entropy:
                     #     word_list = list(img_cap[j, :img_len[j]])
                     #     if use_vg:
@@ -879,7 +903,6 @@ def evaluate(
                     #     else:
                     #         img_title = '_'.join(vrev.get(w, 'unk') for w in word_list)
                     #     fout.write("{0}_{3}\t{1}\t{2}\n".format(img_count, ce[img_count], rb[img_count], img_title))
-                    img_count += 1
 
             if cross_entropy:
                 print("cross entropy {0:.6f}, rebalanced cross entropy {1:.6f}".format(np.mean(ce), np.mean(rb)))
@@ -907,7 +930,7 @@ if __name__ == "__main__":
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/original', 
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/new')
     evaluate(with_caption=True, cross_entropy=True, batch_num=2486, is_coco=True, 
-             with_attention=False, resize=False, concat=False, use_vg=False, lstm_version=2, with_cocoseg=True, random_color=True)
+             with_attention=False, resize=False, concat=False, use_vg=False, lstm_version=2, with_cocoseg=True, random_color=False)
     # print("Model {}.".format(_CKPT_PATH))
     # compare_c313_pixelwise()
     # compare_c313()
