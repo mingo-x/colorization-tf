@@ -33,7 +33,7 @@ _CKPT_PATH = '/srv/glusterfs/xieya/language_2/models/model.ckpt-18000'
 # IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
 IMG_DIR = '/srv/glusterfs/xieya/data/coco_seg'
 _JBU_K = 10
-_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/language_2'
+_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/language_2_new'
 _PRIOR_PATH = '/srv/glusterfs/xieya/prior/coco_313_soft.npy'
 #_PRIOR_PATH = 'resources/prior_probs_smoothed.npy'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
@@ -907,7 +907,7 @@ if __name__ == "__main__":
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/original', 
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/new')
     evaluate(with_caption=True, cross_entropy=True, batch_num=2486, is_coco=True, 
-             with_attention=False, resize=False, concat=False, use_vg=False, lstm_version=2, with_cocoseg=True)
+             with_attention=False, resize=False, concat=False, use_vg=False, lstm_version=2, with_cocoseg=True, random_color=True)
     # print("Model {}.".format(_CKPT_PATH))
     # compare_c313_pixelwise()
     # compare_c313()
