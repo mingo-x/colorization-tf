@@ -117,7 +117,7 @@ class DataSet(object):
             count = 0
             while count < self.batch_size:
                 idx = self.record_queue.get()
-                print idx
+                print(idx)
                 if self.with_cocoseg:
                     cidx = self.im2cap[idx][0]
                     image_path = os.path.join("/srv/glusterfs/xieya/data/coco_seg/images_224/val2017", idx + ".jpg")
@@ -125,8 +125,8 @@ class DataSet(object):
                     h, w, _ = image.shape
                     thr_h = h - 224
                     thr_w = w - 224
-                    start_h = (thr_h + 1) / 2
-                    start_w = (thr_w + 1) / 2
+                    start_h = int((thr_h + 1) / 2)
+                    start_w = int((thr_w + 1) / 2)
                     image = image[start_h: start_h + 224, start_w: start_w + 224, :]
                     caption = self.caps[cidx]
                     # Conver caption from cocoseg dict to this dict
