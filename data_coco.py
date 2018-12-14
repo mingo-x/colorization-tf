@@ -41,6 +41,8 @@ class DataSet(object):
             cocoseg_dict = pickle.load(open('/srv/glusterfs/xieya/data/language/vocabulary.p', 'r'))
             self.cocoseg_vrev = dict((v, k) for (k, v) in cocoseg_dict.iteritems()) 
             self.this_dict = pickle.load(open('/home/xieya/colorfromlanguage/priors/coco_colors_vocab.p', 'r'))
+            self.img_id = 0
+            self.gray_list = pickle.load(open('/srv/glusterfs/xieya/data/coco_seg/val_filtered_gray.p', 'rb'))
 
         if dataset_params:
             self.data_path = str(dataset_params['path'])
@@ -118,6 +120,9 @@ class DataSet(object):
             while count < self.batch_size:
                 idx = self.record_queue.get()
                 if self.with_cocoseg:
+                    self.img_id += 1
+                    if self.img_id in self.gray_list:
+                        continue
                     cidx = self.im2cap[idx][0]
                     image_path = os.path.join("/srv/glusterfs/xieya/data/coco_seg/images_224/val2017", idx + ".jpg")
                     image = cv2.imread(image_path, cv2.IMREAD_COLOR)
