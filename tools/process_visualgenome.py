@@ -295,9 +295,9 @@ def split_train_val_test(region_file_name):
 
 if __name__ == "__main__":
     # build_vocabulary_by_spacy()
-    # build_vocabulary_by_glove('glove.6B.100d.p')
+    build_vocabulary_by_glove('glove.6B.300d.p')
     # filter_regions('glove.6B.100d', 'region_descriptions.json')
     # load_glove('glove.6B.300d.txt')
     # scale_regions('filtered_region_descriptions.json')
-    scale_images('/srv/glusterfs/xieya/data/visual_genome/100k_2.txt', '/srv/glusterfs/xieya/data/visual_genome/VG_100K_224')
+    # scale_images('/srv/glusterfs/xieya/data/visual_genome/100k_2.txt', '/srv/glusterfs/xieya/data/visual_genome/VG_100K_224')
     # split_train_val_test('224_filtered_region_descriptions.json')
