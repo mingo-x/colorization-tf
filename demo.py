@@ -33,7 +33,7 @@ _CKPT_PATH = '/srv/glusterfs/xieya/language_2/models/model.ckpt-18000'
 # IMG_DIR = '/srv/glusterfs/xieya/image/grayscale/colorization_test'
 IMG_DIR = '/srv/glusterfs/xieya/data/coco_seg'
 _JBU_K = 10
-_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/language_2'
+_OUTPUT_DIR = '/srv/glusterfs/xieya/image/color/language_2_new'
 _PRIOR_PATH = '/srv/glusterfs/xieya/prior/coco_313_soft.npy'
 #_PRIOR_PATH = 'resources/prior_probs_smoothed.npy'
 _IMG_NAME = '/srv/glusterfs/xieya/image/grayscale/cow_gray.jpg'
@@ -875,6 +875,7 @@ def evaluate(
                     img_313 = sess.run(c313_tensor, feed_dict=feed_dict)
                 
                 for j in xrange(_BATCH_SIZE):
+                    img_count += 1
                     luma = img_l[j: j + 1]
                     if resize:
                         luma = transform.downscale_local_mean(luma, (1, 4, 4, 1))
@@ -884,7 +885,7 @@ def evaluate(
                         img_title = '_'.join(vrev.get(w, 'unk') for w in word_list)
                     else:
                         img_title = ''
-                    io.imsave(os.path.join(_OUTPUT_DIR, "{}_{}_{}.jpg".format(img_count, img_title, '_rs' if resize else '')), rgb)
+                    io.imsave(os.path.join(_OUTPUT_DIR, "{}{}.jpg".format(img_count, img_title, '_rs' if resize else '')), rgb)
                     # if cross_entropy:
                     #     word_list = list(img_cap[j, :img_len[j]])
                     #     if use_vg:
@@ -892,7 +893,6 @@ def evaluate(
                     #     else:
                     #         img_title = '_'.join(vrev.get(w, 'unk') for w in word_list)
                     #     fout.write("{0}_{3}\t{1}\t{2}\n".format(img_count, ce[img_count], rb[img_count], img_title))
-                    img_count += 1
 
             if cross_entropy:
                 print("cross entropy {0:.6f}, rebalanced cross entropy {1:.6f}".format(np.mean(ce), np.mean(rb)))
@@ -920,7 +920,7 @@ if __name__ == "__main__":
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/original', 
     #       '/srv/glusterfs/xieya/image/color/vgg_5_69k/new')
     evaluate(with_caption=True, cross_entropy=True, batch_num=2486, is_coco=True, 
-             with_attention=False, resize=False, concat=False, use_vg=False, lstm_version=2, with_cocoseg=True)
+             with_attention=False, resize=False, concat=False, use_vg=False, lstm_version=2, with_cocoseg=True, random_color=False)
     # print("Model {}.".format(_CKPT_PATH))
     # compare_c313_pixelwise()
     # compare_c313()

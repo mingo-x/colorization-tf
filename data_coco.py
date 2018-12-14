@@ -117,7 +117,6 @@ class DataSet(object):
             count = 0
             while count < self.batch_size:
                 idx = self.record_queue.get()
-                print(idx)
                 if self.with_cocoseg:
                     cidx = self.im2cap[idx][0]
                     image_path = os.path.join("/srv/glusterfs/xieya/data/coco_seg/images_224/val2017", idx + ".jpg")
@@ -168,5 +167,5 @@ class DataSet(object):
         Returns:
           images: 4-D ndarray [batch_size, height, width, 3]
         """
-        print(self.record_queue.qsize(), self.batch_queue.qsize())
+        # print(self.record_queue.qsize(), self.batch_queue.qsize())
         return self.batch_queue.get()
